@@ -1,1 +1,1 @@
-# book-reader-app
+# book_store app

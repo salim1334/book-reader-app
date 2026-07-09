@@ -1,0 +1,603 @@
+Mobile App Developer Documentation 
+
+Author-Branded Book Reader App System 
+
+Version: 1.0 
+
+Date: July 2026 
+
+ 
+
+1. Purpose of This Document 
+
+This document is written for the Flutter mobile app development team. It explains how the reader app should behave, what data it should store locally, how it should sync with the backend, and how it should support author-specific branding. 
+
+The mobile app is not a shared SaaS reader. Each build is dedicated to one author only. The app should feel like a fully branded product for that author, while still using the same shared Flutter codebase. 
+
+ 
+
+2. Mobile App Product Goal 
+
+The mobile app must provide readers with: 
+
+A simple and clean reading experience 
+
+Offline access to downloaded content 
+
+Support for both image-based books and text-based books 
+
+Audio streaming and audio download 
+
+Book updates with version-aware synchronization 
+
+A branded app experience for one specific author 
+
+The app must stay lightweight and easy to maintain, because the same codebase will be rebuilt for different authors. 
+
+ 
+
+3. App Model and Branding 
+
+Each author gets a separate app build. The app build must be configured with author-specific values such as: 
+
+App name 
+
+App icon 
+
+Splash screen 
+
+Primary color 
+
+Package name / application ID 
+
+API base URL 
+
+Author ID 
+
+3.1 Author ID 
+
+The authorId must be included in the app configuration at build time. Every request made by the app to the backend should be scoped to that author. 
+
+The app must never show content from another author. 
+
+3.2 Template-Based Build 
+
+The mobile app should be developed as a shared Flutter template. Each author build is created from the same source code, but with different configuration values. 
+
+This means: 
+
+One shared codebase 
+
+One shared UI framework 
+
+One shared local storage structure 
+
+One shared sync logic 
+
+Different branding and author configuration per build 
+
+ 
+
+4. Supported Book Types 
+
+The app must support exactly two book types: 
+
+4.1 IMAGE Book 
+
+An IMAGE book contains chapters made of page images. The reader views pages by swiping horizontally or vertically, depending on the chosen UX style. 
+
+Optional audio may be attached to each chapter. 
+
+4.2 TEXT Book 
+
+A TEXT book contains chapters made of text content. The reader scrolls through the content in a clean reading view. 
+
+Optional audio may be attached to each chapter. 
+
+4.3 Book Type Rule 
+
+A book must use only one type: 
+
+IMAGE 
+
+TEXT 
+
+A single book cannot mix image pages and text pages in the same book. 
+
+ 
+
+5. Reader App Core Features 
+
+The mobile app should include the following features. 
+
+5.1 First Book Available Offline 
+
+When a user installs the app, one selected book must already be available locally. This is the first book experience and should work even without internet. 
+
+5.2 Additional Books Online 
+
+Other books are discovered from the backend when the device is online. The app should list available books and allow the reader to download them chapter by chapter. 
+
+5.3 Chapter-by-Chapter Downloads 
+
+Downloads must happen at chapter level, not as one large book file. 
+
+The app should support: 
+
+Download one chapter 
+
+Download remaining chapters 
+
+Download full book 
+
+Show download progress 
+
+Retry failed downloads 
+
+Resume interrupted downloads 
+
+5.4 Audio Support 
+
+Audio must work in two ways: 
+
+Streaming when the device is online 
+
+Download for offline use 
+
+Audio playback should support: 
+
+Play / pause 
+
+Seek 
+
+Resume from last position 
+
+Playback speed controls from 0.75x to 2x 
+
+5.5 Reading Experience 
+
+The reading experience should remain simple and smooth. 
+
+For IMAGE books: 
+
+Page swiping 
+
+Pinch zoom if needed 
+
+Stable image loading 
+
+Fast navigation between pages 
+
+For TEXT books: 
+
+Clean text layout 
+
+Scroll reading 
+
+Easy chapter navigation 
+
+Good readability in light and dark mode 
+
+5.6 Local Reading Data 
+
+The app must support local features such as: 
+
+Reading progress 
+
+Bookmarks 
+
+Favorites 
+
+Last opened book and chapter 
+
+Downloaded chapters 
+
+Local settings such as theme mode 
+
+ 
+
+6. Local Storage Requirements 
+
+SQLite is the main local database in the mobile app. 
+
+SQLite should store only app-side metadata and reader state, not the full backend truth. 
+
+6.1 Store in SQLite 
+
+Book metadata 
+
+Chapter metadata 
+
+Download status 
+
+Reading progress 
+
+Bookmarks 
+
+Favorites 
+
+Theme settings 
+
+Last sync timestamps 
+
+Local version numbers 
+
+6.2 Store as Files 
+
+Large media files should be stored in the device file system, not inside SQLite rows. 
+
+This includes: 
+
+Page images 
+
+Audio files 
+
+Downloaded media assets 
+
+6.3 Backend Is the Source of Truth 
+
+The backend remains the source of truth for: 
+
+Published content 
+
+Version numbers 
+
+Visibility state 
+
+New uploads 
+
+Content updates 
+
+SQLite should only reflect what the reader has already downloaded or viewed locally. 
+
+ 
+
+7. Synchronization and Update Behavior 
+
+The app must support smart updates based on version comparison. 
+
+7.1 Update Check 
+
+The app should call a lightweight update endpoint to compare local content with server content. 
+
+The app should compare: 
+
+Local version 
+
+Server version 
+
+If the server version is newer, the app should treat the content as updated. 
+
+7.2 Text Update Behavior 
+
+If only text content changes: 
+
+Sync automatically 
+
+Replace the local text content 
+
+Do not ask the user to manually download again 
+
+7.3 Image Update Behavior 
+
+If images change: 
+
+Notify the reader that the chapter has been updated 
+
+Ask the reader to download the updated images 
+
+7.4 Audio Update Behavior 
+
+If audio changes: 
+
+Notify the reader 
+
+Ask the reader to download the updated audio 
+
+7.5 Why This Matters 
+
+This approach avoids unnecessary data usage and makes updates feel smart instead of forcing full redownloads. 
+
+ 
+
+8. App Screens and Navigation 
+
+The app should include at minimum the following screens: 
+
+8.1 Splash Screen 
+
+Displays the author-branded app identity during startup. 
+
+8.2 Home Screen 
+
+Shows: 
+
+Featured or first bundled book 
+
+Available books 
+
+Recently opened books 
+
+Download status 
+
+8.3 Book Detail Screen 
+
+Shows: 
+
+Book cover 
+
+Book title 
+
+Description 
+
+Book type 
+
+Download button 
+
+Chapter list 
+
+Downloaded chapter status 
+
+8.4 Chapter Reader Screen 
+
+Shows: 
+
+IMAGE reader or TEXT reader depending on book type 
+
+Page navigation or text scrolling 
+
+Audio controls if audio exists 
+
+Bookmark actions 
+
+Continue reading support 
+
+8.5 Downloads Screen 
+
+Shows: 
+
+Download queue 
+
+Download progress 
+
+Failed downloads 
+
+Retry controls 
+
+8.6 Settings Screen 
+
+Shows: 
+
+Dark mode 
+
+App information 
+
+Reading preferences 
+
+Sync status 
+
+Storage usage 
+
+ 
+
+9. Reader Experience Requirements 
+
+The app should feel fast and stable. 
+
+9.1 Performance Expectations 
+
+Fast initial app launch 
+
+Fast loading of local books 
+
+Smooth scrolling and swiping 
+
+Non-blocking downloads 
+
+No UI freezing during sync 
+
+9.2 Offline Behavior 
+
+Downloaded content must remain usable without internet. 
+
+Offline mode should still allow: 
+
+Reading downloaded chapters 
+
+Listening to downloaded audio 
+
+Viewing bookmarks 
+
+Resuming from last position 
+
+9.3 Dark Mode 
+
+Dark mode must be supported from the beginning. 
+
+9.4 Search 
+
+Basic search should be available for TEXT books only in the first version. 
+
+Search inside IMAGE books is out of scope for MVP. 
+
+ 
+
+10. Versioning Rules for Mobile App 
+
+Each downloaded book and chapter should keep local version information. 
+
+The app should be able to answer: 
+
+Which version do I currently have? 
+
+Has the server version changed? 
+
+Does this content need a refresh? 
+
+The app should not assume all content changed at once. It must handle version changes at chapter level whenever possible. 
+
+ 
+
+11. Suggested Local Data Structure 
+
+The app may use tables such as: 
+
+local_books 
+
+local_chapters 
+
+bookmarks 
+
+favorites 
+
+reading_progress 
+
+download_queue 
+
+downloaded_assets 
+
+sync_versions 
+
+user_settings 
+
+The exact schema may be adjusted during implementation, but the data model should remain stable and easy to maintain. 
+
+ 
+
+12. Mobile API Expectations 
+
+The mobile app should rely on backend endpoints that support: 
+
+Book list retrieval 
+
+Chapter list retrieval 
+
+Chapter content retrieval 
+
+Media file URLs 
+
+Version checks 
+
+Download metadata 
+
+Author-specific filtering 
+
+The app should always send the correct authorId or equivalent author-scoping identifier. 
+
+ 
+
+13. Error Handling Expectations 
+
+The app must fail gracefully. 
+
+Examples: 
+
+If internet is unavailable, show offline content only. 
+
+If a download fails, allow retry. 
+
+If a chapter is unavailable, show a clear message. 
+
+If an update check fails, keep the current local content usable. 
+
+If audio cannot stream, show a fallback message or download option. 
+
+ 
+
+14. Security Expectations 
+
+The mobile app should not expose sensitive credentials inside the codebase. 
+
+Recommendations: 
+
+Keep app-specific configuration minimal and controlled 
+
+Avoid hardcoding secrets 
+
+Use secure token handling where needed 
+
+Do not allow cross-author content access 
+
+ 
+
+15. Mobile App MVP Scope 
+
+In Scope 
+
+One branded app per author 
+
+Shared Flutter template 
+
+IMAGE and TEXT books 
+
+Chapter-based downloads 
+
+Audio streaming and download 
+
+Offline reading 
+
+SQLite local storage 
+
+Reading progress 
+
+Bookmarks 
+
+Favorites 
+
+Dark mode 
+
+Basic search for TEXT books 
+
+Version-based sync 
+
+Update prompts for image/audio changes 
+
+Out of Scope for MVP 
+
+Reader accounts 
+
+Cloud sync 
+
+Payments 
+
+Advanced analytics 
+
+OCR on images 
+
+Social features 
+
+Editions support 
+
+ 
+
+16. Mobile App Developer Deliverables 
+
+The Flutter team should produce: 
+
+Shared app template 
+
+Reusable components 
+
+SQLite integration 
+
+Download manager 
+
+Audio player 
+
+Update checker 
+
+Offline storage layer 
+
+Theme support 
+
+Branding configuration support 
+
+Build automation for author-specific app generation 
+
+ 
+
+17. Final Note 
+
+The mobile app should be designed as a reusable product template, not as a one-off app. Every improvement to the shared template benefits all future author builds. 
+
+ 

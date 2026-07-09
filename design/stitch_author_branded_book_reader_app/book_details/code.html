@@ -1,0 +1,219 @@
+<!DOCTYPE html><html lang="en" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&amp;family=Noto+Serif+Ethiopic:wght@400;500;600;700&amp;family=Source+Sans+3:wght@400;500;600&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-fixed": "#e4e2de",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-fixed": "#1b1c1a",
+                "on-tertiary-fixed-variant": "#474744",
+                "on-primary-fixed": "#002117",
+                "surface-container-highest": "#d9e3f6",
+                "primary": "#003527",
+                "on-surface-variant": "#404944",
+                "on-background": "#121c2a",
+                "surface-dim": "#d0dbed",
+                "tertiary-container": "#444442",
+                "on-secondary-fixed-variant": "#763300",
+                "outline-variant": "#bfc9c3",
+                "inverse-primary": "#95d3ba",
+                "error": "#ba1a1a",
+                "primary-fixed": "#b0f0d6",
+                "surface-container-low": "#eff4ff",
+                "tertiary-fixed-dim": "#c8c6c3",
+                "tertiary": "#2d2e2c",
+                "outline": "#707974",
+                "primary-fixed-dim": "#95d3ba",
+                "on-secondary-container": "#682c00",
+                "on-primary-fixed-variant": "#0b513d",
+                "inverse-on-surface": "#eaf1ff",
+                "surface-container": "#e6eeff",
+                "on-primary-container": "#80bea6",
+                "surface-tint": "#2b6954",
+                "secondary-fixed": "#ffdbca",
+                "on-secondary": "#ffffff",
+                "surface": "#f8f9ff",
+                "surface-bright": "#f8f9ff",
+                "secondary-fixed-dim": "#ffb68e",
+                "secondary-container": "#fd8a42",
+                "on-error": "#ffffff",
+                "primary-container": "#064e3b",
+                "error-container": "#ffdad6",
+                "on-error-container": "#93000a",
+                "background": "#f8f9ff",
+                "on-secondary-fixed": "#331200",
+                "on-tertiary-container": "#b2b1ae",
+                "secondary": "#9b4500",
+                "on-primary": "#ffffff",
+                "surface-container-high": "#dee9fc",
+                "inverse-surface": "#27313f",
+                "on-surface": "#121c2a",
+                "surface-variant": "#d9e3f6",
+                "on-tertiary": "#ffffff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "container-max": "1120px",
+                "unit": "8px",
+                "gutter": "24px",
+                "margin-mobile": "16px",
+                "margin-desktop": "64px",
+                "reading-column-width": "680px"
+        },
+        "fontFamily": {
+                "display-lg-mobile": [
+                        "Noto Serif Ethiopic"
+                ],
+                "display-lg": [
+                        "Noto Serif Ethiopic"
+                ],
+                "body-reading": [
+                        "Noto Serif Ethiopic"
+                ],
+                "headline-md": [
+                        "Noto Serif Ethiopic"
+                ],
+                "label-sm": [
+                        "\"Source Sans 3\""
+                ],
+                "arabic-citation": [
+                        "Amiri"
+                ]
+        },
+        "fontSize": {
+                "display-lg-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "display-lg": [
+                        "48px",
+                        {
+                                "lineHeight": "60px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-reading": [
+                        "18px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "arabic-citation": [
+                        "22px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+}catch(_e){}</script></head><body class="bg-background text-on-background antialiased min-h-screen md:pb-0 font-body-reading">
+<!-- App Bar (Nav hidden because it's a detail screen, but top bar present for context/back navigation) -->
+<header class="bg-surface/80 dark:bg-surface-container-highest/80 backdrop-blur-xl docked full-width top-0 sticky shadow-sm dark:shadow-none z-50 flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16">
+<button class="text-on-surface-variant hover:opacity-80 transition-opacity interactive-element active:scale-95 flex items-center justify-center p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="arrow_back" data-original-icon="arrow_back">arrow_back</span>
+</button>
+<div class="font-headline-md text-headline-md text-primary dark:text-on-primary tracking-tight">የመጽሐፉ ዝርዝር</div>
+<button class="text-on-surface-variant hover:opacity-80 transition-opacity interactive-element active:scale-95 flex items-center justify-center p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</header>
+<main class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-16">
+<!-- Book Hero Section (Bento-style layout on desktop) -->
+<section class="flex flex-col gap-gutter mb-16 items-start md:flex-row-reverse"><!-- Book Info & Actions (Moved to first position) -->
+<div class="w-full flex-shrink-0 flex justify-center mb-8 md:w-1/3 md:mb-0">
+<div class="relative w-64 aspect-[2/3] rounded-lg overflow-hidden book-shadow border border-outline-variant">
+<img alt="Book Cover" class="w-full h-full object-cover" data-alt="A highly detailed, realistic book cover design for an Islamic book. The cover features elegant Arabic calligraphy and geometric patterns with an emerald green and gold color palette." src="https://islamicpublishing.org/storage/content-images/books/amharic/amharca-vakif-infak-hizmet.jpg">
+<div class="absolute inset-0 border border-black/10 rounded-lg pointer-events-none"></div>
+<div class="absolute inset-y-0 left-0 w-2 bg-gradient-to-r from-white/20 to-transparent pointer-events-none"></div>
+</div>
+</div><div class="w-full flex flex-col items-center text-center md:w-2/3 md:items-start md:text-left">
+<div class="mb-2">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">የእስልምና ጥናት</span>
+</div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4 leading-tight">የሐዲስ መርሆዎች</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-6 flex items-center gap-2 justify-center md:justify-start">
+<span class="material-symbols-outlined text-[18px]">person</span>
+                    ሼክ አሕመድ አል-ፈቂህ
+                    <span class="text-surface-variant mx-2">|</span>
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                    2023
+                </p>
+<div class="prose max-w-reading-column-width text-on-surface mb-8 font-body-reading text-body-reading md:justify-start">
+<p class="">
+                        ይህ መጽሐፍ የሐዲስን መሠረታዊ መርሆዎች፣ ታሪካዊ አመጣጥ፣ እና የሐዲስ ሳይንስን በጥልቀት ያብራራል። ደራሲው የነቢዩ ሙሐመድን (ሰ.ዐ.ወ) አስተምህሮዎች እንዴት በትክክል መረዳት እና በዕለት ተዕለት ሕይወት ውስጥ ተግባራዊ ማድረግ እንደሚቻል ጠቃሚ ግንዛቤዎችን ይሰጣሉ።
+                    </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col sm:flex-row gap-4 mt-auto justify-center">
+<button class="bg-primary text-on-primary font-label-sm text-label-sm px-8 py-4 rounded-full flex items-center justify-center gap-2 interactive-element hover:bg-surface-tint active:scale-95 shadow-md">
+<span class="material-symbols-outlined fill" data-icon="menu_book" data-weight="fill">menu_book</span>
+                        አሁን አንብብ
+                    </button>
+
+</div>
+</div>
+<!-- Book Cover (Moved to second position) -->
+</section>
+<!-- Chapter List Section -->
+<section class="max-w-reading-column-width mx-auto">
+<div class="w-full flex flex-col items-center text-center">
+<h2 class="font-headline-md text-headline-md text-primary">ምዕራፎች</h2>
+<span class="font-label-sm text-label-sm text-on-surface-variant">12 ምዕራፎች • 6 ሰዓት ኦዲዮ</span>
+</div>
+<ul class="space-y-2">
+<!-- Chapter 1: Downloaded, Has Audio -->
+<li class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex items-center justify-between group interactive-element hover:shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container flex-shrink-0">
+<span class="font-label-sm text-label-sm">1</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-primary group-hover:text-secondary transition-colors">መግቢያ</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70 mt-1">45 ደቂቃ ንባብ</p>
+</div>
+</div>
+<div class="flex items-center gap-3"><button class="text-secondary p-2 rounded-full hover:bg-surface-container interactive-element" title="Listen to Audio"><span class="material-symbols-outlined">headphones</span></button><button class="bg-primary text-on-primary px-4 py-1 rounded-full font-label-sm text-label-sm interactive-element hover:opacity-80 active:scale-95 flex items-center gap-1">አንብብ <span class="material-symbols-outlined text-[16px]">check_circle</span></button></div>
+</li>
+<!-- Chapter 2: Not Downloaded, Has Audio -->
+<li class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex items-center justify-between group interactive-element hover:shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant flex-shrink-0">
+<span class="font-label-sm text-label-sm">2</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-primary group-hover:text-secondary transition-colors">የሐዲስ አይነቶች</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70 mt-1">32 ደቂቃ ንባብ</p>
+</div>
+</div>
+<div class="flex items-center gap-3"><button class="text-secondary p-2 rounded-full hover:bg-surface-container interactive-element" title="Listen to Audio"><span class="material-symbols-outlined">headphones</span></button><button class="border border-outline text-primary px-4 py-1 rounded-full font-label-sm text-label-sm interactive-element hover:bg-surface-container-low active:scale-95 flex items-center gap-1">አውርድ <span class="material-symbols-outlined text-[16px]">download</span></button></div>
+</li>
+<!-- Chapter 3: Not Downloaded, No Audio -->
+<li class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex items-center justify-between group interactive-element hover:shadow-sm"><div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant flex-shrink-0"><span class="font-label-sm text-label-sm">3</span></div><div><h3 class="font-label-sm text-label-sm text-primary group-hover:text-secondary transition-colors">የነቢዩ (ሰ.ዐ.ወ) ታሪክ</h3><p class="font-label-sm text-label-sm text-on-surface-variant opacity-70 mt-1">58 ደቂቃ ንባብ</p></div></div><div class="flex items-center gap-3"><button class="border border-outline text-primary px-4 py-1 rounded-full font-label-sm text-label-sm interactive-element hover:bg-surface-container-low active:scale-95 flex items-center gap-1">አውርድ <span class="material-symbols-outlined text-[16px]">download</span></button></div></li><li class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex items-center justify-between group interactive-element hover:shadow-sm"><div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant flex-shrink-0"><span class="font-label-sm text-label-sm">4</span></div><div><h3 class="font-label-sm text-label-sm text-primary group-hover:text-secondary transition-colors">የእስልምና መሰረቶች</h3><p class="font-label-sm text-label-sm text-on-surface-variant opacity-70 mt-1">42 ደቂቃ ንባብ</p></div></div><div class="flex items-center gap-3"><button class="border border-outline text-primary px-4 py-1 rounded-full font-label-sm text-label-sm interactive-element hover:bg-surface-container-low active:scale-95 flex items-center gap-1">አውርድ <span class="material-symbols-outlined text-[16px]">download</span></button></div></li><li class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 flex items-center justify-between group interactive-element hover:shadow-sm"><div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant flex-shrink-0"><span class="font-label-sm text-label-sm">5</span></div><div><h3 class="font-label-sm text-label-sm text-primary group-hover:text-secondary transition-colors">የዱዓና ዚክር አስፈላጊነት</h3><p class="font-label-sm text-label-sm text-on-surface-variant opacity-70 mt-1">25 ደቂቃ ንባብ</p></div></div><div class="flex items-center gap-3"><button class="border border-outline text-primary px-4 py-1 rounded-full font-label-sm text-label-sm interactive-element hover:bg-surface-container-low active:scale-95 flex items-center gap-1">አውርድ <span class="material-symbols-outlined text-[16px]">download</span></button></div></li></ul></section></main></body></html>

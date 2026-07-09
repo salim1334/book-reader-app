@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html class="light" lang="am"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ምዕራፍ 1: የብርሃን መንገዶች</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&amp;family=Noto+Serif+Ethiopic:wght@400;600;700&amp;family=Source+Sans+3:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-fixed": "#e4e2de",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-fixed": "#1b1c1a",
+                "on-tertiary-fixed-variant": "#474744",
+                "on-primary-fixed": "#002117",
+                "surface-container-highest": "#d9e3f6",
+                "primary": "#003527",
+                "on-surface-variant": "#404944",
+                "on-background": "#121c2a",
+                "surface-dim": "#d0dbed",
+                "tertiary-container": "#444442",
+                "on-secondary-fixed-variant": "#763300",
+                "outline-variant": "#bfc9c3",
+                "inverse-primary": "#95d3ba",
+                "error": "#ba1a1a",
+                "primary-fixed": "#b0f0d6",
+                "surface-container-low": "#eff4ff",
+                "tertiary-fixed-dim": "#c8c6c3",
+                "tertiary": "#2d2e2c",
+                "outline": "#707974",
+                "primary-fixed-dim": "#95d3ba",
+                "on-secondary-container": "#682c00",
+                "on-primary-fixed-variant": "#0b513d",
+                "inverse-on-surface": "#eaf1ff",
+                "surface-container": "#e6eeff",
+                "on-primary-container": "#80bea6",
+                "surface-tint": "#2b6954",
+                "secondary-fixed": "#ffdbca",
+                "on-secondary": "#ffffff",
+                "surface": "#f8f9ff",
+                "surface-bright": "#f8f9ff",
+                "secondary-fixed-dim": "#ffb68e",
+                "secondary-container": "#fd8a42",
+                "on-error": "#ffffff",
+                "primary-container": "#064e3b",
+                "error-container": "#ffdad6",
+                "on-error-container": "#93000a",
+                "background": "#f8f9ff",
+                "on-secondary-fixed": "#331200",
+                "on-tertiary-container": "#b2b1ae",
+                "secondary": "#9b4500",
+                "on-primary": "#ffffff",
+                "surface-container-high": "#dee9fc",
+                "inverse-surface": "#27313f",
+                "on-surface": "#121c2a",
+                "surface-variant": "#d9e3f6",
+                "on-tertiary": "#ffffff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "container-max": "1120px",
+                "unit": "8px",
+                "gutter": "24px",
+                "margin-mobile": "16px",
+                "margin-desktop": "64px"
+        },
+        "fontFamily": {
+                "display-lg-mobile": [
+                        "Noto Serif Ethiopic"
+                ],
+                "display-lg": [
+                        "Noto Serif Ethiopic"
+                ],
+                "body-reading": [
+                        "Noto Serif Ethiopic"
+                ],
+                "headline-md": [
+                        "Noto Serif Ethiopic"
+                ],
+                "label-sm": [
+                        "\"Source Sans 3\""
+                ],
+                "arabic-citation": [
+                        "Amiri"
+                ]
+        },
+        "fontSize": {
+                "display-lg-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "display-lg": [
+                        "48px",
+                        {
+                                "lineHeight": "60px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-reading": [
+                        "18px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "arabic-citation": [
+                        "22px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body {
+            /* Fallback for fonts if they don't load immediately */
+            font-family: 'Noto Serif Ethiopic', serif;
+        }
+        
+        /* Subtle text highlight for reading selection */
+        ::selection {
+            background-color: theme('colors.secondary-container');
+            color: theme('colors.on-secondary-container');
+        }
+
+        /* Minimal scrollbar for reading focus */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline');
+        }
+
+        /* Reading Progress Bar Animation */
+        #reading-progress {
+            transition: width 0.1s ease;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col antialiased selection:bg-secondary-container selection:text-on-secondary-container relative">
+<!-- TopAppBar (Transactional - Hidden global nav, showing reading context) -->
+<header class="bg-surface/90 dark:bg-surface-container-highest/90 backdrop-blur-md sticky top-0 z-50 shadow-[0_1px_0_rgba(0,0,0,0.05)] transition-transform duration-300 transform translate-y-0" id="top-bar">
+<!-- Reading Progress Indicator -->
+<div class="h-1 bg-surface-variant w-full absolute top-0 left-0">
+<div class="h-full bg-secondary w-[15%] rounded-r-full" id="reading-progress"></div>
+</div>
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 max-w-container-max mx-auto">
+<!-- Back Action -->
+<button aria-label="Go back" class="p-2 -ml-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<!-- Book Context -->
+<div class="flex flex-col items-center justify-center flex-1 mx-4 overflow-hidden">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider truncate w-full text-center">የእውቀት መዝገብ</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate w-full text-center">ምዕራፍ 1: የብርሃን መንገዶች</span>
+</div>
+<!-- Reading Settings & Bookmark -->
+<div class="flex items-center space-x-1 -mr-2 relative">
+<!-- Settings Toggle -->
+<button aria-controls="settings-menu" aria-expanded="false" aria-label="Reading settings" class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface" id="settings-toggle">
+<span class="material-symbols-outlined text-[24px]">format_size</span>
+</button>
+<!-- Bookmark Action -->
+<button aria-label="Add bookmark" class="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface group">
+<span class="material-symbols-outlined text-[24px] group-active:scale-90 transition-transform">bookmark_border</span>
+</button>
+<!-- Settings Overlay (Hidden by default) -->
+<div class="absolute top-full right-0 mt-2 w-64 bg-surface-container-lowest rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.08)] border border-outline-variant/30 p-4 hidden flex-col gap-4 opacity-0 transform scale-95 transition-all duration-200 origin-top-right z-50" id="settings-menu">
+<div class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Appearance</span>
+</div>
+<!-- Text Size Controls -->
+<div class="flex flex-col gap-2">
+<span class="font-label-sm text-label-sm text-on-surface">Text Size</span>
+<div class="flex items-center bg-surface-container rounded-full p-1">
+<button aria-label="Decrease text size" class="flex-1 py-1 px-2 rounded-full hover:bg-surface-container-high text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">text_decrease</span>
+</button>
+<span class="font-label-sm text-label-sm text-on-surface font-medium px-4">100%</span>
+<button aria-label="Increase text size" class="flex-1 py-1 px-2 rounded-full hover:bg-surface-container-high text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">text_increase</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Reading Area (Content Canvas) -->
+<main class="flex-1 flex justify-center py-12 md:py-20 px-margin-mobile md:px-margin-desktop mb-24 md:mb-32">
+<article class="w-full max-w-[680px] mx-auto">
+<!-- Chapter Header -->
+<header class="mb-12 text-center md:text-left">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-[0.1em] mb-4 block">ምዕራፍ አንድ</span>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-6 md:mb-8 font-bold leading-tight">የብርሃን መንገዶች</h1>
+<!-- Decorative separator -->
+<div class="w-16 h-[2px] bg-secondary/30 mx-auto md:mx-0 mb-8 rounded-full"></div>
+</header>
+<!-- Book Text Body -->
+<div class="font-body-reading text-body-reading text-on-surface space-y-6 md:space-y-8 prose prose-lg prose-p:leading-relaxed prose-headings:font-headline-md prose-headings:text-primary max-w-none">
+<p class="first-letter:font-headline-md first-letter:text-6xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-[-0.1em] first-letter:text-primary">
+                    እውቀት ብርሃን ነው። በመጀመሪያ ይህንን ለመረዳት ወደ ኋላ መመለስ ያስፈልገናል። የጥንት ሊቃውንት እንደሚያስተምሩት፣ እውነተኛ እውቀት ከልብ ይፈልቃል እንጂ በመጽሐፍት ብቻ አይገኝም። ይህ ምዕራፍ የሚያተኩረው የነፍስን ጥማት ስለሚያረካው መለኮታዊ ጥበብ ነው።
+                </p>
+<p>
+                    በተረጋጋ ልብ እና በተከፈተ አእምሮ ወደዚህ የእውቀት ውቅያኖስ መግባት አለብን። እያንዳንዱ ፊደል፣ እያንዳንዱ ቃል፣ የራሱ የሆነ ጥልቅ ትርጉም አለው። አባቶቻችን በጨለማ ውስጥ ብርሃንን እንዴት እንደፈለጉ ሁሉ፣ እኛም ዛሬ የራሳችንን መንገድ መፈለግ አለብን።
+                </p>
+<div class="bg-surface-container-low p-8 rounded-2xl border border-primary/10 my-10 relative">
+<div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-surface px-4 text-secondary">
+<span class="material-symbols-outlined text-[32px]">menu_book</span>
+</div>
+<blockquote class="text-right font-arabic-citation text-arabic-citation text-primary mb-6 leading-[2.5]" dir="rtl">
+                    قال رسول الله صلى الله عليه وسلم: "مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ"
+                </blockquote>
+<div class="w-24 h-[1px] bg-outline-variant mx-auto mb-6"></div>
+<p class="text-center font-body-reading text-on-surface-variant italic mb-0">
+                    የአላህ መልእክተኛ (ሰ.ዐ.ወ) እንዲህ ብለዋል፦ "እውቀትን ለመፈለግ መንገድን የጀመረ ሰው፣ አላህ ወደ ጀነት የሚያደርሰውን መንገድ ያቀልለታል።"
+                </p>
+</div>
+<p>
+                    ይህ ሐዲስ የእውቀትን ክቡርነት ያሳየናል። እውቀት መፈለግ ራሱ አምልኮ ነው፤ ወደ ፈጣሪ የምንቀርብበት መንገድ ነው። በዘመናችን ብዙ መረጃዎች ቢኖሩም፣ እውነተኛ እውቀት ግን ጥቂት ነው። የጥበብ መጀመሪያ ፈጣሪን መፍራት ነው እንደሚባለው፣ ንጹህ ልብ ሳይኖረን እውነተኛ እውቀትን ማግኘት አንችልም።
+                </p>
+<p>
+                    በዚህ መጽሐፍ ውስጥ፣ የጥንት ሊቃውንትን ጥበብ እና የዘመናችንን እውቀት ለማስተሳሰር እንሞክራለን። እያንዳንዱ ገጽ አዲስ መንገድ ይከፍትልናል፤ እያንዳንዱ ምዕራፍ አዲስ ብርሃን ይፈነጥቅልናል።
+                </p>
+</div>
+<!-- Chapter End Marker -->
+<div class="mt-16 flex justify-center items-center gap-4 text-outline-variant">
+<span class="w-2 h-2 rounded-full bg-current"></span>
+<span class="w-2 h-2 rounded-full bg-current"></span>
+<span class="w-2 h-2 rounded-full bg-current"></span>
+</div>
+</article>
+</main>
+<!-- Integrated Audio Player (Contextual Bottom Bar for Reading) -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-surface/95 dark:bg-surface-container-highest/95 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-8px_32px_rgba(0,0,0,0.05)] transition-transform duration-300 transform translate-y-0" id="audio-bar">
+<!-- Progress Track -->
+<div class="h-[2px] w-full bg-surface-variant relative cursor-pointer group">
+<div class="absolute h-full bg-secondary w-[15%] group-hover:bg-secondary-container transition-colors"></div>
+<!-- Playhead scrubber (visible on hover/active) -->
+<div class="absolute h-3 w-3 bg-secondary rounded-full -top-[5px] left-[15%] transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"></div>
+</div>
+<div class="max-w-container-max mx-auto px-4 py-3 pb-safe md:py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+<!-- Audio Info -->
+<div class="flex items-center gap-3 w-full sm:w-1/3">
+<div class="w-10 h-10 rounded bg-surface-variant flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+<!-- Subtle placeholder for audiobook cover, maintaining minimalist style -->
+<div class="bg-cover bg-center w-full h-full opacity-80" data-alt="A minimalist, monochromatic abstract book cover design. The artwork features subtle geometric shapes overlapping in shades of cream, off-white, and deep charcoal. The lighting is soft and diffuse, creating a serene, scholarly mood suitable for a premium literature app in light mode." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAMtcC1PYyJpKyhAT-SvYGghKi51tjgM8xILlXJzEoP7GitB2jlxB4Beu0Zj8CxX2l1ACazTywrzDNzzZc1bB3mJN-PDNH0YI0KvBtB6LiJh__4b99Pe0F8SSODqNEEkQ9yB0pRZHn3kSvoVdr45XHXLfjYPJQAyVNCqTQx9YecybkhJ7uTwkPzuo1LYA9QyWaI2Ga2-C_oVZewpWLOgnGWG_L64Mr0sq8lOKpXJ6fu3rOKgLnEHRlqiJ0HJ8-wvdly3eaDeOxloQ')"></div>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">ምዕራፍ 1: የብርሃን መንገዶች</span>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">4:12 / 28:45</span>
+</div>
+</div>
+</div>
+<!-- Main Controls -->
+<div class="flex items-center justify-center gap-4 sm:gap-6 w-full sm:w-1/3">
+<button aria-label="Rewind 15 seconds" class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[24px]">replay_10</span>
+</button>
+<button aria-label="Play" class="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-all active:scale-95 shadow-md">
+<span class="material-symbols-outlined text-[28px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button aria-label="Forward 30 seconds" class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[24px]">forward_30</span>
+</button>
+</div>
+<!-- Secondary Controls (Speed, Options) -->
+<div class="flex items-center justify-end gap-3 w-full sm:w-1/3 text-on-surface-variant">
+<button aria-label="Playback speed" class="font-label-sm text-label-sm font-semibold hover:text-on-surface transition-colors px-2 py-1 rounded hover:bg-surface-container-high">
+                    1.0x
+                </button>
+<button aria-label="Audio settings" class="p-2 rounded-full hover:bg-surface-container-high hover:text-on-surface transition-colors hidden sm:block">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Script for interactive elements (Settings toggle & Scroll hide) -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const settingsToggle = document.getElementById('settings-toggle');
+            const settingsMenu = document.getElementById('settings-menu');
+            
+            // Toggle settings menu
+            settingsToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isExpanded = settingsToggle.getAttribute('aria-expanded') === 'true';
+                
+                if (isExpanded) {
+                    closeSettings();
+                } else {
+                    openSettings();
+                }
+            });
+
+            // Close settings on outside click
+            document.addEventListener('click', (e) => {
+                if (!settingsMenu.contains(e.target) && !settingsToggle.contains(e.target)) {
+                    closeSettings();
+                }
+            });
+
+            function openSettings() {
+                settingsMenu.classList.remove('hidden');
+                // Small delay to allow display block to apply before animating opacity
+                setTimeout(() => {
+                    settingsMenu.classList.remove('opacity-0', 'scale-95');
+                    settingsMenu.classList.add('opacity-100', 'scale-100');
+                    settingsToggle.setAttribute('aria-expanded', 'true');
+                }, 10);
+            }
+
+            function closeSettings() {
+                settingsMenu.classList.remove('opacity-100', 'scale-100');
+                settingsMenu.classList.add('opacity-0', 'scale-95');
+                settingsToggle.setAttribute('aria-expanded', 'false');
+                setTimeout(() => {
+                    settingsMenu.classList.add('hidden');
+                }, 200); // match transition duration
+            }
+
+            // Scroll behavior for Top and Bottom bars
+            let lastScrollY = window.scrollY;
+            const topBar = document.getElementById('top-bar');
+            const audioBar = document.getElementById('audio-bar');
+            const scrollThreshold = 50;
+
+            window.addEventListener('scroll', () => {
+                const currentScrollY = window.scrollY;
+                
+                // Update reading progress mock
+                const scrollPercent = (currentScrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+                document.getElementById('reading-progress').style.width = `${Math.min(100, Math.max(15, scrollPercent))}%`;
+
+                // Hide bars on scroll down, show on scroll up (Minimalist reading focus)
+                if (currentScrollY > lastScrollY && currentScrollY > scrollThreshold) {
+                    // Scrolling down - hide
+                    topBar.style.transform = 'translateY(-100%)';
+                    audioBar.style.transform = 'translateY(100%)';
+                } else {
+                    // Scrolling up - show
+                    topBar.style.transform = 'translateY(0)';
+                    audioBar.style.transform = 'translateY(0)';
+                }
+                
+                lastScrollY = currentScrollY;
+            }, { passive: true });
+        });
+    </script>
+</body></html>

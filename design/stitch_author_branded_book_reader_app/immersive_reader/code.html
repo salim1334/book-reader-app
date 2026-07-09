@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="light" lang="am"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>The Library - Image Reader</title>
+<!-- Google Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400&amp;family=Noto+Serif+Ethiopic:wght@400;600;700&amp;family=Source+Sans+3:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-fixed": "#e4e2de",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-fixed": "#1b1c1a",
+                "on-tertiary-fixed-variant": "#474744",
+                "on-primary-fixed": "#002117",
+                "surface-container-highest": "#d9e3f6",
+                "primary": "#003527",
+                "on-surface-variant": "#404944",
+                "on-background": "#121c2a",
+                "surface-dim": "#d0dbed",
+                "tertiary-container": "#444442",
+                "on-secondary-fixed-variant": "#763300",
+                "outline-variant": "#bfc9c3",
+                "inverse-primary": "#95d3ba",
+                "error": "#ba1a1a",
+                "primary-fixed": "#b0f0d6",
+                "surface-container-low": "#eff4ff",
+                "tertiary-fixed-dim": "#c8c6c3",
+                "tertiary": "#2d2e2c",
+                "outline": "#707974",
+                "primary-fixed-dim": "#95d3ba",
+                "on-secondary-container": "#682c00",
+                "on-primary-fixed-variant": "#0b513d",
+                "inverse-on-surface": "#eaf1ff",
+                "surface-container": "#e6eeff",
+                "on-primary-container": "#80bea6",
+                "surface-tint": "#2b6954",
+                "secondary-fixed": "#ffdbca",
+                "on-secondary": "#ffffff",
+                "surface": "#f8f9ff",
+                "surface-bright": "#f8f9ff",
+                "secondary-fixed-dim": "#ffb68e",
+                "secondary-container": "#fd8a42",
+                "on-error": "#ffffff",
+                "primary-container": "#064e3b",
+                "error-container": "#ffdad6",
+                "on-error-container": "#93000a",
+                "background": "#f8f9ff",
+                "on-secondary-fixed": "#331200",
+                "on-tertiary-container": "#b2b1ae",
+                "secondary": "#9b4500",
+                "on-primary": "#ffffff",
+                "surface-container-high": "#dee9fc",
+                "inverse-surface": "#27313f",
+                "on-surface": "#121c2a",
+                "surface-variant": "#d9e3f6",
+                "on-tertiary": "#ffffff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+        },
+        "spacing": {
+                "container-max": "1120px",
+                "unit": "8px",
+                "gutter": "24px",
+                "margin-mobile": "16px",
+                "margin-desktop": "64px"
+        },
+        "fontFamily": {
+                "display-lg-mobile": [
+                        "Noto Serif Ethiopic"
+                ],
+                "display-lg": [
+                        "Noto Serif Ethiopic"
+                ],
+                "body-reading": [
+                        "Noto Serif Ethiopic"
+                ],
+                "headline-md": [
+                        "Noto Serif Ethiopic"
+                ],
+                "label-sm": [
+                        "\"Source Sans 3\""
+                ],
+                "arabic-citation": [
+                        "Amiri"
+                ]
+        },
+        "fontSize": {
+                "display-lg-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "display-lg": [
+                        "48px",
+                        {
+                                "lineHeight": "60px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-reading": [
+                        "18px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "arabic-citation": [
+                        "22px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        /* Base styles & utilities */
+        body {
+            background-color: theme('colors.primary'); /* Dark green background for immersive image reading */
+            color: theme('colors.surface-container-lowest');
+            overflow: hidden; /* Prevent native scroll, handle via JS/Touch */
+            touch-action: pan-y pinch-zoom;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Overlay transition classes */
+        .overlay-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+        }
+        .overlay-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        
+        .top-overlay-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px);
+        }
+
+        .transition-overlay {
+            transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+        }
+
+        /* Image pan container */
+        .pan-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pan-image {
+            width: 100vw;
+            height: 100vh;
+            aspect-ratio: 9 / 16;
+            object-fit: cover;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* Reading Progress Bar (Top) */
+        .reading-progress-track {
+            height: 2px;
+            background: rgba(255,255,255,0.2);
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+        .reading-progress-fill {
+            height: 100%;
+            background: theme('colors.secondary-container');
+            width: 45%; /* Example progress */
+            transition: width 0.3s ease;
+        }
+
+        /* Audio Player Scrubber */
+        .scrubber-track {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
+        }
+        .scrubber-fill {
+            height: 100%;
+            background: theme('colors.secondary-container');
+            width: 30%;
+            border-radius: 2px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .scrubber-thumb {
+            width: 12px;
+            height: 12px;
+            background: theme('colors.surface-container-lowest');
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 30%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="antialiased bg-primary">
+<!-- Reading Progress Bar -->
+<div class="reading-progress-track">
+<div class="reading-progress-fill"></div>
+</div>
+<!-- Main Image Canvas -->
+<main class="pan-container relative z-0" id="readingCanvas" style="display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; height: 100vh; width: 100vw;">
+<img alt="High-resolution scan of an old book page with elegant serif typography." class="pan-image w-full h-full" draggable="false" id="mainGraphic" src="https://lh3.googleusercontent.com/aida/AP1WRLu_MCGEORDvRGt-NZ-AStQ9Rw34VQdWZVyWpxWPF_ZKbkrDCRASKKZMKjiWQvQL3qLEbiScXGnZUQWc9EpVXgoArfN_KE2y7BvhBNkKDdmQaWSCaNhARrZerta2t_mCvaebD_Hl4grQ4NBNAG62mK6UG73m8LB8pzSIxYhYBwWVfVfgtxvAG-qSQHGFgWE-amMxTTr8MXnsvmSJ1bo1F98a-JMzROfs1pUNU1rocRsK81dizRRG6fXe7Q" style="object-fit: contain; background-color: #003527;"/>
+</main>
+<!-- Top Overlay: Header/Title -->
+<header class="fixed top-0 left-0 w-full z-50 pt-pt-safe transition-overlay overlay-visible bg-gradient-to-b from-primary/90 to-transparent pb-8 bg-primary/60" id="topOverlay">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16">
+<!-- Back/Close Button -->
+<button class="text-surface-container-lowest hover:opacity-80 transition-opacity p-2 -ml-2 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary-container">
+<span class="material-symbols-outlined" style="font-size: 28px;">arrow_back</span>
+</button>
+<!-- Chapter Title -->
+<div class="text-center flex-1 px-4">
+<h1 class="font-headline-md text-headline-md text-surface-container-lowest tracking-tight truncate drop-shadow-md" dir="ltr">
+                    ምዕራፍ 4: የታላቁ ዛፍ ምሳሌ
+                </h1>
+<p class="font-label-sm text-label-sm text-surface-container-lowest/70 uppercase tracking-widest mt-1">ገጽ 12</p>
+</div>
+<!-- More Options -->
+<button class="text-surface-container-lowest hover:opacity-80 transition-opacity p-2 -mr-2 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary-container">
+<span class="material-symbols-outlined" style="font-size: 28px;">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Bottom Overlay: Audio Player & Page Info -->
+<footer class="fixed bottom-0 left-0 w-full z-50 bg-primary border-t border-surface-container-lowest/10 px-margin-mobile md:px-margin-desktop pt-4 pb-pb-safe bg-primary/90" id="bottomOverlay">
+<div class="max-w-3xl mx-auto mb-6">
+<!-- Audio Player Glass Panel -->
+<div class="flex flex-col gap-3">
+<!-- Audio Info & Controls -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-tertiary-container" data-weight="fill">volume_up</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-surface-container-lowest" dir="ltr">የተርጓሚው አስተያየት</p>
+<p class="font-label-sm text-[12px] text-surface-container-lowest/60">A. S. Penman</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-surface-container-lowest hover:text-secondary-container transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 24px;">replay_10</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center hover:scale-105 transition-transform shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary-container focus:ring-offset-2 focus:ring-offset-primary">
+<span class="material-symbols-outlined" data-weight="fill" style="font-size: 32px;">play_arrow</span>
+</button>
+<button class="text-surface-container-lowest hover:text-secondary-container transition-colors p-1">
+<span class="material-symbols-outlined" style="font-size: 24px;">forward_10</span>
+</button>
+</div>
+</div>
+<!-- Scrubber -->
+<div class="flex items-center gap-3 w-full">
+<span class="font-label-sm text-label-sm text-surface-container-lowest/60 tabular-nums">1:24</span>
+<div class="flex-1 scrubber-track">
+<div class="scrubber-fill"></div>
+<div class="scrubber-thumb"></div>
+</div>
+<span class="font-label-sm text-label-sm text-surface-container-lowest/60 tabular-nums">-4:06</span>
+</div>
+</div>
+<!-- Page Indicator -->
+<div class="flex justify-between items-center mt-4 mb-2">
+<button class="text-surface-container-lowest/60 hover:text-surface-container-lowest transition-colors flex items-center gap-1 group">
+<span class="material-symbols-outlined transition-transform group-hover:-translate-x-1" style="font-size: 20px;">chevron_left</span>
+<span class="font-label-sm text-label-sm hidden md:inline">ቀዳሚ</span>
+</button>
+<div class="font-headline-md text-headline-md text-surface-container-lowest opacity-80" style="font-variant-numeric: tabular-nums;">
+                    45 <span class="text-surface-container-lowest/40 text-lg">/ 312</span>
+</div>
+<button class="text-surface-container-lowest/60 hover:text-surface-container-lowest transition-colors flex items-center gap-1 group">
+<span class="font-label-sm text-label-sm hidden md:inline">ቀጣይ</span>
+<span class="material-symbols-outlined transition-transform group-hover:translate-x-1" style="font-size: 20px;">chevron_right</span>
+</button>
+</div>
+</div>
+</footer>
+<!-- Interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('readingCanvas');
+            const topOverlay = document.getElementById('topOverlay');
+            const bottomOverlay = document.getElementById('bottomOverlay');
+            
+            let overlaysVisible = true;
+            let touchStartY = 0;
+            let touchEndY = 0;
+
+            // Toggle Overlays on tap
+            canvas.addEventListener('click', (e) => {
+                // Prevent toggle if clicking on UI elements
+                if(e.target.closest('header') || e.target.closest('footer')) return;
+
+                overlaysVisible = !overlaysVisible;
+                if (overlaysVisible) {
+                    topOverlay.classList.remove('top-overlay-hidden');
+                    bottomOverlay.classList.remove('overlay-hidden');
+                } else {
+                    topOverlay.classList.add('top-overlay-hidden');
+                    bottomOverlay.classList.add('overlay-hidden');
+                }
+            });
+
+            // Basic swipe detection for page turn simulation (visual feedback only)
+            canvas.addEventListener('touchstart', e => {
+                touchStartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+
+            canvas.addEventListener('touchend', e => {
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            }, {passive: true});
+
+            function handleSwipe() {
+                // Ignore small vertical swipes
+                if (Math.abs(touchEndY - touchStartY) < 50) return;
+                
+                // Hide overlays on vertical swipe to focus on content
+                if (overlaysVisible) {
+                    overlaysVisible = false;
+                    topOverlay.classList.add('top-overlay-hidden');
+                    bottomOverlay.classList.add('overlay-hidden');
+                }
+            }
+        });
+    </script>
+</body></html>
