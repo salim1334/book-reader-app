@@ -25,6 +25,16 @@ class BookDao {
     await _db.delete(DbTables.localBooks);
   }
 
+  Future<void> deleteBook(String bookId) async {
+    // Foreign keys are enabled, so deleting the book cascades to chapters,
+    // bookmarks, reading progress, downloaded assets, and queue entries.
+    await _db.delete(
+      DbTables.localBooks,
+      where: 'id = ?',
+      whereArgs: [bookId],
+    );
+  }
+
   Future<void> insertBooksAndChapters({
     required LocalBook book,
     required List<LocalChapter> chapters,
@@ -45,12 +55,130 @@ class BookDao {
     await batch.commit(noResult: true);
   }
 
+  Future<void> insertChapter(LocalChapter chapter) async {
+    await _db.insert(
+      DbTables.localChapters,
+      chapter.toDb(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateBookCover(String bookId, String coverUrl) async {
+    await _db.update(
+      DbTables.localBooks,
+      {'cover_url': coverUrl},
+      where: 'id = ?',
+      whereArgs: [bookId],
+    );
+  }
+
+  Future<void> insertBook(LocalBook book) async {
+    await _db.insert(
+      DbTables.localBooks,
+      book.toDb(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateBookMetadata(LocalBook book) async {
+    await _db.update(
+      DbTables.localBooks,
+      {
+        'title': book.title,
+        'description': book.description,
+        'cover_url': book.coverUrl,
+        'book_type': book.type.dbValue,
+        'version': book.version,
+      },
+      where: 'id = ?',
+      whereArgs: [book.id],
+    );
+  }
+
+  Future<void> updateBookInfo(LocalBook book) async {
+    await _db.update(
+      DbTables.localBooks,
+      {
+        'title': book.title,
+        'description': book.description,
+        'cover_url': book.coverUrl,
+        'book_type': book.type.dbValue,
+      },
+      where: 'id = ?',
+      whereArgs: [book.id],
+    );
+  }
+
+  Future<void> updateBookVersion(String bookId, int version) async {
+    await _db.update(
+      DbTables.localBooks,
+      {'version': version},
+      where: 'id = ?',
+      whereArgs: [bookId],
+    );
+  }
+
+  Future<void> updateChapterMetadata(LocalChapter chapter) async {
+    await _db.update(
+      DbTables.localChapters,
+      {
+        'title': chapter.title,
+        'description': chapter.description,
+        'sort_order': chapter.sortOrder,
+        'version': chapter.version,
+      },
+      where: 'id = ?',
+      whereArgs: [chapter.id],
+    );
+  }
+
+  Future<void> updateChapterInfo(LocalChapter chapter) async {
+    await _db.update(
+      DbTables.localChapters,
+      {
+        'title': chapter.title,
+        'description': chapter.description,
+        'sort_order': chapter.sortOrder,
+      },
+      where: 'id = ?',
+      whereArgs: [chapter.id],
+    );
+  }
+
+  Future<void> updateChapterContent(
+    String chapterId, {
+    String? contentText,
+    String? contentSegmentsJson,
+    bool? isDownloaded,
+  }) async {
+    final values = <String, Object?>{
+      'content_text': contentText,
+      'content_segments_json': contentSegmentsJson,
+      if (isDownloaded != null) 'is_downloaded': isDownloaded ? 1 : 0,
+    }..removeWhere((_, v) => v == null);
+    await _db.update(
+      DbTables.localChapters,
+      values,
+      where: 'id = ?',
+      whereArgs: [chapterId],
+    );
+  }
+
+  Future<void> markChapterDownloaded(String chapterId, bool downloaded) async {
+    await _db.update(
+      DbTables.localChapters,
+      {'is_downloaded': downloaded ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [chapterId],
+    );
+  }
+
   Future<List<LocalBook>> getBooks() async {
     final rows = await _db.query(DbTables.localBooks, orderBy: 'id ASC');
     return rows.map((e) => LocalBook.fromDb(e)).toList();
   }
 
-  Future<LocalBook?> getBook(int id) async {
+  Future<LocalBook?> getBook(String id) async {
     final rows = await _db.query(
       DbTables.localBooks,
       where: 'id = ?',
@@ -61,7 +189,7 @@ class BookDao {
     return LocalBook.fromDb(rows.first);
   }
 
-  Future<List<LocalChapter>> getChapters(int bookId) async {
+  Future<List<LocalChapter>> getChapters(String bookId) async {
     final rows = await _db.query(
       DbTables.localChapters,
       where: 'book_id = ?',
@@ -71,7 +199,7 @@ class BookDao {
     return rows.map((e) => LocalChapter.fromDb(e)).toList();
   }
 
-  Future<LocalChapter?> getChapter(int id) async {
+  Future<LocalChapter?> getChapter(String id) async {
     final rows = await _db.query(
       DbTables.localChapters,
       where: 'id = ?',
@@ -83,8 +211,8 @@ class BookDao {
   }
 
   Future<void> saveReadingProgress({
-    required int bookId,
-    required int chapterId,
+    required String bookId,
+    required String chapterId,
     required int lastPositionMs,
     required int lastPageIndex,
   }) async {
@@ -120,8 +248,8 @@ class BookDao {
   }
 
   Future<bool> isBookmarked({
-    required int bookId,
-    required int chapterId,
+    required String bookId,
+    required String chapterId,
   }) async {
     final rows = await _db.query(
       DbTables.bookmarks,
@@ -133,8 +261,8 @@ class BookDao {
   }
 
   Future<void> toggleBookmark({
-    required int bookId,
-    required int chapterId,
+    required String bookId,
+    required String chapterId,
   }) async {
     final exists = await isBookmarked(bookId: bookId, chapterId: chapterId);
     if (exists) {
@@ -164,5 +292,133 @@ class BookDao {
       'SELECT COUNT(*) as c FROM ${DbTables.localChapters}',
     );
     return r.first['c'] as int;
+  }
+
+  Future<void> insertDownloadedAsset({
+    required String chapterId,
+    required String assetType,
+    required String filePath,
+    int? sortOrder,
+  }) async {
+    await _db.insert(
+      DbTables.downloadedAssets,
+      {
+        'chapter_id': chapterId,
+        'asset_type': assetType,
+        'sort_order': sortOrder,
+        'file_path': filePath,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, Object?>>> getDownloadedAssets(
+    String chapterId, {
+    String? assetType,
+  }) async {
+    String? where;
+    List<Object?>? whereArgs;
+    if (assetType != null) {
+      where = 'chapter_id = ? AND asset_type = ?';
+      whereArgs = [chapterId, assetType];
+    } else {
+      where = 'chapter_id = ?';
+      whereArgs = [chapterId];
+    }
+    return _db.query(
+      DbTables.downloadedAssets,
+      where: where,
+      whereArgs: whereArgs,
+      orderBy: 'sort_order ASC, id ASC',
+    );
+  }
+
+  Future<void> deleteDownloadedAssets(
+    String chapterId, {
+    String? assetType,
+  }) async {
+    String? where;
+    List<Object?>? whereArgs;
+    if (assetType != null) {
+      where = 'chapter_id = ? AND asset_type = ?';
+      whereArgs = [chapterId, assetType];
+    } else {
+      where = 'chapter_id = ?';
+      whereArgs = [chapterId];
+    }
+    await _db.delete(
+      DbTables.downloadedAssets,
+      where: where,
+      whereArgs: whereArgs,
+    );
+  }
+
+  Future<void> insertQueueItem({
+    required String chapterId,
+    required String bookId,
+    required String status,
+    double progress = 0.0,
+    int retryCount = 0,
+  }) async {
+    await _db.insert(
+      DbTables.downloadQueue,
+      {
+        'chapter_id': chapterId,
+        'book_id': bookId,
+        'status': status,
+        'progress': progress,
+        'retry_count': retryCount,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateQueueStatus({
+    required String chapterId,
+    required String status,
+    double? progress,
+    int? retryCount,
+  }) async {
+    final values = <String, Object?>{
+      'status': status,
+      'progress': progress,
+      'retry_count': retryCount,
+    }..removeWhere((_, v) => v == null);
+    await _db.update(
+      DbTables.downloadQueue,
+      values,
+      where: 'chapter_id = ?',
+      whereArgs: [chapterId],
+    );
+  }
+
+  Future<void> incrementRetryCount(String chapterId) async {
+    await _db.rawUpdate(
+      'UPDATE ${DbTables.downloadQueue} SET retry_count = retry_count + 1 WHERE chapter_id = ?',
+      [chapterId],
+    );
+  }
+
+  Future<List<Map<String, Object?>>> getQueue({String? status}) async {
+    String? where;
+    List<Object?>? whereArgs;
+    if (status != null) {
+      where = 'status = ?';
+      whereArgs = [status];
+    }
+    return _db.query(
+      DbTables.downloadQueue,
+      where: where,
+      whereArgs: whereArgs,
+      orderBy: 'chapter_id ASC',
+    );
+  }
+
+  Future<void> deleteQueueItem(String chapterId) async {
+    await _db.delete(
+      DbTables.downloadQueue,
+      where: 'chapter_id = ?',
+      whereArgs: [chapterId],
+    );
   }
 }

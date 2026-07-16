@@ -1,12 +1,464 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
-class ChapterReaderScreen extends StatelessWidget {
-  const ChapterReaderScreen({super.key});
+import 'package:audioplayers/audioplayers.dart';
+import 'package:book_store/data/local/models/book_local_models.dart';
+import 'package:book_store/data/repositories/book_repository.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+class ChapterReaderScreen extends StatefulWidget {
+  final LocalBook book;
+  final LocalChapter chapter;
+  final int initialPageIndex;
+  final int initialPositionMs;
+
+  const ChapterReaderScreen({
+    super.key,
+    required this.book,
+    required this.chapter,
+    this.initialPageIndex = 0,
+    this.initialPositionMs = 0,
+  });
+
+  @override
+  State<ChapterReaderScreen> createState() => _ChapterReaderScreenState();
+}
+
+class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
+  final BookRepository _repository = Get.find<BookRepository>();
+  late int _lastPageIndex;
+  late int _lastPositionMs;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastPageIndex = widget.initialPageIndex;
+    _lastPositionMs = widget.initialPositionMs;
+    _saveProgress(pageIndex: _lastPageIndex, positionMs: _lastPositionMs);
+  }
+
+  Future<void> _saveProgress({
+    int pageIndex = 0,
+    int positionMs = 0,
+  }) async {
+    try {
+      await _repository.saveProgress(
+        bookId: widget.book.id,
+        chapterId: widget.chapter.id,
+        lastPositionMs: positionMs,
+        lastPageIndex: pageIndex,
+      );
+    } catch (e) {
+      debugPrint('Failed to save progress: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _saveProgress(pageIndex: _lastPageIndex, positionMs: _lastPositionMs);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const Center(child: Text('Chapter Reader Screen - UI scaffold')),
+      appBar: AppBar(title: Text(widget.chapter.title)),
+      body: widget.book.type == LocalBookType.text
+          ? _TextReader(
+              chapter: widget.chapter,
+              chapterId: widget.chapter.id,
+              initialPositionMs: widget.initialPositionMs,
+              onPositionChanged: (ms) => _lastPositionMs = ms,
+            )
+          : _ImageReader(
+              chapterId: widget.chapter.id,
+              initialPageIndex: widget.initialPageIndex,
+              onPageChanged: (index) {
+                _lastPageIndex = index;
+                _saveProgress(pageIndex: index);
+              },
+            ),
+    );
+  }
+}
+
+class _TextReader extends StatefulWidget {
+  final LocalChapter chapter;
+  final String chapterId;
+  final int initialPositionMs;
+  final void Function(int positionMs) onPositionChanged;
+
+  const _TextReader({
+    required this.chapter,
+    required this.chapterId,
+    this.initialPositionMs = 0,
+    required this.onPositionChanged,
+  });
+
+  @override
+  State<_TextReader> createState() => _TextReaderState();
+}
+
+class _TextReaderState extends State<_TextReader> {
+  final BookRepository _repository = Get.find<BookRepository>();
+  late Future<List<String>> _audioFuture;
+  late int _positionMs;
+  late List<GlobalKey> _segmentKeys;
+  int _currentSegmentIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _positionMs = widget.initialPositionMs;
+    _audioFuture = _loadAudio();
+    final segments = widget.chapter.contentSegments;
+    _segmentKeys = List.generate(segments?.length ?? 0, (_) => GlobalKey());
+    _updateCurrentSegment(scheduleScroll: true, shouldSetState: false);
+  }
+
+  Future<List<String>> _loadAudio() async {
+    final rows = await _repository.getChapterAssets(
+      widget.chapterId,
+      assetType: 'AUDIO',
+    );
+    return rows.map((r) => r['file_path'] as String).toList();
+  }
+
+  void _onPositionChanged(int ms) {
+    widget.onPositionChanged(ms);
+    _positionMs = ms;
+    _updateCurrentSegment();
+  }
+
+  void _updateCurrentSegment({
+    bool scheduleScroll = false,
+    bool shouldSetState = true,
+  }) {
+    final segments = widget.chapter.contentSegments;
+    if (segments == null || segments.isEmpty) return;
+
+    final seconds = _positionMs / 1000.0;
+    var index = -1;
+    for (var i = 0; i < segments.length; i++) {
+      final s = segments[i];
+      if (s.startSeconds != null &&
+          s.endSeconds != null &&
+          seconds >= s.startSeconds! &&
+          seconds <= s.endSeconds!) {
+        index = i;
+        break;
+      }
+    }
+
+    if (index != _currentSegmentIndex) {
+      _currentSegmentIndex = index;
+      if (shouldSetState && mounted) {
+        setState(() {});
+      }
+      if (index != -1 && scheduleScroll) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _scrollToSegment(index),
+        );
+      }
+    }
+  }
+
+  void _scrollToSegment(int index) {
+    final ctx = _segmentKeys[index].currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      alignment: 0.5,
+      duration: const Duration(milliseconds: 300),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<String>>(
+      future: _audioFuture,
+      builder: (context, snapshot) {
+        final audioPaths = snapshot.data ?? [];
+        final hasAudio = audioPaths.isNotEmpty;
+        final hasKaraoke = widget.chapter.contentSegments?.isNotEmpty == true && hasAudio;
+
+        final textContent = hasKaraoke
+            ? _buildKaraoke(context)
+            : Text(
+                widget.chapter.contentText ?? 'No content available.',
+                style: Theme.of(context).textTheme.bodyLarge,
+              );
+
+        return Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: textContent,
+              ),
+            ),
+            if (hasAudio)
+              _AudioPlayerBar(
+                key: ValueKey('audio_${widget.chapterId}'),
+                audioPath: audioPaths.first,
+                initialPositionMs: widget.initialPositionMs,
+                onPositionChanged: _onPositionChanged,
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildKaraoke(BuildContext context) {
+    final theme = Theme.of(context);
+    final segments = widget.chapter.contentSegments!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: segments.asMap().entries.map((entry) {
+        final index = entry.key;
+        final segment = entry.value;
+        final isCurrent = index == _currentSegmentIndex;
+        return Container(
+          key: _segmentKeys[index],
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            segment.content,
+            style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                  color: isCurrent
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _AudioPlayerBar extends StatefulWidget {
+  final String audioPath;
+  final int initialPositionMs;
+  final void Function(int positionMs) onPositionChanged;
+
+  const _AudioPlayerBar({
+    super.key,
+    required this.audioPath,
+    this.initialPositionMs = 0,
+    required this.onPositionChanged,
+  });
+
+  @override
+  State<_AudioPlayerBar> createState() => _AudioPlayerBarState();
+}
+
+class _AudioPlayerBarState extends State<_AudioPlayerBar> {
+  final AudioPlayer _player = AudioPlayer();
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+  bool _isPlaying = false;
+  bool _isReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPlayer();
+  }
+
+  Future<void> _initPlayer() async {
+    _player.onDurationChanged.listen((d) {
+      if (mounted) setState(() => _duration = d);
+    });
+    _player.onPositionChanged.listen((p) {
+      if (mounted) setState(() => _position = p);
+      widget.onPositionChanged(p.inMilliseconds);
+    });
+    _player.onPlayerStateChanged.listen((state) {
+      if (mounted) setState(() => _isPlaying = state == PlayerState.playing);
+    });
+
+    await _player.setSource(DeviceFileSource(widget.audioPath));
+    if (widget.initialPositionMs > 0) {
+      await _player.seek(Duration(milliseconds: widget.initialPositionMs));
+    }
+    if (mounted) setState(() => _isReady = true);
+  }
+
+  Future<void> _toggle() async {
+    if (_isPlaying) {
+      await _player.pause();
+    } else {
+      await _player.resume();
+    }
+  }
+
+  Future<void> _seek(double value) async {
+    final position = Duration(milliseconds: value.toInt());
+    await _player.seek(position);
+  }
+
+  String _format(Duration d) {
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Material(
+        elevation: 8,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Slider(
+                min: 0,
+                max: _duration.inMilliseconds.toDouble().clamp(1, double.infinity),
+                value: _position.inMilliseconds.toDouble().clamp(0, _duration.inMilliseconds.toDouble()),
+                onChanged: _isReady ? _seek : null,
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                    onPressed: _isReady ? _toggle : null,
+                  ),
+                  Text('${_format(_position)} / ${_format(_duration)}'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImageMedia {
+  final List<String> images;
+  final List<String> audio;
+
+  _ImageMedia(this.images, this.audio);
+}
+
+class _ImageReader extends StatefulWidget {
+  final String chapterId;
+  final int initialPageIndex;
+  final void Function(int page) onPageChanged;
+
+  const _ImageReader({
+    required this.chapterId,
+    this.initialPageIndex = 0,
+    required this.onPageChanged,
+  });
+
+  @override
+  State<_ImageReader> createState() => _ImageReaderState();
+}
+
+class _ImageReaderState extends State<_ImageReader> {
+  final BookRepository _repository = Get.find<BookRepository>();
+  late final PageController _pageController;
+  late Future<_ImageMedia> _mediaFuture;
+  int _lastReportedPage = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: widget.initialPageIndex);
+    _mediaFuture = _loadMedia();
+    _pageController.addListener(_onPageChanged);
+  }
+
+  @override
+  void dispose() {
+    _pageController.removeListener(_onPageChanged);
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged() {
+    if (_pageController.page == null) return;
+    final index = _pageController.page!.round();
+    if (index == _lastReportedPage) return;
+    _lastReportedPage = index;
+    widget.onPageChanged(index);
+  }
+
+  Future<_ImageMedia> _loadMedia() async {
+    final imageRows = await _repository.getChapterAssets(
+      widget.chapterId,
+      assetType: 'IMAGE',
+    );
+    final images = imageRows.map((r) => r['file_path'] as String).toList();
+
+    final audioRows = await _repository.getChapterAssets(
+      widget.chapterId,
+      assetType: 'AUDIO',
+    );
+    final audio = audioRows.map((r) => r['file_path'] as String).toList();
+
+    return _ImageMedia(images, audio);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<_ImageMedia>(
+      future: _mediaFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error loading images: ${snapshot.error}'));
+        }
+
+        final media = snapshot.data ?? _ImageMedia([], []);
+        if (media.images.isEmpty) {
+          return const Center(
+            child: Text('No downloaded images for this chapter.'),
+          );
+        }
+
+        return Column(
+          children: [
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: media.images.length,
+                itemBuilder: (context, index) {
+                  return InteractiveViewer(
+                    minScale: 0.5,
+                    maxScale: 4.0,
+                    child: Image.file(
+                      File(media.images[index]),
+                      fit: BoxFit.contain,
+                    ),
+                  );
+                },
+              ),
+            ),
+            if (media.audio.isNotEmpty)
+              _AudioPlayerBar(
+                key: ValueKey('audio_${widget.chapterId}'),
+                audioPath: media.audio.first,
+                initialPositionMs: 0,
+                onPositionChanged: (_) {},
+              ),
+          ],
+        );
+      },
     );
   }
 }

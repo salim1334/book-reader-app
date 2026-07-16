@@ -1,0 +1,93 @@
+class RemoteBook {
+  const RemoteBook({
+    required this.id,
+    required this.title,
+    this.description,
+    this.coverImage,
+    required this.type,
+    required this.version,
+    required this.author,
+    this.chapters = const [],
+    this.chaptersCount,
+  });
+
+  final String id;
+  final String title;
+  final String? description;
+  final String? coverImage;
+  final String type; // 'IMAGE' or 'TEXT'
+  final int version;
+  final RemoteAuthor author;
+  final List<RemoteChapterSummary> chapters;
+  final int? chaptersCount;
+
+  factory RemoteBook.fromJson(Map<String, dynamic> json) {
+    final counts = json['_count'] as Map<String, dynamic>?;
+    final parsedChapters = (json['chapters'] as List<dynamic>?)
+            ?.map((e) => RemoteChapterSummary.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        const [];
+    return RemoteBook(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString(),
+      coverImage: json['coverImage']?.toString(),
+      type: json['type']?.toString() ?? 'TEXT',
+      version: (json['version'] as num?)?.toInt() ?? 0,
+      author: RemoteAuthor.fromJson((json['author'] as Map<String, dynamic>?) ?? {}),
+      chapters: parsedChapters,
+      chaptersCount: (counts?['chapters'] as num?)?.toInt() ??
+          parsedChapters.length,
+    );
+  }
+}
+
+class RemoteAuthor {
+  const RemoteAuthor({required this.id, required this.name});
+
+  final String id;
+  final String name;
+
+  factory RemoteAuthor.fromJson(Map<String, dynamic> json) {
+    return RemoteAuthor(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+    );
+  }
+}
+
+class RemoteChapterSummary {
+  const RemoteChapterSummary({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.orderIndex,
+    required this.version,
+    this.pagesCount,
+    this.textsCount,
+    this.audiosCount,
+  });
+
+  final String id;
+  final String title;
+  final String? description;
+  final int orderIndex;
+  final int version;
+  final int? pagesCount;
+  final int? textsCount;
+  final int? audiosCount;
+
+  factory RemoteChapterSummary.fromJson(Map<String, dynamic> json) {
+    final counts = json['_count'] as Map<String, dynamic>?;
+    return RemoteChapterSummary(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString(),
+      orderIndex: (json['orderIndex'] as num?)?.toInt() ?? 0,
+      version: (json['version'] as num?)?.toInt() ?? 0,
+      pagesCount: (counts?['pages'] as num?)?.toInt(),
+      textsCount: (counts?['texts'] as num?)?.toInt(),
+      audiosCount: (counts?['audios'] as num?)?.toInt(),
+    );
+  }
+}

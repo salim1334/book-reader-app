@@ -37,6 +37,7 @@ class SettingsRepository extends GetxService {
       ThemeMode.system => 'system',
     };
     await _dao.setString(_keyTheme, value);
+    Get.changeThemeMode(mode);
   }
 
   Future<void> clearCache() async {
