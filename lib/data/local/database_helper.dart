@@ -6,7 +6,7 @@ class DatabaseHelper {
   DatabaseHelper._();
   static final DatabaseHelper instance = DatabaseHelper._();
 
-  static const int _dbVersion = 7;
+  static const int _dbVersion = 8;
   static const String _dbName = 'book_store.db';
 
   Database? _database;
@@ -87,6 +87,24 @@ class DatabaseHelper {
         'swipe_direction',
         "TEXT NOT NULL DEFAULT 'RTL'",
       );
+      return;
+    }
+
+    if (version == 8) {
+      // v8: reading_progress now tracks every book/chapter combination.
+      // The old PK was book_id only; we need a composite PK and a progress column.
+      const oldName = 'reading_progress_old';
+      await _dropTableIfExists(db, oldName);
+      await db.execute('ALTER TABLE ${DbTables.readingProgress} RENAME TO $oldName');
+      await _createUserAndSyncTables(db);
+      await db.execute('''
+        INSERT INTO ${DbTables.readingProgress}
+          (book_id, chapter_id, last_position_ms, last_page_index, chapter_progress_percent, updated_at)
+        SELECT
+          book_id, chapter_id, last_position_ms, last_page_index, 0.0, updated_at
+        FROM $oldName
+      ''');
+      await _dropTableIfExists(db, oldName);
       return;
     }
 
@@ -225,11 +243,13 @@ class DatabaseHelper {
     // Captures reader metrics, scroll layout placements, and audio playback positions
     await db.execute('''
       CREATE TABLE IF NOT EXISTS ${DbTables.readingProgress} (
-        book_id TEXT PRIMARY KEY,
+        book_id TEXT NOT NULL,
         chapter_id TEXT NOT NULL,
         last_position_ms INTEGER NOT NULL DEFAULT 0, -- Audio track placement tracking
         last_page_index INTEGER NOT NULL DEFAULT 0,  -- Image book page tracking
+        chapter_progress_percent REAL NOT NULL DEFAULT 0.0, -- 0.0..1.0 chapter completion
         updated_at TEXT NOT NULL,
+        PRIMARY KEY (book_id, chapter_id),
         FOREIGN KEY (book_id) REFERENCES ${DbTables.localBooks}(id) ON DELETE CASCADE,
         FOREIGN KEY (chapter_id) REFERENCES ${DbTables.localChapters}(id) ON DELETE CASCADE
       )

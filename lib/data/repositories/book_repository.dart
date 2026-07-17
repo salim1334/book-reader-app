@@ -33,12 +33,25 @@ class BookRepository extends GetxService {
     required String chapterId,
     required int lastPositionMs,
     required int lastPageIndex,
+    double chapterProgressPercent = 0.0,
   }) => _dao.saveReadingProgress(
     bookId: bookId,
     chapterId: chapterId,
     lastPositionMs: lastPositionMs,
     lastPageIndex: lastPageIndex,
+    chapterProgressPercent: chapterProgressPercent,
   );
+
+  Future<Map<String, Object?>?> getReadingProgress({
+    required String bookId,
+    required String chapterId,
+  }) => _dao.getReadingProgress(bookId: bookId, chapterId: chapterId);
+
+  Future<double> getBookProgressPercent(String bookId) =>
+      _dao.getBookProgressPercent(bookId);
+
+  Future<Map<String, double>> getChaptersProgressPercent(String bookId) =>
+      _dao.getChaptersProgressPercent(bookId);
 
   Future<void> clearReadingProgress() => _dao.clearReadingProgress();
 

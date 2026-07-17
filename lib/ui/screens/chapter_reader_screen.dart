@@ -29,18 +29,24 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
   final BookRepository _repository = Get.find<BookRepository>();
   late int _lastPageIndex;
   late int _lastPositionMs;
+  double _chapterProgressPercent = 0.0;
 
   @override
   void initState() {
     super.initState();
     _lastPageIndex = widget.initialPageIndex;
     _lastPositionMs = widget.initialPositionMs;
-    _saveProgress(pageIndex: _lastPageIndex, positionMs: _lastPositionMs);
+    _saveProgress(
+      pageIndex: _lastPageIndex,
+      positionMs: _lastPositionMs,
+      chapterProgressPercent: _chapterProgressPercent,
+    );
   }
 
   Future<void> _saveProgress({
     int pageIndex = 0,
     int positionMs = 0,
+    double chapterProgressPercent = 0.0,
   }) async {
     try {
       await _repository.saveProgress(
@@ -48,6 +54,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
         chapterId: widget.chapter.id,
         lastPositionMs: positionMs,
         lastPageIndex: pageIndex,
+        chapterProgressPercent: chapterProgressPercent,
       );
     } catch (e) {
       debugPrint('Failed to save progress: $e');
@@ -56,7 +63,11 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
 
   @override
   void dispose() {
-    _saveProgress(pageIndex: _lastPageIndex, positionMs: _lastPositionMs);
+    _saveProgress(
+      pageIndex: _lastPageIndex,
+      positionMs: _lastPositionMs,
+      chapterProgressPercent: _chapterProgressPercent,
+    );
     super.dispose();
   }
 
@@ -70,6 +81,13 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
               chapterId: widget.chapter.id,
               initialPositionMs: widget.initialPositionMs,
               onPositionChanged: (ms) => _lastPositionMs = ms,
+              onProgressChanged: (progress) {
+                _chapterProgressPercent = progress;
+                _saveProgress(
+                  positionMs: _lastPositionMs,
+                  chapterProgressPercent: progress,
+                );
+              },
             )
           : _ImageReader(
               chapterId: widget.chapter.id,
@@ -77,7 +95,13 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
               initialPageIndex: widget.initialPageIndex,
               onPageChanged: (index) {
                 _lastPageIndex = index;
-                _saveProgress(pageIndex: index);
+              },
+              onProgressChanged: (progress) {
+                _chapterProgressPercent = progress;
+                _saveProgress(
+                  pageIndex: _lastPageIndex,
+                  chapterProgressPercent: progress,
+                );
               },
             ),
     );
@@ -89,12 +113,14 @@ class _TextReader extends StatefulWidget {
   final String chapterId;
   final int initialPositionMs;
   final void Function(int positionMs) onPositionChanged;
+  final void Function(double progress) onProgressChanged;
 
   const _TextReader({
     required this.chapter,
     required this.chapterId,
     this.initialPositionMs = 0,
     required this.onPositionChanged,
+    required this.onProgressChanged,
   });
 
   @override
@@ -105,8 +131,10 @@ class _TextReaderState extends State<_TextReader> {
   final BookRepository _repository = Get.find<BookRepository>();
   late Future<List<String>> _audioFuture;
   late int _positionMs;
+  int _audioDurationMs = 0;
   late List<GlobalKey> _segmentKeys;
   int _currentSegmentIndex = -1;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -116,6 +144,20 @@ class _TextReaderState extends State<_TextReader> {
     final segments = widget.chapter.contentSegments;
     _segmentKeys = List.generate(segments?.length ?? 0, (_) => GlobalKey());
     _updateCurrentSegment(scheduleScroll: true, shouldSetState: false);
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final max = _scrollController.position.maxScrollExtent;
+    if (max <= 0) return;
+    final progress = (_scrollController.offset / max).clamp(0.0, 1.0);
+    widget.onProgressChanged(progress);
   }
 
   Future<List<String>> _loadAudio() async {
@@ -130,6 +172,18 @@ class _TextReaderState extends State<_TextReader> {
     widget.onPositionChanged(ms);
     _positionMs = ms;
     _updateCurrentSegment();
+    _updateAudioProgress();
+  }
+
+  void _onDurationChanged(int durationMs) {
+    _audioDurationMs = durationMs;
+    _updateAudioProgress();
+  }
+
+  void _updateAudioProgress() {
+    if (_audioDurationMs <= 0) return;
+    final progress = (_positionMs / _audioDurationMs).clamp(0.0, 1.0);
+    widget.onProgressChanged(progress);
   }
 
   void _updateCurrentSegment({
@@ -195,6 +249,7 @@ class _TextReaderState extends State<_TextReader> {
           children: [
             Expanded(
               child: SingleChildScrollView(
+                controller: _scrollController,
                 padding: const EdgeInsets.all(16.0),
                 child: textContent,
               ),
@@ -205,6 +260,7 @@ class _TextReaderState extends State<_TextReader> {
                 audioPath: audioPaths.first,
                 initialPositionMs: widget.initialPositionMs,
                 onPositionChanged: _onPositionChanged,
+                onDurationChanged: _onDurationChanged,
               ),
           ],
         );
@@ -244,12 +300,14 @@ class _AudioPlayerBar extends StatefulWidget {
   final String audioPath;
   final int initialPositionMs;
   final void Function(int positionMs) onPositionChanged;
+  final void Function(int durationMs) onDurationChanged;
 
   const _AudioPlayerBar({
     super.key,
     required this.audioPath,
     this.initialPositionMs = 0,
     required this.onPositionChanged,
+    required this.onDurationChanged,
   });
 
   @override
@@ -272,6 +330,7 @@ class _AudioPlayerBarState extends State<_AudioPlayerBar> {
   Future<void> _initPlayer() async {
     _player.onDurationChanged.listen((d) {
       if (mounted) setState(() => _duration = d);
+      widget.onDurationChanged(d.inMilliseconds);
     });
     _player.onPositionChanged.listen((p) {
       if (mounted) setState(() => _position = p);
@@ -358,12 +417,14 @@ class _ImageReader extends StatefulWidget {
   final SwipeDirection swipeDirection;
   final int initialPageIndex;
   final void Function(int page) onPageChanged;
+  final void Function(double progress) onProgressChanged;
 
   const _ImageReader({
     required this.chapterId,
     this.swipeDirection = SwipeDirection.rtl,
     this.initialPageIndex = 0,
     required this.onPageChanged,
+    required this.onProgressChanged,
   });
 
   @override
@@ -375,6 +436,7 @@ class _ImageReaderState extends State<_ImageReader> {
   late final PageController _pageController;
   late Future<_ImageMedia> _mediaFuture;
   int _lastReportedPage = -1;
+  int _imageCount = 0;
 
   @override
   void initState() {
@@ -397,6 +459,15 @@ class _ImageReaderState extends State<_ImageReader> {
     if (index == _lastReportedPage) return;
     _lastReportedPage = index;
     widget.onPageChanged(index);
+    _reportProgress();
+  }
+
+  void _reportProgress() {
+    final total = _imageCount;
+    if (total <= 0) return;
+    final index = _pageController.page?.round() ?? widget.initialPageIndex;
+    final progress = ((index + 1) / total).clamp(0.0, 1.0);
+    widget.onProgressChanged(progress);
   }
 
   Future<_ImageMedia> _loadMedia() async {
@@ -429,11 +500,14 @@ class _ImageReaderState extends State<_ImageReader> {
         }
 
         final media = snapshot.data ?? _ImageMedia([], []);
+        _imageCount = media.images.length;
         if (media.images.isEmpty) {
           return const Center(
             child: Text('No downloaded images for this chapter.'),
           );
         }
+
+        WidgetsBinding.instance.addPostFrameCallback((_) => _reportProgress());
 
         return Column(
           children: [
@@ -460,6 +534,7 @@ class _ImageReaderState extends State<_ImageReader> {
                 audioPath: media.audio.first,
                 initialPositionMs: 0,
                 onPositionChanged: (_) {},
+                onDurationChanged: (_) {},
               ),
           ],
         );

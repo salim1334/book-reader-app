@@ -39,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isOffline = false;
   String? _downloadingBookId;
   final Map<String, bool> _downloadedBooks = {};
+  final Map<String, double> _bookProgress = {};
 
   @override
   void initState() {
@@ -56,8 +57,10 @@ class _HomeScreenState extends State<HomeScreen> {
       final books = await _bookRepository.getBooks();
       final cont = await _loadContinueReading();
       final downloaded = <String, bool>{};
+      final progress = <String, double>{};
       for (final book in books) {
         downloaded[book.id] = await _isBookDownloaded(book);
+        progress[book.id] = await _bookRepository.getBookProgressPercent(book.id);
       }
       if (!mounted) return;
       setState(() {
@@ -66,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _loading = false;
         _error = null;
         _downloadedBooks.addAll(downloaded);
+        _bookProgress.addAll(progress);
       });
     } catch (e) {
       if (!mounted) return;
@@ -207,6 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             book: book,
                             isDownloaded: isDownloaded,
                             isDownloading: _downloadingBookId == book.id,
+                            progressPercent: _bookProgress[book.id] ?? 0.0,
                             onDownload: () => _downloadBook(book),
                             onTap: () => _openBook(book),
                           );
@@ -245,6 +250,7 @@ class _BookCard extends StatelessWidget {
   final LocalBook book;
   final bool isDownloaded;
   final bool isDownloading;
+  final double progressPercent;
   final VoidCallback onTap;
   final VoidCallback onDownload;
 
@@ -252,6 +258,7 @@ class _BookCard extends StatelessWidget {
     required this.book,
     required this.isDownloaded,
     required this.isDownloading,
+    this.progressPercent = 0.0,
     required this.onTap,
     required this.onDownload,
   });
@@ -315,6 +322,17 @@ class _BookCard extends StatelessWidget {
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,
                     ),
+                    if (isDownloaded && progressPercent > 0) ...[
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: LinearProgressIndicator(
+                          value: progressPercent,
+                          color: Colors.green,
+                          backgroundColor: Colors.grey.shade300,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

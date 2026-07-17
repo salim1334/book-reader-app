@@ -29,6 +29,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   final List<String> _outdatedChapterIds = [];
   String? _downloadingChapterId;
   bool _isOffline = false;
+  double _bookProgressPercent = 0.0;
+  final Map<String, double> _chapterProgress = {};
 
   @override
   void initState() {
@@ -47,6 +49,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       final localChapters = await _repository.getChapters(widget.book.id);
       if (localBook != null) _book = localBook;
       _chapters = localChapters;
+      _bookProgressPercent = await _repository.getBookProgressPercent(widget.book.id);
+      _chapterProgress.addAll(await _repository.getChaptersProgressPercent(widget.book.id));
 
       final online = await _syncManager.isOnline();
       if (!mounted) return;
@@ -58,6 +62,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         final updatedChapters = await _repository.getChapters(widget.book.id);
         if (updatedBook != null) _book = updatedBook;
         _chapters = updatedChapters;
+        _bookProgressPercent = await _repository.getBookProgressPercent(widget.book.id);
+        _chapterProgress.addAll(await _repository.getChaptersProgressPercent(widget.book.id));
 
         _outdatedChapterIds.clear();
         _outdatedChapterIds.addAll(_findOutdatedChapterIds(_remoteBook!, _chapters));
@@ -204,6 +210,20 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: _bookProgressPercent,
+                  color: Colors.green,
+                  backgroundColor: Colors.grey.shade300,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text('${(_bookProgressPercent * 100).round()}%'),
+            ],
+          ),
         ],
       ),
     );
@@ -245,14 +265,48 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
                   (context, index) {
                     final chapter = _chapters[index];
                     final isOutdated = _outdatedChapterIds.contains(chapter.id);
+                    final chapterProgress = _chapterProgress[chapter.id] ?? 0.0;
+                    final progressText = chapter.isDownloaded
+                        ? '${(chapterProgress * 100).round()}%'
+                        : null;
                     return ListTile(
-                      leading: CircleAvatar(child: Text('${index + 1}')),
+                      leading: CircleAvatar(
+                        backgroundColor: chapterProgress >= 1.0
+                            ? Colors.green
+                            : null,
+                        child: Text('${index + 1}'),
+                      ),
                       title: Text(chapter.title),
-                      subtitle: Text(
-                        chapter.description ??
-                            (chapter.isDownloaded
-                                ? 'Downloaded'
-                                : 'Tap to download'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            chapter.description ??
+                                (chapter.isDownloaded
+                                    ? 'Downloaded'
+                                    : 'Tap to download'),
+                          ),
+                          if (chapter.isDownloaded && progressText != null) ...[
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              width: double.infinity,
+                              child: LinearProgressIndicator(
+                                value: chapterProgress,
+                                color: Colors.green,
+                                backgroundColor: Colors.grey.shade300,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              progressText,
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       trailing: _downloadingChapterId == chapter.id
                           ? const SizedBox(

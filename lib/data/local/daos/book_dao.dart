@@ -217,14 +217,15 @@ class BookDao {
     required String chapterId,
     required int lastPositionMs,
     required int lastPageIndex,
+    double chapterProgressPercent = 0.0,
   }) async {
-    // reading_progress uses book_id as PK. Upsert by replace.
     await _db.transaction((txn) async {
       await txn.insert(DbTables.readingProgress, {
         'book_id': bookId,
         'chapter_id': chapterId,
         'last_position_ms': lastPositionMs,
         'last_page_index': lastPageIndex,
+        'chapter_progress_percent': chapterProgressPercent.clamp(0.0, 1.0),
         'updated_at': DateTime.now().toIso8601String(),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     });
@@ -243,6 +244,44 @@ class BookDao {
     );
     if (rows.isEmpty) return null;
     return rows.first;
+  }
+
+  Future<Map<String, Object?>?> getReadingProgress({
+    required String bookId,
+    required String chapterId,
+  }) async {
+    final rows = await _db.query(
+      DbTables.readingProgress,
+      where: 'book_id = ? AND chapter_id = ?',
+      whereArgs: [bookId, chapterId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first;
+  }
+
+  Future<double> getBookProgressPercent(String bookId) async {
+    final rows = await _db.rawQuery('''
+      SELECT
+        COALESCE(SUM(r.chapter_progress_percent), 0.0) / NULLIF(COUNT(c.id), 0) as book_progress
+      FROM ${DbTables.localChapters} c
+      LEFT JOIN ${DbTables.readingProgress} r ON c.id = r.chapter_id
+      WHERE c.book_id = ?
+    ''', [bookId]);
+    return (rows.first['book_progress'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  Future<Map<String, double>> getChaptersProgressPercent(String bookId) async {
+    final rows = await _db.query(
+      DbTables.readingProgress,
+      columns: ['chapter_id', 'chapter_progress_percent'],
+      where: 'book_id = ?',
+      whereArgs: [bookId],
+    );
+    return {
+      for (final row in rows)
+        row['chapter_id']!.toString(): (row['chapter_progress_percent'] as num?)?.toDouble() ?? 0.0,
+    };
   }
 
   Future<void> clearReadingProgress() async {
