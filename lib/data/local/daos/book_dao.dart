@@ -220,12 +220,26 @@ class BookDao {
     double chapterProgressPercent = 0.0,
   }) async {
     await _db.transaction((txn) async {
+      final existing = await txn.query(
+        DbTables.readingProgress,
+        where: 'book_id = ? AND chapter_id = ?',
+        whereArgs: [bookId, chapterId],
+        limit: 1,
+      );
+
+      final current = existing.isEmpty ? null : existing.first;
+      final storedPageIndex = (current?['last_page_index'] as num?)?.toInt() ?? 0;
+      final storedPositionMs = (current?['last_position_ms'] as num?)?.toInt() ?? 0;
+      final storedProgress = (current?['chapter_progress_percent'] as num?)?.toDouble() ?? 0.0;
+
       await txn.insert(DbTables.readingProgress, {
         'book_id': bookId,
         'chapter_id': chapterId,
-        'last_position_ms': lastPositionMs,
-        'last_page_index': lastPageIndex,
-        'chapter_progress_percent': chapterProgressPercent.clamp(0.0, 1.0),
+        'last_position_ms': lastPositionMs > storedPositionMs ? lastPositionMs : storedPositionMs,
+        'last_page_index': lastPageIndex > storedPageIndex ? lastPageIndex : storedPageIndex,
+        'chapter_progress_percent': chapterProgressPercent.clamp(0.0, 1.0) > storedProgress
+            ? chapterProgressPercent.clamp(0.0, 1.0)
+            : storedProgress,
         'updated_at': DateTime.now().toIso8601String(),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     });

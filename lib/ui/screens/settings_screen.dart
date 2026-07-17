@@ -50,6 +50,38 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           ListTile(
+            title: const Text('Reset reading progress'),
+            subtitle: const Text('Clear all book and chapter reading progress.'),
+            leading: const Icon(Icons.restore_page, color: Colors.orange),
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Reset reading progress?'),
+                  content: const Text('This will reset all reading progress and cannot be undone.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Reset'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await repository.clearReadingProgress();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Reading progress reset.')),
+                  );
+                }
+              }
+            },
+          ),
+          ListTile(
             title: const Text('Clear downloaded books'),
             subtitle: const Text('Remove all downloaded books, chapters, and media.'),
             leading: const Icon(Icons.delete_sweep),
