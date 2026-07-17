@@ -5,6 +5,7 @@ class RemoteBook {
     this.description,
     this.coverImage,
     required this.type,
+    this.swipeDirection = 'RTL',
     required this.version,
     required this.author,
     this.chapters = const [],
@@ -16,6 +17,7 @@ class RemoteBook {
   final String? description;
   final String? coverImage;
   final String type; // 'IMAGE' or 'TEXT'
+  final String swipeDirection; // 'RTL' or 'LTR'
   final int version;
   final RemoteAuthor author;
   final List<RemoteChapterSummary> chapters;
@@ -33,6 +35,7 @@ class RemoteBook {
       description: json['description']?.toString(),
       coverImage: json['coverImage']?.toString(),
       type: json['type']?.toString() ?? 'TEXT',
+      swipeDirection: json['swipeDirection']?.toString() ?? 'RTL',
       version: (json['version'] as num?)?.toInt() ?? 0,
       author: RemoteAuthor.fromJson((json['author'] as Map<String, dynamic>?) ?? {}),
       chapters: parsedChapters,

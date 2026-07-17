@@ -1,6 +1,8 @@
 library;
 import 'dart:convert';
 
+import 'package:book_store/core/constants/app_enums.dart';
+
 /// Lightweight local data models used by the offline/template schema.
 ///
 /// Docs expect the app to support IMAGE and TEXT books with chapter-based
@@ -21,6 +23,23 @@ extension LocalBookTypeX on LocalBookType {
   };
 }
 
+extension SwipeDirectionX on SwipeDirection {
+  String get dbValue => switch (this) {
+    SwipeDirection.rtl => 'RTL',
+    SwipeDirection.ltr => 'LTR',
+  };
+
+  static SwipeDirection fromDb(String? raw) => switch (raw?.toUpperCase()) {
+    'LTR' => SwipeDirection.ltr,
+    _ => SwipeDirection.rtl,
+  };
+
+  /// Maps the stored swipe direction to PageView.reverse.
+  /// - RTL => true, so pages are laid right-to-left and the user swipes right to advance.
+  /// - LTR => false, so pages are laid left-to-right and the user swipes left to advance.
+  bool get pageViewReverse => this == SwipeDirection.rtl;
+}
+
 class LocalBook {
   const LocalBook({
     required this.id,
@@ -28,6 +47,7 @@ class LocalBook {
     this.description,
     this.coverUrl,
     required this.type,
+    this.swipeDirection = SwipeDirection.rtl,
     required this.version,
   });
 
@@ -36,6 +56,7 @@ class LocalBook {
   final String? description;
   final String? coverUrl;
   final LocalBookType type;
+  final SwipeDirection swipeDirection;
   final int version;
 
   Map<String, Object?> toDb() => {
@@ -44,6 +65,7 @@ class LocalBook {
     'description': description,
     'cover_url': coverUrl,
     'book_type': type.dbValue,
+    'swipe_direction': swipeDirection.dbValue,
     'version': version,
   };
 
@@ -54,6 +76,7 @@ class LocalBook {
       description: row['description']?.toString(),
       coverUrl: row['cover_url']?.toString(),
       type: LocalBookTypeX.fromDb(row['book_type']?.toString() ?? 'TEXT'),
+      swipeDirection: SwipeDirectionX.fromDb(row['swipe_direction']?.toString()),
       version: (row['version'] as num?)?.toInt() ?? 0,
     );
   }

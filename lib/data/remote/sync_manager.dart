@@ -195,6 +195,7 @@ class SyncManager extends GetxService {
         description: book.description,
         coverUrl: book.coverImage,
         type: LocalBookTypeX.fromDb(book.type),
+        swipeDirection: SwipeDirectionX.fromDb(book.swipeDirection),
         version: book.version,
       );
       await _dao!.insertBook(localBook);
@@ -215,6 +216,7 @@ class SyncManager extends GetxService {
         description: book.description,
         coverUrl: coverUrl,
         type: LocalBookTypeX.fromDb(book.type),
+        swipeDirection: SwipeDirectionX.fromDb(book.swipeDirection),
         version: updateVersions ? book.version : existing.version,
       );
       if (updateVersions) {

@@ -6,7 +6,7 @@ class DatabaseHelper {
   DatabaseHelper._();
   static final DatabaseHelper instance = DatabaseHelper._();
 
-  static const int _dbVersion = 6;
+  static const int _dbVersion = 7;
   static const String _dbName = 'book_store.db';
 
   Database? _database;
@@ -75,6 +75,17 @@ class DatabaseHelper {
         DbTables.localChapters,
         'is_downloaded',
         'INTEGER NOT NULL DEFAULT 0',
+      );
+      return;
+    }
+
+    if (version == 7) {
+      // v7: add book-level swipe direction for image-type readers
+      await _addColumnIfMissing(
+        db,
+        DbTables.localBooks,
+        'swipe_direction',
+        "TEXT NOT NULL DEFAULT 'RTL'",
       );
       return;
     }
@@ -159,6 +170,7 @@ class DatabaseHelper {
         description TEXT,
         cover_url TEXT,
         book_type TEXT NOT NULL, -- 'IMAGE' or 'TEXT'
+        swipe_direction TEXT NOT NULL DEFAULT 'RTL', -- 'RTL' or 'LTR'
         version INTEGER NOT NULL
       )
     ''');

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:book_store/core/constants/app_enums.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:flutter/material.dart';
@@ -72,6 +73,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
             )
           : _ImageReader(
               chapterId: widget.chapter.id,
+              swipeDirection: widget.book.swipeDirection,
               initialPageIndex: widget.initialPageIndex,
               onPageChanged: (index) {
                 _lastPageIndex = index;
@@ -353,11 +355,13 @@ class _ImageMedia {
 
 class _ImageReader extends StatefulWidget {
   final String chapterId;
+  final SwipeDirection swipeDirection;
   final int initialPageIndex;
   final void Function(int page) onPageChanged;
 
   const _ImageReader({
     required this.chapterId,
+    this.swipeDirection = SwipeDirection.rtl,
     this.initialPageIndex = 0,
     required this.onPageChanged,
   });
@@ -436,6 +440,7 @@ class _ImageReaderState extends State<_ImageReader> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
+                reverse: widget.swipeDirection.pageViewReverse,
                 itemCount: media.images.length,
                 itemBuilder: (context, index) {
                   return InteractiveViewer(
