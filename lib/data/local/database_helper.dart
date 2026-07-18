@@ -6,7 +6,7 @@ class DatabaseHelper {
   DatabaseHelper._();
   static final DatabaseHelper instance = DatabaseHelper._();
 
-  static const int _dbVersion = 8;
+  static const int _dbVersion = 9;
   static const String _dbName = 'book_store.db';
 
   Database? _database;
@@ -108,6 +108,23 @@ class DatabaseHelper {
       return;
     }
 
+    if (version == 9) {
+      // v9: downloaded assets now store per-page audio timing for image books.
+      await _addColumnIfMissing(
+        db,
+        DbTables.downloadedAssets,
+        'audio_start_time',
+        'REAL',
+      );
+      await _addColumnIfMissing(
+        db,
+        DbTables.downloadedAssets,
+        'audio_end_time',
+        'REAL',
+      );
+      return;
+    }
+
     // All other migration steps are additive and idempotent.
     await _createSettingsTables(db);
     await _createContentTables(db);
@@ -201,6 +218,8 @@ class DatabaseHelper {
         asset_type TEXT NOT NULL, -- 'IMAGE' or 'AUDIO'
         sort_order INTEGER,       -- Ordering position for IMAGE pages
         file_path TEXT NOT NULL,  -- Absolute or relative path on device storage
+        audio_start_time REAL,    -- Page start time (seconds) for audio-synced image books
+        audio_end_time REAL,      -- Page end time (seconds) for audio-synced image books
         FOREIGN KEY (chapter_id) REFERENCES ${DbTables.localChapters}(id) ON DELETE CASCADE
       )
     ''');

@@ -35,7 +35,7 @@ class TextReaderController extends GetxController {
     scrollController = ScrollController();
     scrollController.addListener(_onScroll);
 
-    _updateCurrentSegment(scheduleScroll: true);
+    _updateCurrentSegment();
 
     if (_chapterReader.book.type == LocalBookType.text) {
       _initAudio();
@@ -77,6 +77,11 @@ class TextReaderController extends GetxController {
       _audio.duration,
       (dur) => _onDurationChanged(dur.inMilliseconds),
     );
+
+    // If already playing this exact chapter, don't reset the source.
+    if (_audio.isCurrentBookChapter(_chapterReader.book, _chapterReader.chapter)) {
+      return;
+    }
 
     final artUri = coverArtUri(_chapterReader.book);
     await _audio.playQueue(
@@ -125,7 +130,7 @@ class TextReaderController extends GetxController {
     _chapterReader.updateProgress(progress);
   }
 
-  void _updateCurrentSegment({bool scheduleScroll = false}) {
+  void _updateCurrentSegment() {
     final segments = _chapterReader.chapter.contentSegments;
     if (segments == null || segments.isEmpty) return;
 
@@ -144,7 +149,7 @@ class TextReaderController extends GetxController {
 
     if (index != currentSegmentIndex.value) {
       currentSegmentIndex.value = index;
-      if (index != -1 && scheduleScroll) {
+      if (index != -1) {
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => _scrollToSegment(index),
         );

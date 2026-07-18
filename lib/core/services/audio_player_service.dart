@@ -74,7 +74,18 @@ class AudioPlayerService extends GetxService {
   final queueLength = 0.obs;
   final isReaderActive = false.obs;
 
+  /// The book/chapter currently being played, used to reopen the reader from
+  /// the mini player.
+  LocalBook? currentBook;
+  LocalChapter? currentChapter;
+
   bool get isInitialized => _initialized.value;
+
+  bool isCurrentBookChapter(LocalBook book, LocalChapter chapter) {
+    return hasMedia.value &&
+        currentBook?.id == book.id &&
+        currentChapter?.id == chapter.id;
+  }
 
   AudioPlayerService() {
     _BookReaderAudioHandler.service = this;
@@ -130,6 +141,19 @@ class AudioPlayerService extends GetxService {
   }) async {
     if (!_initialized.value) return;
 
+    // If this exact chapter is already loaded, just continue from where we are
+    // instead of resetting to the beginning.
+    if (queue.items.isNotEmpty) {
+      final startItem = queue.items[queue.startIndex];
+      if (startItem.book != null &&
+          startItem.chapter != null &&
+          hasMedia.value &&
+          currentBook?.id == startItem.book!.id &&
+          currentChapter?.id == startItem.chapter!.id) {
+        return;
+      }
+    }
+
     isLoading.value = true;
     try {
       final mediaItems = <MediaItem>[];
@@ -147,10 +171,18 @@ class AudioPlayerService extends GetxService {
 
       await _handler.updateQueue(mediaItems);
       await _handler.skipToQueueItem(queue.startIndex);
-      await _handler.play();
+
+      final startItem = queue.items[queue.startIndex];
+      currentBook = startItem.book;
+      currentChapter = startItem.chapter;
     } finally {
       isLoading.value = false;
     }
+
+    // play() returns a future that completes when playback completes or is
+    // paused/stopped, so we must not await it here. Awaiting it would keep
+    // isLoading true for the entire duration of playback.
+    unawaited(_handler.play());
   }
 
   Future<Duration> _estimateDuration(String path) async {
@@ -173,7 +205,8 @@ class AudioPlayerService extends GetxService {
     if (isPlaying.value) {
       await pause();
     } else {
-      await play();
+      // play() completes when playback completes/pauses/stops, so don't await.
+      unawaited(play());
     }
   }
 

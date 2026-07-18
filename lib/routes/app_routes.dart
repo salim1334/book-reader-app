@@ -8,6 +8,5 @@ abstract class Routes {
   static const bookDetails = '/book-details';
   static const chapterReader = '/chapter-reader';
   static const downloads = '/downloads';
-  static const audioPlayer = '/audio-player';
   static const settings = '/settings';
 }

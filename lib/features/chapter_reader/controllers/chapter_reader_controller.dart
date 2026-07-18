@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 
 class ChapterReaderController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
-  final AudioPlayerService _audio = Get.find<AudioPlayerService>();
 
   late final LocalBook book;
   late final LocalChapter chapter;
@@ -32,7 +31,6 @@ class ChapterReaderController extends GetxController {
 
     lastPageIndex.value = initialPageIndex;
     lastPositionMs.value = initialPositionMs;
-    _audio.isReaderActive.value = true;
 
     await _saveProgress(
       pageIndex: initialPageIndex,
@@ -63,7 +61,6 @@ class ChapterReaderController extends GetxController {
       positionMs: lastPositionMs.value,
       chapterProgressPercent: chapterProgressPercent.value,
     );
-    _audio.isReaderActive.value = false;
     super.onClose();
   }
 

@@ -26,6 +26,7 @@ class ImageReader extends GetView<ImageReaderController> {
         controller: controller.pageController,
         reverse: controller.chapterReader.book.swipeDirection.pageViewReverse,
         itemCount: media.images.length,
+        onPageChanged: (index) => controller.onPageChanged(index),
         itemBuilder: (context, index) {
           return InteractiveViewer(
             minScale: 0.5,

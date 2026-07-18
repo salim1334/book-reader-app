@@ -354,6 +354,8 @@ class BookDao {
     required String assetType,
     required String filePath,
     int? sortOrder,
+    double? audioStartTime,
+    double? audioEndTime,
   }) async {
     await _db.insert(
       DbTables.downloadedAssets,
@@ -362,6 +364,8 @@ class BookDao {
         'asset_type': assetType,
         'sort_order': sortOrder,
         'file_path': filePath,
+        'audio_start_time': audioStartTime,
+        'audio_end_time': audioEndTime,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );

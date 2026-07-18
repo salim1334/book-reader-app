@@ -1,5 +1,3 @@
-import 'package:book_store/features/audio_player/bindings/audio_player_binding.dart';
-import 'package:book_store/features/audio_player/screens/audio_player_screen.dart';
 import 'package:book_store/features/book_details/bindings/book_details_binding.dart';
 import 'package:book_store/features/book_details/screens/book_details_screen.dart';
 import 'package:book_store/features/chapter_reader/bindings/chapter_reader_binding.dart';
@@ -62,12 +60,6 @@ class AppPages {
       name: Routes.downloads,
       page: () => const DownloadsScreen(),
       binding: DownloadsBinding(),
-    ),
-    GetPage(
-      name: Routes.audioPlayer,
-      page: () => const AudioPlayerScreen(),
-      binding: AudioPlayerBinding(),
-      transition: Transition.upToDown,
     ),
     GetPage(
       name: Routes.settings,

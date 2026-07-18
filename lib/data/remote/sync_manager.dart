@@ -303,6 +303,8 @@ class SyncManager extends GetxService {
           assetType: 'IMAGE',
           filePath: localPath,
           sortOrder: page.orderIndex,
+          audioStartTime: page.audioStartTime,
+          audioEndTime: page.audioEndTime,
         );
       }
     }
