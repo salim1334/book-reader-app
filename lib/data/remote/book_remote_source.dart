@@ -11,7 +11,10 @@ class BookRemoteSource {
       queryParameters: {'authorId': AppConfig.authorId},
     );
     final list = response.data as List<dynamic>;
-    return list.map((e) => RemoteBook.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => RemoteBook.fromJson(e as Map<String, dynamic>))
+        .where((b) => b.isPublished)
+        .toList();
   }
 
   Future<RemoteBook> fetchBook(String bookId) async {
@@ -19,6 +22,10 @@ class BookRemoteSource {
       'mobile/books/$bookId',
       queryParameters: {'authorId': AppConfig.authorId},
     );
-    return RemoteBook.fromJson(response.data as Map<String, dynamic>);
+    final book = RemoteBook.fromJson(response.data as Map<String, dynamic>);
+    if (!book.isPublished) {
+      throw Exception('Book $bookId is not published');
+    }
+    return book;
   }
 }

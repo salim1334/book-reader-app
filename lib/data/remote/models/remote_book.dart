@@ -10,6 +10,9 @@ class RemoteBook {
     required this.author,
     this.chapters = const [],
     this.chaptersCount,
+    this.status,
+    this.published,
+    this.unpublishChange,
   });
 
   final String id;
@@ -22,6 +25,27 @@ class RemoteBook {
   final RemoteAuthor author;
   final List<RemoteChapterSummary> chapters;
   final int? chaptersCount;
+  final String? status;
+  final bool? published;
+  final bool? unpublishChange;
+
+  bool get isPublished {
+    if (published == false) return false;
+    if (unpublishChange == true) return false;
+    if (status != null) {
+      final s = status!.toLowerCase();
+      if (s == 'published') return true;
+      if (s == 'unpublished' ||
+          s == 'unpublish_change' ||
+          s == 'unpublish-change' ||
+          s == 'draft' ||
+          s == 'pending' ||
+          s == 'false') {
+        return false;
+      }
+    }
+    return true;
+  }
 
   factory RemoteBook.fromJson(Map<String, dynamic> json) {
     final counts = json['_count'] as Map<String, dynamic>?;
@@ -41,6 +65,10 @@ class RemoteBook {
       chapters: parsedChapters,
       chaptersCount: (counts?['chapters'] as num?)?.toInt() ??
           parsedChapters.length,
+      status: json['status']?.toString(),
+      published: json['published'] as bool? ?? json['isPublished'] as bool?,
+      unpublishChange: json['unpublish_change'] as bool? ??
+          json['unpublishChange'] as bool?,
     );
   }
 }

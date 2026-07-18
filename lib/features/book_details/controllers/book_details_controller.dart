@@ -57,23 +57,34 @@ class BookDetailsController extends GetxController {
       isOffline.value = !online;
 
       if (online) {
-        final fetchedRemoteBook = await _syncManager.fetchAndSyncBookMetadata(initialBook.id);
-        remoteBook.value = fetchedRemoteBook;
+        RemoteBook? fetchedRemoteBook;
+        try {
+          fetchedRemoteBook = await _syncManager.fetchAndSyncBookMetadata(initialBook.id);
+        } catch (e) {
+          debugPrint('Remote fetch failed, using offline source: $e');
+          isOffline.value = true;
+        }
 
-        final updatedBook = await _repository.getBook(initialBook.id);
-        final updatedChapters = await _repository.getChapters(initialBook.id);
-        if (updatedBook != null) book.value = updatedBook;
-        chapters.value = updatedChapters;
-        await _loadProgress();
+        if (fetchedRemoteBook != null) {
+          remoteBook.value = fetchedRemoteBook;
 
-        outdatedChapterIds.value = _findOutdatedChapterIds(fetchedRemoteBook, chapters);
-        hasUpdate.value = fetchedRemoteBook.version > book.value!.version || outdatedChapterIds.isNotEmpty;
+          final updatedBook = await _repository.getBook(initialBook.id);
+          final updatedChapters = await _repository.getChapters(initialBook.id);
+          if (updatedBook != null) book.value = updatedBook;
+          chapters.value = updatedChapters;
+          await _loadProgress();
+
+          outdatedChapterIds.value = _findOutdatedChapterIds(fetchedRemoteBook, chapters);
+          hasUpdate.value = fetchedRemoteBook.version > book.value!.version || outdatedChapterIds.isNotEmpty;
+        }
       }
 
       isLoading.value = false;
     } catch (e) {
       isLoading.value = false;
-      errorMessage.value = 'Failed to load book details: $e';
+      if (book.value == null) {
+        errorMessage.value = 'Failed to load book details: $e';
+      }
       debugPrint('BookDetailsController.loadData error: $e');
     }
   }
