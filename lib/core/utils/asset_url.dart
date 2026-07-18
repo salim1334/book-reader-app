@@ -30,5 +30,8 @@ ImageProvider? coverImageProvider(String? coverUrl) {
   if (isRemoteCoverUrl(coverUrl)) {
     return NetworkImage(resolveAssetUrl(coverUrl));
   }
+  if (coverUrl.startsWith('file:')) {
+    return FileImage(File.fromUri(Uri.parse(coverUrl)));
+  }
   return FileImage(File(coverUrl));
 }
