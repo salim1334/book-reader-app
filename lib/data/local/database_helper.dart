@@ -143,22 +143,6 @@ class DatabaseHelper {
     }
   }
 
-  Future<void> _dropAllTables(Database db) async {
-    for (final table in [
-      DbTables.syncVersions,
-      DbTables.downloadQueue,
-      DbTables.readingProgress,
-      DbTables.bookmarks,
-      DbTables.downloadedAssets,
-      DbTables.localChapters,
-      DbTables.localBooks,
-      DbTables.userSettings,
-      DbTables.appSettings,
-    ]) {
-      await db.execute('DROP TABLE IF EXISTS $table');
-    }
-  }
-
   /// System and configuration settings
   Future<void> _createSettingsTables(Database db) async {
     // General app configurations

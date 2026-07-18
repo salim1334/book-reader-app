@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/remote/api_client.dart';
 import 'package:flutter/painting.dart';
 
@@ -21,6 +22,16 @@ bool isRemoteCoverUrl(String? coverUrl) {
   if (coverUrl.startsWith('/uploads/')) return true;
   if (coverUrl.startsWith('uploads/')) return true;
   return false;
+}
+
+/// Builds a display URI for a book cover, handling both remote and local files.
+String? coverArtUri(LocalBook book) {
+  final cover = book.coverUrl;
+  if (cover == null || cover.isEmpty) return null;
+  if (cover.startsWith('http') || isRemoteCoverUrl(cover)) {
+    return resolveAssetUrl(cover);
+  }
+  return Uri.file(cover).toString();
 }
 
 /// Returns a Flutter [ImageProvider] for the given [coverUrl], which can be

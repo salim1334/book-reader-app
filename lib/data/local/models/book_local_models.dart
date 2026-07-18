@@ -100,7 +100,7 @@ class TextSegment {
   };
 
   static TextSegment fromJson(Map<String, dynamic> json) {
-    double? _toDouble(dynamic value) {
+    double? parseDouble(dynamic value) {
       if (value == null) return null;
       if (value is double) return value;
       if (value is int) return value.toDouble();
@@ -110,8 +110,8 @@ class TextSegment {
 
     return TextSegment(
       content: json['content']?.toString() ?? '',
-      startSeconds: _toDouble(json['startSeconds']),
-      endSeconds: _toDouble(json['endSeconds']),
+      startSeconds: parseDouble(json['startSeconds']),
+      endSeconds: parseDouble(json['endSeconds']),
     );
   }
 }

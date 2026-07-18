@@ -1,6 +1,7 @@
 import 'package:book_store/core/theme/app_theme.dart';
-import 'package:book_store/ui/screens/splash_screen.dart';
-import 'package:book_store/ui/widgets/audio_player_overlay.dart';
+import 'package:book_store/routes/app_pages.dart';
+import 'package:book_store/routes/app_routes.dart';
+import 'package:book_store/common/widgets/audio_player_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,7 +16,8 @@ class App extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      home: const SplashScreen(),
+      initialRoute: Routes.splash,
+      getPages: AppPages.pages,
       builder: (context, child) {
         if (child == null) return const SizedBox.shrink();
         return AudioPlayerOverlay(child: child);
