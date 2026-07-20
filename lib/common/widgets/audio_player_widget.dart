@@ -8,17 +8,8 @@ import 'package:book_store/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// The visual mode used by [AudioPlayerWidget].
-enum AudioPlayerMode {
-  /// Compact bar shown at the bottom of most screens.
-  mini,
+enum AudioPlayerMode { mini, reader }
 
-  /// Embedded card shown inside the chapter reader.
-  reader,
-}
-
-/// A single, adaptive audio player UI that renders as a mini bar or an
-/// embedded reader card depending on [mode].
 class AudioPlayerWidget extends StatelessWidget {
   final AudioPlayerMode mode;
 
@@ -30,9 +21,7 @@ class AudioPlayerWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Obx(() {
-      if (!audio.hasMedia.value) {
-        return const SizedBox.shrink();
-      }
+      if (!audio.hasMedia.value) return const SizedBox.shrink();
 
       return switch (mode) {
         AudioPlayerMode.mini => _buildMini(context, audio, theme),
@@ -41,91 +30,176 @@ class AudioPlayerWidget extends StatelessWidget {
     });
   }
 
+  // ---------- MINI MODE ----------
   Widget _buildMini(
     BuildContext context,
     AudioPlayerService audio,
     ThemeData theme,
   ) {
-    return GestureDetector(
-      onTap: () async {
-        final book = audio.currentBook;
-        final chapter = audio.currentChapter;
-        if (book == null || chapter == null) return;
+    return AnimatedSlide(
+  duration: const Duration(milliseconds: 250),
+  curve: Curves.easeOutCubic,
+  offset: const Offset(0, 0),
+  child: AnimatedOpacity(
+    duration: const Duration(milliseconds: 250),
+    opacity: 1,
+    child:Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          final book = audio.currentBook;
+          final chapter = audio.currentChapter;
+          if (book == null || chapter == null) return;
 
-        final progress = await Get.find<BookRepository>().getReadingProgress(
-          bookId: book.id,
-          chapterId: chapter.id,
-        );
+          final progress = await Get.find<BookRepository>().getReadingProgress(
+            bookId: book.id,
+            chapterId: chapter.id,
+          );
+          final lastPageIndex =
+              (progress?['last_page_index'] as num?)?.toInt() ?? 0;
 
-        final lastPageIndex =
-            (progress?['last_page_index'] as num?)?.toInt() ?? 0;
-
-        Get.toNamed(
-          Routes.chapterReader,
-          arguments: ChapterReaderArgs(
-            book: book,
-            chapter: chapter,
-            initialPageIndex: lastPageIndex,
-            initialPositionMs: audio.position.value.inMilliseconds,
-          ),
-        );
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        margin: const EdgeInsets.all(12.0),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.95,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+          Get.toNamed(
+            Routes.chapterReader,
+            arguments: ChapterReaderArgs(
+              book: book,
+              chapter: chapter,
+              initialPageIndex: lastPageIndex,
+              initialPositionMs: audio.position.value.inMilliseconds,
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Material(
-            color: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  const _CoverArt(mode: AudioPlayerMode.mini),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _TrackInfo(mode: AudioPlayerMode.mini),
-                        const SizedBox(height: 6),
-                        const AudioProgressBar(
-                          trackHeight: 3,
-                          thumbRadius: 0,
-                          showTimeLabels: false,
-                        ),
-                      ],
+          );
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainer.withOpacity(.98),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(.05),
+                blurRadius: 8,
+                spreadRadius: 1,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+  topLeft: Radius.circular(18),
+  topRight: Radius.circular(18),
+),
+            child: Material(
+              color: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // ---- Cover (left) ----
+                    const _CoverArt(mode: AudioPlayerMode.mini),
+                    const SizedBox(width: 8),
+                    // ---- Info & progress (right) ----
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Row: title + controls
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Obx(() {
+                                      final bookTitle =
+                                          audio.currentBook?.title ?? '';
+                                      final chapterTitle =
+                                          audio.currentChapter?.title ?? '';
+                                      final remaining = _formatRemaining(
+                                        audio.duration.value -
+                                            audio.position.value,
+                                      );
+
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            bookTitle,
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: .2,
+                                                ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Text(
+                                            '$chapterTitle • $remaining left',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontSize: 11,
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                              const _PlayPauseButton(
+                                mode: AudioPlayerMode.mini,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close_rounded, size: 18),
+                                onPressed: audio.stop,
+                                color: theme.colorScheme.onSurfaceVariant,
+                                splashRadius: 18,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 28,
+                                  minHeight: 28,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          const AudioProgressBar(
+                            trackHeight: 2,
+                            thumbRadius: 0,
+                            showTimeLabels: true,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const _PlayPauseButton(mode: AudioPlayerMode.mini),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    onPressed: audio.stop,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    );
+    ),),);
   }
 
+  /// Helper to format remaining time as "MM:SS"
+  String _formatRemaining(Duration duration) {
+    if (duration.isNegative) return '00:00';
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  // ---------- READER MODE ----------
   Widget _buildReader(
     BuildContext context,
     AudioPlayerService audio,
@@ -136,38 +210,38 @@ class AudioPlayerWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [colors.primaryContainer, colors.surfaceContainerHighest],
+          colors: [
+            colors.primaryContainer.withOpacity(0.6),
+            colors.surfaceContainerHighest.withOpacity(0.9),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        // only border radius for top right and top left
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
-        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: colors.outlineVariant.withOpacity(0.3),
+          width: 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Row(
-            //   children: [
-            //     const _CoverArt(mode: AudioPlayerMode.reader),
-            //     const SizedBox(width: 12),
-            //     const Expanded(child: _TrackInfo(mode: AudioPlayerMode.reader)),
-            //     IconButton(
-            //       tooltip: 'Stop audio',
-            //       onPressed: audio.stop,
-            //       icon: const Icon(Icons.close_rounded),
-            //     ),
-            //   ],
-            // ),
-            // const SizedBox(height: 8),
             const AudioProgressBar(showTimeLabels: true),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             const _PlaybackControls(mode: AudioPlayerMode.reader),
-            const SizedBox(height: 2),
+            const SizedBox(height: 6),
             const _ExtraControls(),
           ],
         ),
@@ -176,6 +250,7 @@ class AudioPlayerWidget extends StatelessWidget {
   }
 }
 
+// ---------- COVER ART ----------
 class _CoverArt extends StatelessWidget {
   final AudioPlayerMode mode;
 
@@ -185,8 +260,8 @@ class _CoverArt extends StatelessWidget {
   Widget build(BuildContext context) {
     final audio = Get.find<AudioPlayerService>();
     final isMini = mode == AudioPlayerMode.mini;
-    final size = isMini ? 48.0 : 58.0;
-    final radius = isMini ? 8.0 : 14.0;
+    final size = isMini ? 44.0 : 64.0;
+    final radius = isMini ? 8.0 : 16.0;
 
     return Obx(() {
       final uri = audio.currentArtUri.value;
@@ -194,27 +269,32 @@ class _CoverArt extends StatelessWidget {
           ? coverImageProvider(uri)
           : null;
 
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: provider != null
-              ? Image(
-                  image: provider,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _ArtworkPlaceholder(
-                    mode: mode,
-                    iconSize: isMini ? null : 28.0,
-                  ),
-                )
-              : _ArtworkPlaceholder(mode: mode, iconSize: isMini ? null : 28.0),
+      return Hero(
+        tag: 'audio_cover_${audio.currentBook?.id ?? 'default'}',
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: provider != null
+                ? Image(
+                    image: provider,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _ArtworkPlaceholder(
+                          mode: mode,
+                          iconSize: isMini ? null : 30,
+                        ),
+                  )
+                : _ArtworkPlaceholder(mode: mode, iconSize: isMini ? null : 30),
+          ),
         ),
       );
     });
   }
 }
 
+// ---------- PLACEHOLDER ----------
 class _ArtworkPlaceholder extends StatelessWidget {
   final AudioPlayerMode mode;
   final double? iconSize;
@@ -228,75 +308,20 @@ class _ArtworkPlaceholder extends StatelessWidget {
 
     return Container(
       color: isReader
-          ? colorScheme.primary.withValues(alpha: 0.14)
+          ? colorScheme.primary.withOpacity(0.15)
           : colorScheme.surfaceContainerHighest,
       child: Center(
         child: Icon(
           isReader ? Icons.headphones_rounded : Icons.music_note,
           color: isReader ? colorScheme.primary : colorScheme.onSurfaceVariant,
-          size: iconSize,
+          size: iconSize ?? 28,
         ),
       ),
     );
   }
 }
 
-class _TrackInfo extends StatelessWidget {
-  final AudioPlayerMode mode;
-
-  const _TrackInfo({required this.mode});
-
-  @override
-  Widget build(BuildContext context) {
-    final audio = Get.find<AudioPlayerService>();
-    final theme = Theme.of(context);
-
-    return Obx(() {
-      final title = audio.currentTitle.value;
-      final subtitle = audio.currentSubtitle.value;
-      final isMini = mode == AudioPlayerMode.mini;
-
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isMini)
-            Text(
-              'NOW READING',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-              ),
-            ),
-          if (!isMini) const SizedBox(height: 4),
-          Text(
-            title,
-            style: isMini
-                ? theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  )
-                : theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      );
-    });
-  }
-}
-
+// ---------- PLAYBACK CONTROLS ----------
 class _PlaybackControls extends StatelessWidget {
   final AudioPlayerMode mode;
 
@@ -317,19 +342,20 @@ class _PlaybackControls extends StatelessWidget {
         children: [
           _ControlButton(
             icon: Icons.replay_10_rounded,
-            tooltip: 'Back 10 seconds',
+            tooltip: 'Back 10s',
             onPressed: () => audio.seek(
               Duration(
-                seconds: (audio.position.value.inSeconds - 10)
-                    .clamp(0, audio.duration.value.inSeconds)
-                    .toInt(),
+                seconds: (audio.position.value.inSeconds - 10).clamp(
+                  0,
+                  audio.duration.value.inSeconds,
+                ),
               ),
             ),
           ),
-          SizedBox(width: compact ? 8 : 8),
+          SizedBox(width: compact ? 4 : 8),
           _ControlButton(
             icon: Icons.skip_previous_rounded,
-            tooltip: 'Previous',
+            tooltip: 'Previous chapter',
             onPressed: audio.hasMedia.value ? audio.skipToPrevious : null,
           ),
           SizedBox(width: compact ? 10 : 16),
@@ -337,18 +363,19 @@ class _PlaybackControls extends StatelessWidget {
           SizedBox(width: compact ? 10 : 16),
           _ControlButton(
             icon: Icons.skip_next_rounded,
-            tooltip: 'Next',
-            onPressed: audio.queueLength.value > 1 ? audio.skipToNext : null,
+            tooltip: 'Next chapter',
+            onPressed: audio.hasMedia.value ? audio.skipToNext : null,
           ),
-          SizedBox(width: compact ? 8 : 8),
+          SizedBox(width: compact ? 4 : 8),
           _ControlButton(
             icon: Icons.forward_10_rounded,
-            tooltip: 'Forward 10 seconds',
+            tooltip: 'Forward 10s',
             onPressed: () => audio.seek(
               Duration(
-                seconds: (audio.position.value.inSeconds + 10)
-                    .clamp(0, audio.duration.value.inSeconds)
-                    .toInt(),
+                seconds: (audio.position.value.inSeconds + 10).clamp(
+                  0,
+                  audio.duration.value.inSeconds,
+                ),
               ),
             ),
           ),
@@ -358,6 +385,7 @@ class _PlaybackControls extends StatelessWidget {
   }
 }
 
+// ---------- CONTROL BUTTON ----------
 class _ControlButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
@@ -366,7 +394,7 @@ class _ControlButton extends StatelessWidget {
   const _ControlButton({
     required this.icon,
     required this.tooltip,
-    required this.onPressed,
+    this.onPressed,
   });
 
   @override
@@ -374,16 +402,20 @@ class _ControlButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return IconButton(
-      iconSize: 32,
+      iconSize: 30,
       tooltip: tooltip,
       onPressed: onPressed,
       icon: Icon(icon),
       color: colorScheme.onSurfaceVariant,
-      disabledColor: colorScheme.onSurface.withValues(alpha: 0.2),
+      disabledColor: colorScheme.onSurface.withOpacity(0.2),
+      splashRadius: 18,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
   }
 }
 
+// ---------- PLAY/PAUSE BUTTON ----------
 class _PlayPauseButton extends StatelessWidget {
   final AudioPlayerMode mode;
 
@@ -402,66 +434,39 @@ class _PlayPauseButton extends StatelessWidget {
         return IconButton(
           icon: isLoading
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
-              : Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+              : Icon(
+                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                ),
           onPressed: audio.togglePlayPause,
           color: colorScheme.primary,
+          splashRadius: 22,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         );
       }
 
-      if (mode == AudioPlayerMode.reader) {
-        return SizedBox(
-          width: 58,
-          height: 58,
-          child: FilledButton(
-            onPressed: audio.togglePlayPause,
-            style: FilledButton.styleFrom(
-              shape: const CircleBorder(),
-              padding: EdgeInsets.zero,
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-            ),
-            child: isLoading
-                ? SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: colorScheme.onPrimary,
-                    ),
-                  )
-                : Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    size: 32,
-                  ),
+      // Reader mode – large circular button
+      return SizedBox(
+        width: 60,
+        height: 60,
+        child: FilledButton(
+          onPressed: audio.togglePlayPause,
+          style: FilledButton.styleFrom(
+            shape: const CircleBorder(),
+            padding: EdgeInsets.zero,
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            elevation: 4,
+            shadowColor: colorScheme.primary.withOpacity(0.3),
           ),
-        );
-      }
-
-      return Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          color: colorScheme.primary,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withValues(alpha: 0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: IconButton(
-          iconSize: 40,
-          color: colorScheme.onPrimary,
-          icon: isLoading
+          child: isLoading
               ? const SizedBox(
-                  width: 28,
-                  height: 28,
+                  width: 24,
+                  height: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     color: Colors.white,
@@ -469,14 +474,15 @@ class _PlayPauseButton extends StatelessWidget {
                 )
               : Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  size: 34,
                 ),
-          onPressed: audio.togglePlayPause,
         ),
       );
     });
   }
 }
 
+// ---------- EXTRA CONTROLS (speed + volume) ----------
 class _ExtraControls extends StatelessWidget {
   const _ExtraControls();
 
@@ -484,7 +490,7 @@ class _ExtraControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [AudioSpeedButton(), SizedBox(width: 12), AudioVolumeButton()],
+      children: [AudioSpeedButton(), SizedBox(width: 16), AudioVolumeButton()],
     );
   }
 }

@@ -16,13 +16,21 @@ class BookDao {
   }
 
   Future<void> clearBookContent() async {
-    // Keep settings/user_settings intact; remove local book metadata/state.
+    // Keep settings/user_settings and book/chapter metadata intact;
+    // remove downloaded content state so the user can re-download later.
     await _db.delete(DbTables.bookmarks);
     await _db.delete(DbTables.readingProgress);
     await _db.delete(DbTables.downloadQueue);
     await _db.delete(DbTables.downloadedAssets);
-    await _db.delete(DbTables.localChapters);
-    await _db.delete(DbTables.localBooks);
+    await _db.delete(DbTables.syncVersions);
+    await _db.update(
+      DbTables.localChapters,
+      {
+        'is_downloaded': 0,
+        'content_text': null,
+        'content_segments_json': null,
+      },
+    );
   }
 
   Future<void> deleteBook(String bookId) async {
@@ -39,16 +47,45 @@ class BookDao {
     required LocalBook book,
     required List<LocalChapter> chapters,
   }) async {
+    final existingBook = await _db.query(
+      DbTables.localBooks,
+      columns: ['is_favorite'],
+      where: 'id = ?',
+      whereArgs: [book.id],
+      limit: 1,
+    );
+    final isBookFavorite = existingBook.isEmpty
+        ? book.isFavorite
+        : (existingBook.first['is_favorite'] as num?)?.toInt() == 1;
+    final bookValues = Map<String, Object?>.from(book.toDb());
+    bookValues['is_favorite'] = isBookFavorite ? 1 : 0;
+
     final batch = _db.batch();
     batch.insert(
       DbTables.localBooks,
-      book.toDb(),
+      bookValues,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     for (final ch in chapters) {
+      final existingChapter = await _db.query(
+        DbTables.localChapters,
+        columns: ['is_favorite', 'is_downloaded'],
+        where: 'id = ?',
+        whereArgs: [ch.id],
+        limit: 1,
+      );
+      final isChapterFavorite = existingChapter.isEmpty
+          ? ch.isFavorite
+          : (existingChapter.first['is_favorite'] as num?)?.toInt() == 1;
+      final isChapterDownloaded = existingChapter.isEmpty
+          ? ch.isDownloaded
+          : (existingChapter.first['is_downloaded'] as num?)?.toInt() == 1;
+      final chapterValues = Map<String, Object?>.from(ch.toDb());
+      chapterValues['is_favorite'] = isChapterFavorite ? 1 : 0;
+      chapterValues['is_downloaded'] = isChapterDownloaded ? 1 : 0;
       batch.insert(
         DbTables.localChapters,
-        ch.toDb(),
+        chapterValues,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
@@ -56,9 +93,25 @@ class BookDao {
   }
 
   Future<void> insertChapter(LocalChapter chapter) async {
+    final existing = await _db.query(
+      DbTables.localChapters,
+      columns: ['is_favorite', 'is_downloaded'],
+      where: 'id = ?',
+      whereArgs: [chapter.id],
+      limit: 1,
+    );
+    final isFavorite = existing.isEmpty
+        ? chapter.isFavorite
+        : (existing.first['is_favorite'] as num?)?.toInt() == 1;
+    final isDownloaded = existing.isEmpty
+        ? chapter.isDownloaded
+        : (existing.first['is_downloaded'] as num?)?.toInt() == 1;
+    final values = Map<String, Object?>.from(chapter.toDb());
+    values['is_favorite'] = isFavorite ? 1 : 0;
+    values['is_downloaded'] = isDownloaded ? 1 : 0;
     await _db.insert(
       DbTables.localChapters,
-      chapter.toDb(),
+      values,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -73,9 +126,21 @@ class BookDao {
   }
 
   Future<void> insertBook(LocalBook book) async {
+    final existing = await _db.query(
+      DbTables.localBooks,
+      columns: ['is_favorite'],
+      where: 'id = ?',
+      whereArgs: [book.id],
+      limit: 1,
+    );
+    final isFavorite = existing.isEmpty
+        ? book.isFavorite
+        : (existing.first['is_favorite'] as num?)?.toInt() == 1;
+    final values = Map<String, Object?>.from(book.toDb());
+    values['is_favorite'] = isFavorite ? 1 : 0;
     await _db.insert(
       DbTables.localBooks,
-      book.toDb(),
+      values,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -173,6 +238,126 @@ class BookDao {
       where: 'id = ?',
       whereArgs: [chapterId],
     );
+  }
+
+  Future<bool> isBookFavorite(String bookId) async {
+    final rows = await _db.query(
+      DbTables.localBooks,
+      columns: ['is_favorite'],
+      where: 'id = ?',
+      whereArgs: [bookId],
+      limit: 1,
+    );
+    return (rows.isEmpty ? null : rows.first['is_favorite'] as num?)?.toInt() == 1;
+  }
+
+  Future<void> setBookFavorite(String bookId, bool favorite) async {
+    await _db.update(
+      DbTables.localBooks,
+      {'is_favorite': favorite ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [bookId],
+    );
+  }
+
+  Future<bool> isChapterFavorite(String chapterId) async {
+    final rows = await _db.query(
+      DbTables.localChapters,
+      columns: ['is_favorite'],
+      where: 'id = ?',
+      whereArgs: [chapterId],
+      limit: 1,
+    );
+    return (rows.isEmpty ? null : rows.first['is_favorite'] as num?)?.toInt() == 1;
+  }
+
+  Future<void> setChapterFavorite(String chapterId, bool favorite) async {
+    await _db.update(
+      DbTables.localChapters,
+      {'is_favorite': favorite ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [chapterId],
+    );
+  }
+
+  Future<List<LocalBook>> getFavoriteBooks() async {
+    final rows = await _db.query(
+      DbTables.localBooks,
+      where: 'is_favorite = 1',
+      orderBy: 'id ASC',
+    );
+    return rows.map((e) => LocalBook.fromDb(e)).toList();
+  }
+
+  Future<List<LocalChapter>> getFavoriteChapters({String? bookId}) async {
+    String? where;
+    List<Object?>? whereArgs;
+    if (bookId != null) {
+      where = 'is_favorite = 1 AND book_id = ?';
+      whereArgs = [bookId];
+    } else {
+      where = 'is_favorite = 1';
+    }
+    final rows = await _db.query(
+      DbTables.localChapters,
+      where: where,
+      whereArgs: whereArgs,
+      orderBy: 'book_id ASC, sort_order ASC',
+    );
+    return rows.map((e) => LocalChapter.fromDb(e)).toList();
+  }
+
+  Future<bool> isPageFavorite({
+    required String bookId,
+    required String chapterId,
+    required int pageIndex,
+  }) async {
+    final rows = await _db.query(
+      DbTables.favoritePages,
+      where: 'book_id = ? AND chapter_id = ? AND page_index = ?',
+      whereArgs: [bookId, chapterId, pageIndex],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  Future<void> setPageFavorite({
+    required String bookId,
+    required String chapterId,
+    required int pageIndex,
+    required bool favorite,
+  }) async {
+    if (!favorite) {
+      await _db.delete(
+        DbTables.favoritePages,
+        where: 'book_id = ? AND chapter_id = ? AND page_index = ?',
+        whereArgs: [bookId, chapterId, pageIndex],
+      );
+      return;
+    }
+    await _db.insert(
+      DbTables.favoritePages,
+      {
+        'book_id': bookId,
+        'chapter_id': chapterId,
+        'page_index': pageIndex,
+        'created_at': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  Future<List<Map<String, Object?>>> getFavoritePages({String? bookId}) async {
+    final where = bookId == null ? '' : 'WHERE fp.book_id = ?';
+    final args = bookId == null ? <Object?>[] : <Object?>[bookId];
+    return _db.rawQuery('''
+      SELECT fp.*, b.title as book_title, c.title as chapter_title
+      FROM ${DbTables.favoritePages} fp
+      JOIN ${DbTables.localBooks} b ON fp.book_id = b.id
+      JOIN ${DbTables.localChapters} c ON fp.chapter_id = c.id
+      $where
+      ORDER BY fp.created_at DESC
+    ''', args);
   }
 
   Future<List<LocalBook>> getBooks() async {

@@ -65,24 +65,40 @@ class DownloadsScreen extends GetView<DownloadsController> {
         final item = queue[index - 1];
         final chapterId = item['chapter_id'] as String? ?? '';
         final status = item['status'] as String? ?? 'UNKNOWN';
-        final progress = (item['progress'] as num?)?.toDouble() ?? 0.0;
+        final queueProgress = (item['progress'] as num?)?.toDouble() ?? 0.0;
         final retryCount = (item['retry_count'] as num?)?.toInt() ?? 0;
         final canRetry = status == 'FAILED';
-        return ListTile(
-          leading: controller.queueIcon(status),
-          title: Text(
-            'Chapter ${chapterId.length > 8 ? chapterId.substring(0, 8) : chapterId}...',
-          ),
-          subtitle: Text(
-            '$status • ${(progress * 100).toStringAsFixed(0)}% • retries: $retryCount',
-          ),
-          trailing: canRetry
-              ? IconButton(
-                  icon: const Icon(Icons.replay),
-                  onPressed: () => controller.retryChapter(chapterId),
-                )
-              : null,
-        );
+        final isDownloading = status == 'DOWNLOADING';
+        return Obx(() {
+          final liveProgress = isDownloading
+              ? Get.find<SyncManager>().chapterDownloadProgress[chapterId]
+              : null;
+          final progress = liveProgress ?? queueProgress;
+          return ListTile(
+            leading: isDownloading
+                ? SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : controller.queueIcon(status),
+            title: Text(
+              'Chapter ${chapterId.length > 8 ? chapterId.substring(0, 8) : chapterId}...',
+            ),
+            subtitle: Text(
+              '$status • ${(progress * 100).toStringAsFixed(0)}% • retries: $retryCount',
+            ),
+            trailing: canRetry
+                ? IconButton(
+                    icon: const Icon(Icons.replay),
+                    onPressed: () => controller.retryChapter(chapterId),
+                  )
+                : null,
+          );
+        });
       }
     }
 

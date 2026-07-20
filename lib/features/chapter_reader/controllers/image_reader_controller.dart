@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:book_store/core/utils/asset_url.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -33,6 +36,7 @@ class ImageMedia {
 class ImageReaderController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
   final AudioPlayerService _audio = Get.find<AudioPlayerService>();
+  final SettingsRepository _settings = Get.find<SettingsRepository>();
   late final ChapterReaderController _chapterReader = Get.find<ChapterReaderController>();
 
   ChapterReaderController get chapterReader => _chapterReader;
@@ -51,12 +55,28 @@ class ImageReaderController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    unawaited(reload());
+  }
+
+  /// (Re)loads this chapter's images, audio and page controller. Called from
+  /// onInit and from ChapterReaderController.loadChapter when switching
+  /// chapters in place.
+  Future<void> reload() async {
+    _pageWorker?.dispose();
+    pageController?.dispose();
+
+    isLoading.value = true;
+    imageCount.value = 0;
+    media.value = null;
+    _lastReportedPage = -1;
+
     if (!_isImageBook) {
       isLoading.value = false;
+      update();
       return;
     }
 
-    _initMedia();
+    await _initMedia();
   }
 
   @override
@@ -94,6 +114,7 @@ class ImageReaderController extends GetxController {
           sourceTitle: _chapterReader.chapter.title,
           sourceSubtitle: _chapterReader.book.title,
           sourceArtUri: artUri,
+          initialSpeed: _settings.defaultSpeed.value,
         );
       }
     } else {
@@ -133,6 +154,7 @@ class ImageReaderController extends GetxController {
   }
 
   void _updateCurrentPage(int ms) {
+    if (!_settings.autoScroll.value) return;
     if (pageController == null || imageCount.value <= 0) return;
     if (!pageController!.hasClients || pageController!.page == null) return;
     final timings = media.value?.timings;

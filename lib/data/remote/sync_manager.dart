@@ -57,6 +57,8 @@ class SyncManager extends GetxService {
 
   final Rx<SyncState> syncState = SyncState.idle.obs;
   final RxString? currentDownload = RxString('');
+  final RxMap<String, double> bookDownloadProgress = <String, double>{}.obs;
+  final RxMap<String, double> chapterDownloadProgress = <String, double>{}.obs;
 
   /// Fetches the list of published remote books for this author.
   Future<List<RemoteBook>> fetchRemoteBooks() async {
@@ -96,8 +98,12 @@ class SyncManager extends GetxService {
   Future<void> downloadBook(String bookId) async {
     await _ensureDb();
     syncState.value = SyncState.downloading;
+    bookDownloadProgress[bookId] = 0.0;
     try {
       final remoteBook = await _bookRemoteSource.fetchBook(bookId);
+      if (!remoteBook.isPublished) {
+        throw Exception('Book $bookId is not published');
+      }
       await _syncBookMetadata(
         remoteBook,
         downloadCover: true,
@@ -106,9 +112,18 @@ class SyncManager extends GetxService {
 
       await _downloadCover(bookId, remoteBook.coverImage);
 
-      for (final summary in remoteBook.chapters) {
-        await downloadChapter(summary.id);
+      final totalChapters = remoteBook.chapters.length;
+      for (var i = 0; i < totalChapters; i++) {
+        final summary = remoteBook.chapters[i];
+        bookDownloadProgress[bookId] = i / totalChapters;
+        await downloadChapter(
+          summary.id,
+          onProgress: (chapterProgress) {
+            bookDownloadProgress[bookId] = (i + chapterProgress) / totalChapters;
+          },
+        );
       }
+      bookDownloadProgress[bookId] = 1.0;
     } finally {
       syncState.value = SyncState.idle;
       currentDownload?.value = '';
@@ -120,8 +135,12 @@ class SyncManager extends GetxService {
   Future<void> updateBook(String bookId) async {
     await _ensureDb();
     syncState.value = SyncState.downloading;
+    bookDownloadProgress[bookId] = 0.0;
     try {
       final remoteBook = await _bookRemoteSource.fetchBook(bookId);
+      if (!remoteBook.isPublished) {
+        throw Exception('Book $bookId is not published');
+      }
       await _syncBookMetadata(
         remoteBook,
         downloadCover: true,
@@ -131,15 +150,25 @@ class SyncManager extends GetxService {
       final localChapters = await _dao!.getChapters(bookId);
       final localChapterMap = {for (final c in localChapters) c.id: c};
 
+      final totalChapters = remoteBook.chapters.length;
+      var processedChapters = 0;
       for (final summary in remoteBook.chapters) {
         final local = localChapterMap[summary.id];
         if (local == null || !local.isDownloaded || summary.version > local.version) {
-          await downloadChapter(summary.id);
+          await downloadChapter(
+            summary.id,
+            onProgress: (chapterProgress) {
+              bookDownloadProgress[bookId] = (processedChapters + chapterProgress) / totalChapters;
+            },
+          );
         }
+        processedChapters++;
+        bookDownloadProgress[bookId] = processedChapters / totalChapters;
       }
 
       await _downloadCover(bookId, remoteBook.coverImage);
       await _dao!.updateBookVersion(bookId, remoteBook.version);
+      bookDownloadProgress[bookId] = 1.0;
     } finally {
       syncState.value = SyncState.idle;
       currentDownload?.value = '';
@@ -148,10 +177,14 @@ class SyncManager extends GetxService {
 
   /// Downloads the content and media for a single chapter and marks it as
   /// downloaded so it can be read offline.
-  Future<void> downloadChapter(String chapterId) async {
+  Future<void> downloadChapter(
+    String chapterId, {
+    void Function(double progress)? onProgress,
+  }) async {
     await _ensureDb();
     syncState.value = SyncState.downloading;
     currentDownload?.value = 'Fetching chapter...';
+    chapterDownloadProgress[chapterId] = 0.0;
     try {
       final chapter = await _chapterRemoteSource.fetchPages(chapterId);
 
@@ -162,7 +195,23 @@ class SyncManager extends GetxService {
       await _persistTextContent(chapter);
 
       // Download images and audio files.
-      await _downloadMedia(chapter);
+      final totalAssets = (chapter.pages?.length ?? 0) + (chapter.audios?.length ?? 0);
+      var completedAssets = 0;
+      void report() {
+        final progress = totalAssets == 0 ? 1.0 : completedAssets / totalAssets;
+        chapterDownloadProgress[chapterId] = progress;
+        onProgress?.call(progress);
+      }
+      report();
+      await _downloadMedia(
+        chapter,
+        onAssetComplete: () {
+          completedAssets++;
+          report();
+        },
+      );
+      chapterDownloadProgress[chapterId] = 1.0;
+      onProgress?.call(1.0);
 
       // Record the downloaded content version.
       final localChapter = LocalChapter(
@@ -288,7 +337,10 @@ class SyncManager extends GetxService {
     );
   }
 
-  Future<void> _downloadMedia(RemoteChapter chapter) async {
+  Future<void> _downloadMedia(
+    RemoteChapter chapter, {
+    void Function()? onAssetComplete,
+  }) async {
     final bookId = chapter.bookId;
 
     if (chapter.pages != null) {
@@ -306,6 +358,7 @@ class SyncManager extends GetxService {
           audioStartTime: page.audioStartTime,
           audioEndTime: page.audioEndTime,
         );
+        onAssetComplete?.call();
       }
     }
 
@@ -321,6 +374,7 @@ class SyncManager extends GetxService {
           assetType: 'AUDIO',
           filePath: localPath,
         );
+        onAssetComplete?.call();
       }
     }
   }

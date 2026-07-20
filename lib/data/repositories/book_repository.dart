@@ -94,4 +94,47 @@ class BookRepository extends GetxService {
     String chapterId, {
     String? assetType,
   }) => _dao.getDownloadedAssets(chapterId, assetType: assetType);
+
+  Future<bool> isBookFavorite(String bookId) => _dao.isBookFavorite(bookId);
+
+  Future<void> setBookFavorite(String bookId, bool favorite) =>
+      _dao.setBookFavorite(bookId, favorite);
+
+  Future<bool> isChapterFavorite(String chapterId) =>
+      _dao.isChapterFavorite(chapterId);
+
+  Future<void> setChapterFavorite(String chapterId, bool favorite) =>
+      _dao.setChapterFavorite(chapterId, favorite);
+
+  Future<List<LocalBook>> getFavoriteBooks() => _dao.getFavoriteBooks();
+
+  Future<List<LocalChapter>> getFavoriteChapters({String? bookId}) =>
+      _dao.getFavoriteChapters(bookId: bookId);
+
+  Future<bool> isPageFavorite({
+    required String bookId,
+    required String chapterId,
+    required int pageIndex,
+  }) =>
+      _dao.isPageFavorite(
+        bookId: bookId,
+        chapterId: chapterId,
+        pageIndex: pageIndex,
+      );
+
+  Future<void> setPageFavorite({
+    required String bookId,
+    required String chapterId,
+    required int pageIndex,
+    required bool favorite,
+  }) =>
+      _dao.setPageFavorite(
+        bookId: bookId,
+        chapterId: chapterId,
+        pageIndex: pageIndex,
+        favorite: favorite,
+      );
+
+  Future<List<Map<String, Object?>>> getFavoritePages({String? bookId}) =>
+      _dao.getFavoritePages(bookId: bookId);
 }

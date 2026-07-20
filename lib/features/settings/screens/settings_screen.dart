@@ -1,4 +1,5 @@
 import 'package:book_store/features/settings/controllers/settings_controller.dart';
+import 'package:book_store/features/settings/screens/about_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -7,55 +8,383 @@ class SettingsScreen extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
+      appBar: AppBar(
+        title: const Text('Settings'),
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          children: [
+            // ---- Appearance ----
+            _buildSectionHeader('Appearance'),
+            _buildThemeSwitch(colorScheme),
+            const SizedBox(height: 24),
+
+            // ---- Reading Preferences ----
+            _buildSectionHeader('Reading Preferences'),
+            _buildReadingSettings(),
+            const SizedBox(height: 24),
+
+            // ---- Audio Settings ----
+            _buildSectionHeader('Audio Settings'),
+            _buildAudioSettings(),
+            const SizedBox(height: 24),
+
+            // ---- Library Preferences ----
+            _buildSectionHeader('Library'),
+            _buildLibrarySettings(),
+            const SizedBox(height: 24),
+
+            // ---- Notifications ----
+            _buildSectionHeader('Notifications'),
+            _buildNotificationSettings(),
+            const SizedBox(height: 24),
+
+            // ---- Data Management ----
+            _buildSectionHeader('Data Management'),
+            _buildDataManagement(),
+            const SizedBox(height: 24),
+
+            // ---- About ----
+            _buildSectionHeader('About'),
+            _buildAbout(),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // -- Theme Switch --
+  Widget _buildThemeSwitch(ColorScheme colorScheme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Obx(() {
+        return SwitchListTile(
+          title: const Text('Dark Theme'),
+          subtitle: Text(
+            controller.themeMode.value == ThemeMode.dark
+                ? 'Dark mode enabled'
+                : 'Light mode enabled',
+          ),
+          value: controller.themeMode.value == ThemeMode.dark,
+          onChanged: (value) {
+            controller.setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
+          },
+          activeThumbColor: colorScheme.primary,
+          secondary: Icon(
+            controller.themeMode.value == ThemeMode.dark
+                ? Icons.dark_mode_rounded
+                : Icons.light_mode_rounded,
+            color: controller.themeMode.value == ThemeMode.dark
+                ? Colors.amber
+                : colorScheme.primary,
+          ),
+        );
+      }),
+    );
+  }
+
+  // -- Reading Settings --
+  Widget _buildReadingSettings() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
         children: [
-          Obx(() {
-            return ListTile(
-              title: const Text('Theme'),
-              subtitle: Text(controller.themeMode.value.name),
-              trailing: DropdownButton<ThemeMode>(
-                value: controller.themeMode.value,
-                onChanged: (mode) {
-                  if (mode != null) {
-                    controller.setThemeMode(mode);
-                  }
-                },
-                items: ThemeMode.values
-                    .map(
-                      (mode) => DropdownMenuItem(
-                        value: mode,
-                        child: Text(mode.name),
-                      ),
-                    )
-                    .toList(),
+          // a text size for text based books
+          ListTile(
+            leading: const Icon(Icons.text_fields_rounded, color: Colors.blue),
+            title: const Text('Font Size'),
+            subtitle: Obx(() => Text(controller.fontSize.value)),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => _showFontSizeDialog(),
+          ),
+          const Divider(height: 0, indent: 60),
+          // Auto Scroll/next page for chapter reader
+          Obx(
+            () => SwitchListTile(
+              secondary: const Icon(
+                Icons.auto_awesome_rounded,
+                color: Colors.blue,
               ),
-            );
-          }),
-          ListTile(
-            title: const Text('Reset onboarding'),
-            leading: const Icon(Icons.restart_alt),
-            onTap: controller.resetOnboarding,
+              title: const Text('Auto-Scroll'),
+              subtitle: const Text('Automatically scroll pages'),
+              value: controller.autoScroll.value,
+              onChanged: controller.toggleAutoScroll,
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // -- Audio Settings --
+  Widget _buildAudioSettings() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
           ListTile(
-            title: const Text('Reset reading progress'),
-            subtitle: const Text('Clear all book and chapter reading progress.'),
-            leading: const Icon(Icons.restore_page, color: Colors.orange),
+            leading: const Icon(Icons.speed_rounded, color: Colors.purple),
+            title: const Text('Default Playback Speed'),
+            subtitle: Obx(() => Text('${controller.defaultSpeed.value}x')),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => _showSpeedDialog(),
+          ),
+          const Divider(height: 0, indent: 60),
+          // Auto move to next chapter when the next clicks because one chapter has only one audio
+          Obx(
+            () => SwitchListTile(
+              secondary: const Icon(
+                Icons.skip_next_rounded,
+                color: Colors.purple,
+              ),
+              title: const Text('Auto-Play Next'),
+              subtitle: const Text('Automatically play next chapter'),
+              value: controller.autoPlayNext.value,
+              onChanged: controller.toggleAutoPlayNext,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -- Library Settings --
+  Widget _buildLibrarySettings() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          Obx(
+            () => SwitchListTile(
+              secondary: const Icon(
+                Icons.offline_bolt_rounded,
+                color: Colors.green,
+              ),
+              title: const Text('Offline Mode'),
+              subtitle: const Text('Show only downloaded content'),
+              value: controller.offlineMode.value,
+              onChanged: controller.toggleOfflineMode,
+            ),
+          ),
+          const Divider(height: 0, indent: 60),
+          Obx(
+            () => SwitchListTile(
+              secondary: const Icon(Icons.download_rounded, color: Colors.green),
+              title: const Text('Auto-Download'),
+              subtitle: const Text('Download new chapters automatically'),
+              value: controller.autoDownload.value,
+              onChanged: controller.toggleAutoDownload,
+            ),
+          ),
+          const Divider(height: 0, indent: 60),
+          ListTile(
+            leading: const Icon(Icons.storage_rounded, color: Colors.green),
+            title: const Text('Storage'),
+            subtitle: const Text('Manage downloaded content'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => _showStorageDialog(),
+          ),
+        ],
+      ),
+    );
+  }
+  // -- Notifications --
+  Widget _buildNotificationSettings() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          Obx(
+            () => SwitchListTile(
+              secondary: const Icon(Icons.book_rounded, color: Colors.teal),
+              title: const Text('New Books'),
+              subtitle: const Text('Notify when new books are added'),
+              value: controller.notifyNewBooks.value,
+              onChanged: controller.toggleNotifyNewBooks,
+            ),
+          ),
+          const Divider(height: 0, indent: 60),
+          Obx(
+            () => SwitchListTile(
+              secondary: const Icon(Icons.update_rounded, color: Colors.teal),
+              title: const Text('Updates'),
+              subtitle: const Text('Notify when content is updated'),
+              value: controller.notifyUpdates.value,
+              onChanged: controller.toggleNotifyUpdates,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -- Data Management --
+  Widget _buildDataManagement() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(
+              Icons.restore_page_rounded,
+              color: Colors.orange,
+            ),
+            title: const Text('Reset Reading Progress'),
+            subtitle: const Text('Clear all book and chapter progress.'),
             onTap: controller.resetReadingProgress,
+            trailing: const Icon(Icons.chevron_right_rounded),
           ),
-          ListTile(
-            title: const Text('Clear downloaded books'),
-            subtitle: const Text('Remove all downloaded books, chapters, and media.'),
-            leading: const Icon(Icons.delete_sweep),
-            onTap: controller.clearDownloads,
+          // const Divider(height: 0, indent: 60),
+          // ListTile(
+          //   leading: const Icon(Icons.cached_rounded, color: Colors.grey),
+          //   title: const Text('Clear Cache'),
+          //   subtitle: const Text('Clear temporary files and cached data'),
+          //   onTap: controller.clearCache,
+          //   trailing: const Icon(Icons.chevron_right_rounded),
+          // ),
+        ],
+      ),
+    );
+  }
+
+  // -- About --
+  Widget _buildAbout() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ListTile(
+        leading: const Icon(Icons.info_outline_rounded, color: Colors.teal),
+        title: const Text('About this app'),
+        subtitle: const Text('Version 1.0.0'),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () => Get.to(() => const AboutScreen()),
+      ),
+    );
+  }
+
+  // -- Section Header --
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Theme.of(Get.context!).colorScheme.onSurfaceVariant,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  // ===== DIALOGS =====
+
+  void _showFontSizeDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Font Size'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Obx(
+              () => Slider(
+                value: controller.fontSizeSlider.value,
+                min: 0.8,
+                max: 1.8,
+                divisions: 10,
+                label: '${(controller.fontSizeSlider.value * 100).round()}%',
+                onChanged: controller.updateFontSize,
+              ),
+            ),
+            Obx(
+              () => Text(
+                'Sample text — size: ${(controller.fontSizeSlider.value * 100).round()}%',
+                style: TextStyle(
+                  fontSize: 14 * controller.fontSizeSlider.value,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Done')),
+        ],
+      ),
+    );
+  }
+
+  void _showSpeedDialog() {
+    const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Default Playback Speed'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: speeds.map((speed) {
+              return ListTile(
+                title: Text('${speed}x'),
+                trailing: Obx(
+                  () => Radio<double>(
+                    value: speed,
+                    groupValue: controller.defaultSpeed.value,
+                    onChanged: (value) {
+                      if (value != null) controller.setDefaultSpeed(value);
+                      Get.back();
+                    },
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-          const AboutListTile(
-            icon: Icon(Icons.info),
-            applicationName: 'Book Reader',
-            applicationVersion: '1.0.0',
-            applicationLegalese: 'Book Store Mobile Reader',
-          ),
+        ),
+      ),
+    );
+  }
+
+
+  void _showStorageDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Storage'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(
+              leading: Icon(Icons.sd_storage_rounded),
+              title: Text('Used Storage'),
+              subtitle: Text('245 MB'),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(
+                Icons.delete_forever_rounded,
+                color: Colors.red,
+              ),
+              title: const Text('Clear All Downloads'),
+              onTap: () {
+                Get.back();
+                controller.clearDownloads();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Close')),
         ],
       ),
     );

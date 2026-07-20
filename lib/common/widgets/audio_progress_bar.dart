@@ -159,6 +159,13 @@ class _AudioProgressBarState extends State<AudioProgressBar> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary,
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
               ),

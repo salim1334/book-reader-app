@@ -4,6 +4,8 @@ import 'package:book_store/features/chapter_reader/bindings/chapter_reader_bindi
 import 'package:book_store/features/chapter_reader/screens/chapter_reader_screen.dart';
 import 'package:book_store/features/downloads/bindings/downloads_binding.dart';
 import 'package:book_store/features/downloads/screens/downloads_screen.dart';
+import 'package:book_store/features/favorites/bindings/favorites_binding.dart';
+import 'package:book_store/features/favorites/screens/favorites_screen.dart';
 import 'package:book_store/features/home/bindings/home_binding.dart';
 import 'package:book_store/features/home/screens/home_screen.dart';
 import 'package:book_store/features/main_navigation/bindings/main_navigation_binding.dart';
@@ -60,6 +62,11 @@ class AppPages {
       name: Routes.downloads,
       page: () => const DownloadsScreen(),
       binding: DownloadsBinding(),
+    ),
+    GetPage(
+      name: Routes.favorites,
+      page: () => const FavoritesScreen(),
+      binding: FavoritesBinding(),
     ),
     GetPage(
       name: Routes.settings,

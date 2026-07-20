@@ -49,6 +49,7 @@ class LocalBook {
     required this.type,
     this.swipeDirection = SwipeDirection.rtl,
     required this.version,
+    this.isFavorite = false,
   });
 
   final String id;
@@ -58,6 +59,7 @@ class LocalBook {
   final LocalBookType type;
   final SwipeDirection swipeDirection;
   final int version;
+  final bool isFavorite;
 
   Map<String, Object?> toDb() => {
     'id': id,
@@ -67,6 +69,7 @@ class LocalBook {
     'book_type': type.dbValue,
     'swipe_direction': swipeDirection.dbValue,
     'version': version,
+    'is_favorite': isFavorite ? 1 : 0,
   };
 
   static LocalBook fromDb(Map<String, Object?> row) {
@@ -78,6 +81,7 @@ class LocalBook {
       type: LocalBookTypeX.fromDb(row['book_type']?.toString() ?? 'TEXT'),
       swipeDirection: SwipeDirectionX.fromDb(row['swipe_direction']?.toString()),
       version: (row['version'] as num?)?.toInt() ?? 0,
+      isFavorite: (row['is_favorite'] as num?)?.toInt() == 1,
     );
   }
 }
@@ -127,6 +131,7 @@ class LocalChapter {
     this.contentSegments,
     required this.version,
     this.isDownloaded = false,
+    this.isFavorite = false,
   });
 
   final String id;
@@ -138,6 +143,7 @@ class LocalChapter {
   final List<TextSegment>? contentSegments;
   final int version;
   final bool isDownloaded;
+  final bool isFavorite;
 
   Map<String, Object?> toDb() => {
     'id': id,
@@ -151,6 +157,7 @@ class LocalChapter {
         : jsonEncode(contentSegments!.map((s) => s.toJson()).toList()),
     'version': version,
     'is_downloaded': isDownloaded ? 1 : 0,
+    'is_favorite': isFavorite ? 1 : 0,
   };
 
   static LocalChapter fromDb(Map<String, Object?> row) {
@@ -173,6 +180,7 @@ class LocalChapter {
       contentSegments: segments,
       version: (row['version'] as num?)?.toInt() ?? 0,
       isDownloaded: (row['is_downloaded'] as num?)?.toInt() == 1,
+      isFavorite: (row['is_favorite'] as num?)?.toInt() == 1,
     );
   }
 }

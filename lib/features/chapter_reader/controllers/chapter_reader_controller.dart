@@ -1,21 +1,32 @@
+import 'package:book_store/common/utils/snackbar_helper.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
+import 'package:book_store/features/chapter_reader/controllers/image_reader_controller.dart';
+import 'package:book_store/features/chapter_reader/controllers/text_reader_controller.dart';
 import 'package:book_store/features/chapter_reader/presentation/arguments/chapter_reader_args.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ChapterReaderController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
+  final AudioPlayerService _audio = Get.find<AudioPlayerService>();
+  final SettingsRepository _settings = Get.find<SettingsRepository>();
 
-  late final LocalBook book;
-  late final LocalChapter chapter;
-  late final int initialPageIndex;
-  late final int initialPositionMs;
+  late LocalBook book;
+  late LocalChapter chapter;
+  late int initialPageIndex;
+  late int initialPositionMs;
+
+  final chapterTitle = ''.obs;
+  final bookType = LocalBookType.text.obs;
+  final chapterKey = UniqueKey().obs;
 
   final lastPageIndex = 0.obs;
   final lastPositionMs = 0.obs;
   final chapterProgressPercent = 0.0.obs;
+  final isPageFavorite = false.obs;
 
   @override
   Future<void> onInit() async {
@@ -28,10 +39,18 @@ class ChapterReaderController extends GetxController {
     chapter = args.chapter;
     initialPageIndex = args.initialPageIndex;
     initialPositionMs = args.initialPositionMs;
+    chapterTitle.value = chapter.title;
+    bookType.value = book.type;
+    chapterKey.value = UniqueKey();
 
     lastPageIndex.value = initialPageIndex;
     lastPositionMs.value = initialPositionMs;
 
+    _audio.onQueueCompleted = () { _onAudioFinished(); };
+    _audio.onSkipToNext = _skipToNextChapter;
+    _audio.onSkipToPrevious = _skipToPreviousChapter;
+
+    await _loadPageFavoriteState();
     await _saveProgress(
       pageIndex: initialPageIndex,
       positionMs: initialPositionMs,
@@ -41,7 +60,31 @@ class ChapterReaderController extends GetxController {
 
   Future<void> updatePage(int pageIndex) async {
     lastPageIndex.value = pageIndex;
+    await _loadPageFavoriteState();
     await _saveProgress(pageIndex: pageIndex);
+  }
+
+  Future<void> _loadPageFavoriteState() async {
+    try {
+      isPageFavorite.value = await _repository.isPageFavorite(
+        bookId: book.id,
+        chapterId: chapter.id,
+        pageIndex: lastPageIndex.value,
+      );
+    } catch (e) {
+      debugPrint('Failed to load page favorite state: $e');
+    }
+  }
+
+  Future<void> togglePageFavorite() async {
+    final newValue = !isPageFavorite.value;
+    await _repository.setPageFavorite(
+      bookId: book.id,
+      chapterId: chapter.id,
+      pageIndex: lastPageIndex.value,
+      favorite: newValue,
+    );
+    isPageFavorite.value = newValue;
   }
 
   Future<void> updatePosition(int positionMs) async {
@@ -56,12 +99,80 @@ class ChapterReaderController extends GetxController {
 
   @override
   Future<void> onClose() async {
+    _audio.onQueueCompleted = null;
+    _audio.onSkipToNext = null;
+    _audio.onSkipToPrevious = null;
     await _saveProgress(
       pageIndex: lastPageIndex.value,
       positionMs: lastPositionMs.value,
       chapterProgressPercent: chapterProgressPercent.value,
     );
     super.onClose();
+  }
+
+  /// Handles completion of the current audio queue. If Auto-Play Next is on
+  /// and the next chapter is downloaded, load it in place.
+  Future<void> _onAudioFinished() async {
+    if (!_settings.autoPlayNext.value) return;
+    await _skipToNextChapter();
+  }
+
+  Future<void> _skipToNextChapter() async {
+    final chapters = await _repository.getChapters(book.id);
+    final currentIndex = chapters.indexWhere((c) => c.id == chapter.id);
+    if (currentIndex < 0 || currentIndex >= chapters.length - 1) return;
+
+    final next = chapters[currentIndex + 1];
+    if (!next.isDownloaded) {
+      SnackbarHelper.show('Next chapter is not downloaded.');
+      return;
+    }
+
+    await loadChapter(next);
+  }
+
+  Future<void> _skipToPreviousChapter() async {
+    final chapters = await _repository.getChapters(book.id);
+    final currentIndex = chapters.indexWhere((c) => c.id == chapter.id);
+    if (currentIndex <= 0) return;
+
+    final previous = chapters[currentIndex - 1];
+    if (!previous.isDownloaded) {
+      SnackbarHelper.show('Previous chapter is not downloaded.');
+      return;
+    }
+
+    await loadChapter(previous);
+  }
+
+  /// Reload the reader for a new chapter without replacing the route, avoiding
+  /// GetX controller lifetime issues when navigating to the same page.
+  Future<void> loadChapter(LocalChapter newChapter) async {
+    chapter = newChapter;
+    initialPageIndex = 0;
+    initialPositionMs = 0;
+
+    lastPageIndex.value = 0;
+    lastPositionMs.value = 0;
+    chapterProgressPercent.value = 0.0;
+    isPageFavorite.value = false;
+
+    await _loadPageFavoriteState();
+    await _saveProgress(
+      pageIndex: 0,
+      positionMs: 0,
+      chapterProgressPercent: 0.0,
+    );
+
+    if (book.type == LocalBookType.text) {
+      await Get.find<TextReaderController>().reload();
+    } else {
+      await Get.find<ImageReaderController>().reload();
+    }
+
+    chapterTitle.value = newChapter.title;
+    bookType.value = book.type;
+    chapterKey.value = UniqueKey();
   }
 
   Future<void> _saveProgress({

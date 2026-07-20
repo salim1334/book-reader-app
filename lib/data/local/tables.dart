@@ -8,4 +8,5 @@ abstract final class DbTables {
   static const String downloadedAssets = 'downloaded_assets';
   static const String syncVersions = 'sync_versions';
   static const String userSettings = 'user_settings';
+  static const String favoritePages = 'favorite_pages';
 }

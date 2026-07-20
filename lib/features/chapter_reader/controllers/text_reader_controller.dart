@@ -4,6 +4,7 @@ import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:book_store/core/utils/asset_url.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,12 +12,13 @@ import 'package:get/get.dart';
 class TextReaderController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
   final AudioPlayerService _audio = Get.find<AudioPlayerService>();
+  final SettingsRepository _settings = Get.find<SettingsRepository>();
   late final ChapterReaderController _chapterReader = Get.find<ChapterReaderController>();
 
   ChapterReaderController get chapterReader => _chapterReader;
 
   late final ScrollController scrollController;
-  late final List<GlobalKey> segmentKeys;
+  List<GlobalKey> segmentKeys = [];
 
   final positionMs = 0.obs;
   final audioDurationMs = 0.obs;
@@ -29,19 +31,40 @@ class TextReaderController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    positionMs.value = _chapterReader.initialPositionMs;
-    final segments = _chapterReader.chapter.contentSegments;
-    segmentKeys = List.generate(segments?.length ?? 0, (_) => GlobalKey());
     scrollController = ScrollController();
-    scrollController.addListener(_onScroll);
+    unawaited(reload());
+  }
+
+  /// (Re)loads this chapter's text, segment keys and audio. Called from onInit
+  /// and from ChapterReaderController.loadChapter when moving to the next/prev
+  /// chapter in place.
+  Future<void> reload() async {
+    _positionWorker?.dispose();
+    _durationWorker?.dispose();
+
+    positionMs.value = _chapterReader.initialPositionMs;
+    hasAudio.value = false;
+    currentSegmentIndex.value = -1;
+
+    final segments = _chapterReader.chapter.contentSegments;
+    final newSegmentCount = segments?.length ?? 0;
+    // Keep a long-enough list so the old widget doesn't access a stale shorter
+    // list while the chapter change is in flight.
+    if (newSegmentCount > segmentKeys.length) {
+      segmentKeys = List.generate(newSegmentCount, (_) => GlobalKey());
+    }
+
+    if (scrollController.hasClients) {
+      scrollController.jumpTo(0);
+    }
 
     _updateCurrentSegment();
 
     if (_chapterReader.book.type == LocalBookType.text) {
-      _initAudio();
-    } else {
-      hasAudio.value = false;
+      await _initAudio();
     }
+
+    update();
   }
 
   @override
@@ -102,6 +125,7 @@ class TextReaderController extends GetxController {
       sourceTitle: _chapterReader.chapter.title,
       sourceSubtitle: _chapterReader.book.title,
       sourceArtUri: artUri,
+      initialSpeed: _settings.defaultSpeed.value,
     );
   }
 
@@ -149,7 +173,7 @@ class TextReaderController extends GetxController {
 
     if (index != currentSegmentIndex.value) {
       currentSegmentIndex.value = index;
-      if (index != -1) {
+      if (index != -1 && _settings.autoScroll.value) {
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => _scrollToSegment(index),
         );

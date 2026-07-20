@@ -2,6 +2,7 @@ import 'package:book_store/common/utils/snackbar_helper.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/book_details/presentation/arguments/book_details_args.dart';
 import 'package:book_store/features/chapter_reader/presentation/arguments/chapter_reader_args.dart';
 import 'package:book_store/features/home/domain/entities/continue_reading.dart';
@@ -12,20 +13,41 @@ import 'package:get/get.dart';
 class HomeController extends GetxController {
   final BookRepository _bookRepository = Get.find<BookRepository>();
   final SyncManager _syncManager = Get.find<SyncManager>();
+  final SettingsRepository _settings = Get.find<SettingsRepository>();
 
   final books = <LocalBook>[].obs;
   final continueReading = Rxn<ContinueReading>();
   final isLoading = true.obs;
   final errorMessage = Rxn<String>();
   final isOffline = false.obs;
+  RxBool get offlineMode => _settings.offlineMode;
   final downloadingBookId = Rxn<String>();
   final downloadedBooks = <String, bool>{}.obs;
   final bookProgress = <String, double>{}.obs;
+  final bookFavorites = <String, bool>{}.obs;
+
+  Worker? _offlineModeWorker;
+  Worker? _autoDownloadWorker;
 
   @override
   Future<void> onInit() async {
     super.onInit();
     await initialize();
+    _bindSettingWorkers();
+  }
+
+  void _bindSettingWorkers() {
+    _offlineModeWorker = ever(_settings.offlineMode, (_) => loadBooks());
+    _autoDownloadWorker = ever(_settings.autoDownload, (_) {
+      if (_settings.autoDownload.value) autoSync();
+    });
+  }
+
+  @override
+  Future<void> onClose() async {
+    _offlineModeWorker?.dispose();
+    _autoDownloadWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> initialize() async {
@@ -37,21 +59,29 @@ class HomeController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = null;
+      final offlineOnly = _settings.offlineMode.value;
 
       final loadedBooks = await _bookRepository.getBooks();
       final cont = await _loadContinueReading();
       final downloaded = <String, bool>{};
       final progress = <String, double>{};
+      final favorites = <String, bool>{};
 
       for (final book in loadedBooks) {
         downloaded[book.id] = await _isBookDownloaded(book);
         progress[book.id] = await _bookRepository.getBookProgressPercent(book.id);
+        favorites[book.id] = await _bookRepository.isBookFavorite(book.id);
       }
 
-      books.value = loadedBooks;
+      final booksToShow = offlineOnly
+          ? loadedBooks.where((book) => downloaded[book.id] == true).toList()
+          : loadedBooks;
+
+      books.value = booksToShow;
       continueReading.value = cont;
       downloadedBooks.assignAll(downloaded);
       bookProgress.assignAll(progress);
+      bookFavorites.assignAll(favorites);
       isLoading.value = false;
     } catch (e) {
       isLoading.value = false;
@@ -94,12 +124,21 @@ class HomeController extends GetxController {
 
   Future<void> autoSync() async {
     final online = await _syncManager.isOnline();
-    isOffline.value = !online;
+    isOffline.value = !online || _settings.offlineMode.value;
     if (!online) return;
 
     try {
       await _syncManager.syncCatalog();
       await loadBooks();
+
+      if (_settings.autoDownload.value) {
+        final allBooks = await _bookRepository.getBooks();
+        for (final book in allBooks) {
+          if (!(downloadedBooks[book.id] ?? false)) {
+            await downloadBook(book);
+          }
+        }
+      }
     } catch (e) {
       SnackbarHelper.show('Could not refresh catalog: $e');
     }
@@ -116,6 +155,12 @@ class HomeController extends GetxController {
     } finally {
       downloadingBookId.value = null;
     }
+  }
+
+  Future<void> toggleBookFavorite(LocalBook book) async {
+    final newValue = !(bookFavorites[book.id] ?? false);
+    await _bookRepository.setBookFavorite(book.id, newValue);
+    bookFavorites[book.id] = newValue;
   }
 
   void openBook(LocalBook book) {

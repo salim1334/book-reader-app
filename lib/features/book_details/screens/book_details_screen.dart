@@ -13,7 +13,22 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Obx(() => Text(controller.book.value?.title ?? ''))),
+      appBar: AppBar(
+        title: Obx(() => Text(controller.book.value?.title ?? '')),
+        actions: [
+          Obx(() {
+            final isFavorite = controller.isBookFavorite.value;
+            return IconButton(
+              icon: Icon(
+                isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                color: isFavorite ? Colors.red : null,
+              ),
+              onPressed: controller.toggleBookFavorite,
+              tooltip: 'Favorite',
+            );
+          }),
+        ],
+      ),
       body: Obx(() {
         if (controller.isLoading.value && controller.book.value == null) {
           return const LoadingIndicator();
@@ -34,27 +49,74 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              SliverToBoxAdapter(child: _UpdateBanner()),
-              SliverToBoxAdapter(child: _buildCover(book.coverUrl)),
-              SliverToBoxAdapter(child: _buildBookInfo(book)),
+              // ---- Header Card (cover + info) ----
+              SliverToBoxAdapter(child: _buildHeaderCard(book, context)),
+
+              // ---- Progress Bar ----
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildProgressBar(),
+                ),
+              ),
+
+              // ---- Update Banner ----
+              SliverToBoxAdapter(
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: _UpdateBanner(),
+                ),
+              ),
+
+              // ---- Divider & "Chapters" title ----
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Chapters',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ---- Chapters List ----
               if (controller.chapters.isEmpty)
                 const SliverFillRemaining(
                   child: Center(child: Text('No chapters available')),
                 )
               else
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
+                SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
                       final chapter = controller.chapters[index];
                       return Obx(() {
-                        final isOutdated = controller.outdatedChapterIds.contains(chapter.id);
-                        final progress = controller.chapterProgress[chapter.id] ?? 0.0;
+                        final isOutdated = controller.outdatedChapterIds
+                            .contains(chapter.id);
+                        final progress =
+                            controller.chapterProgress[chapter.id] ?? 0.0;
                         return ChapterListTile(
                           index: index,
                           chapter: chapter,
                           progress: progress,
                           isOutdated: isOutdated,
-                          isDownloading: controller.downloadingChapterId.value == chapter.id,
+                          isDownloading:
+                              controller.downloadingChapterId.value ==
+                              chapter.id,
+                          isFavorite:
+                              controller.chapterFavoriteStates[chapter.id] ??
+                              false,
+                          onFavorite: () =>
+                              controller.toggleChapterFavorite(chapter.id),
                           onTap: () {
                             if (chapter.isDownloaded && !isOutdated) {
                               controller.openChapter(chapter);
@@ -64,8 +126,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                           },
                         );
                       });
-                    },
-                    childCount: controller.chapters.length,
+                    }, childCount: controller.chapters.length),
                   ),
                 ),
             ],
@@ -75,84 +136,193 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
     );
   }
 
-  Widget _buildCover(String? coverUrl) {
-    if (coverUrl == null || coverUrl.isEmpty) return const SizedBox.shrink();
-    return CoverImage(
-      coverUrl: coverUrl,
-      borderRadius: 0,
-      aspectRatio: 16 / 9,
-    );
-  }
+  // ---- Header: book info (left) + cover (right) ----
+  Widget _buildHeaderCard(LocalBook book, BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Book info (expanded)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      book.title,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Chip(
+                      label: Text(
+                        book.type == LocalBookType.text ? 'TEXT' : 'IMAGE',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      backgroundColor: theme.colorScheme.primaryContainer
+                          .withOpacity(0.5),
+                      side: BorderSide.none,
+                    ),
+                    if (book.description != null &&
+                        book.description!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        book.description!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.5,
+                        ),
+                        maxLines: 5,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
 
-  Widget _buildBookInfo(LocalBook book) {
-    return Builder(
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              book.title,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Chip(
-              label: Text(book.type == LocalBookType.text ? 'TEXT' : 'IMAGE'),
-              visualDensity: VisualDensity.compact,
-            ),
-            if (book.description != null && book.description!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                book.description!,
-                style: Theme.of(context).textTheme.bodyMedium,
+              // Cover image (120x180, like continue reading)
+              Hero(
+                tag: 'book_cover_${book.id}',
+                child: Material(
+                  elevation: 8,
+                  borderRadius: BorderRadius.circular(16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: book.coverUrl != null && book.coverUrl!.isNotEmpty
+                        ? CoverImage(
+                            coverUrl: book.coverUrl!,
+                            width: 120,
+                            height: 180,
+                            borderRadius: 16,
+                          )
+                        : Container(
+                            width: 120,
+                            height: 180,
+                            color: theme.colorScheme.primaryContainer,
+                            child: Icon(
+                              Icons.menu_book,
+                              size: 60,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                  ),
+                ),
               ),
             ],
-            const SizedBox(height: 16),
-            Obx(
-              () => Row(
-                children: [
-                  Expanded(
-                    child: LinearProgressIndicator(
-                      value: controller.bookProgressPercent.value,
-                      color: Colors.green,
-                      backgroundColor: Colors.grey.shade300,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text('${(controller.bookProgressPercent.value * 100).round()}%'),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
+
+  // ---- Progress bar ----
+  Widget _buildProgressBar() {
+    return Obx(() {
+      final progress = controller.bookProgressPercent.value;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Reading progress',
+                style: Theme.of(Get.context!).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(Get.context!).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                '${(progress * 100).round()}%',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              color: Colors.green,
+              backgroundColor: Colors.grey.shade300,
+            ),
+          ),
+        ],
+      );
+    });
+  }
 }
 
+// ---- Update Banner (styled) ----
 class _UpdateBanner extends GetView<BookDetailsController> {
+  const _UpdateBanner();
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       if (!controller.hasUpdate.value) return const SizedBox.shrink();
-      return Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Card(
-          color: Colors.orange.shade50,
-          child: ListTile(
-            leading: const Icon(Icons.update, color: Colors.orange),
-            title: const Text('New version available'),
-            subtitle: const Text('Some content has been updated. Tap update to download the latest changes.'),
-            trailing: controller.isLoading.value
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : TextButton(
-                    onPressed: controller.updateBook,
-                    child: const Text('UPDATE'),
-                  ),
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: Colors.orange.shade50,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.update, color: Colors.orange, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'New version available',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tap update to download the latest changes.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              controller.isLoading.value
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : TextButton(
+                      onPressed: controller.updateBook,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text('UPDATE'),
+                    ),
+            ],
           ),
         ),
       );

@@ -19,9 +19,10 @@ class AudioPlayerOverlay extends StatelessWidget {
       children: [
         Expanded(child: child),
         Obx(() {
-          return AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
             child: audio.hasMedia.value && !audio.isReaderActive.value
                 ? const SafeArea(
                     top: false,

@@ -79,6 +79,18 @@ class AudioPlayerService extends GetxService {
   LocalBook? currentBook;
   LocalChapter? currentChapter;
 
+  /// Called when the last item in the current queue finishes. Readers use this
+  /// to auto-play the next chapter when the user has enabled that setting.
+  void Function()? onQueueCompleted;
+
+  /// Called when the user presses the "next" button in a chapter reader.
+  /// If set, it overrides the default queue skip behaviour.
+  Future<void> Function()? onSkipToNext;
+
+  /// Called when the user presses the "previous" button in a chapter reader.
+  /// If set, it overrides the default queue skip behaviour.
+  Future<void> Function()? onSkipToPrevious;
+
   bool get isInitialized => _initialized.value;
 
   bool isCurrentBookChapter(LocalBook book, LocalChapter chapter) {
@@ -138,6 +150,7 @@ class AudioPlayerService extends GetxService {
     String? sourceTitle,
     String? sourceSubtitle,
     String? sourceArtUri,
+    double? initialSpeed,
   }) async {
     if (!_initialized.value) return;
 
@@ -179,6 +192,10 @@ class AudioPlayerService extends GetxService {
       isLoading.value = false;
     }
 
+    if (initialSpeed != null) {
+      await setSpeed(initialSpeed);
+    }
+
     // play() returns a future that completes when playback completes or is
     // paused/stopped, so we must not await it here. Awaiting it would keep
     // isLoading true for the entire duration of playback.
@@ -211,8 +228,22 @@ class AudioPlayerService extends GetxService {
   }
 
   Future<void> seek(Duration pos) => _handler.seek(pos);
-  Future<void> skipToNext() => _handler.skipToNext();
-  Future<void> skipToPrevious() => _handler.skipToPrevious();
+
+  Future<void> skipToNext() async {
+    if (onSkipToNext != null) {
+      await onSkipToNext!();
+      return;
+    }
+    await _handler.skipToNext();
+  }
+
+  Future<void> skipToPrevious() async {
+    if (onSkipToPrevious != null) {
+      await onSkipToPrevious!();
+      return;
+    }
+    await _handler.skipToPrevious();
+  }
 
   Future<void> setSpeed(double value) async {
     final clamped = value.clamp(0.5, 2.0).toDouble();
@@ -365,6 +396,7 @@ class _BookReaderAudioHandler extends BaseAudioHandler with SeekHandler {
     if (_currentIndex < queue.length - 1) {
       await skipToNext();
     } else {
+      service?.onQueueCompleted?.call();
       await _player.pause();
       await _player.seek(Duration.zero);
     }

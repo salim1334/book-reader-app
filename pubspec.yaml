@@ -27,6 +27,9 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
+  font_awesome_flutter: ^11.0.0
+  url_launcher: ^6.3.2
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -39,6 +42,7 @@ flutter:
 
   assets:
     - .env
+    - assets/
 
   # To add more assets (images/audio), extend the assets list.
 

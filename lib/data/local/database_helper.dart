@@ -6,7 +6,7 @@ class DatabaseHelper {
   DatabaseHelper._();
   static final DatabaseHelper instance = DatabaseHelper._();
 
-  static const int _dbVersion = 9;
+  static const int _dbVersion = 10;
   static const String _dbName = 'book_store.db';
 
   Database? _database;
@@ -125,6 +125,24 @@ class DatabaseHelper {
       return;
     }
 
+    if (version == 10) {
+      // v10: add favorite flags for books and chapters, and a favorite_pages table.
+      await _addColumnIfMissing(
+        db,
+        DbTables.localBooks,
+        'is_favorite',
+        'INTEGER NOT NULL DEFAULT 0',
+      );
+      await _addColumnIfMissing(
+        db,
+        DbTables.localChapters,
+        'is_favorite',
+        'INTEGER NOT NULL DEFAULT 0',
+      );
+      await _createFavoritePagesTable(db);
+      return;
+    }
+
     // All other migration steps are additive and idempotent.
     await _createSettingsTables(db);
     await _createContentTables(db);
@@ -190,7 +208,8 @@ class DatabaseHelper {
         cover_url TEXT,
         book_type TEXT NOT NULL, -- 'IMAGE' or 'TEXT'
         swipe_direction TEXT NOT NULL DEFAULT 'RTL', -- 'RTL' or 'LTR'
-        version INTEGER NOT NULL
+        version INTEGER NOT NULL,
+        is_favorite INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -206,6 +225,7 @@ class DatabaseHelper {
         content_segments_json TEXT, -- Optional karaoke timing segments
         version INTEGER NOT NULL,
         is_downloaded INTEGER NOT NULL DEFAULT 0,
+        is_favorite INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (book_id) REFERENCES ${DbTables.localBooks}(id) ON DELETE CASCADE
       )
     ''');
@@ -278,6 +298,23 @@ class DatabaseHelper {
         local_version INTEGER NOT NULL,
         server_version INTEGER NOT NULL,
         last_sync_timestamp TEXT NOT NULL
+      )
+    ''');
+
+    await _createFavoritePagesTable(db);
+  }
+
+  Future<void> _createFavoritePagesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DbTables.favoritePages} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        book_id TEXT NOT NULL,
+        chapter_id TEXT NOT NULL,
+        page_index INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (book_id) REFERENCES ${DbTables.localBooks}(id) ON DELETE CASCADE,
+        FOREIGN KEY (chapter_id) REFERENCES ${DbTables.localChapters}(id) ON DELETE CASCADE,
+        UNIQUE(book_id, chapter_id, page_index)
       )
     ''');
   }

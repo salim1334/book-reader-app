@@ -37,28 +37,46 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final reader = controller.book.type == LocalBookType.text
-        ? const TextReader()
-        : const ImageReader();
+    return Obx(() {
+      controller.chapterKey.value;
 
-    return PopScope(
-      canPop: true,
-      onPopInvoked: (didPop) {
-        if (didPop) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            audio.isReaderActive.value = false;
-          });
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text(controller.chapter.title)),
-        body: Column(
-          children: [
-            Expanded(child: reader),
-            const ReaderAudioPlayer(),
-          ],
+      final reader = controller.bookType.value == LocalBookType.text
+          ? TextReader(key: controller.chapterKey.value)
+          : ImageReader(key: controller.chapterKey.value);
+
+      return PopScope(
+        canPop: true,
+        onPopInvoked: (didPop) {
+          if (didPop) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              audio.isReaderActive.value = false;
+            });
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(controller.chapterTitle.value),
+            actions: [
+              Obx(() {
+                final isFavorite = controller.isPageFavorite.value;
+                return IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                    color: isFavorite ? Colors.red : null,
+                  ),
+                  onPressed: controller.togglePageFavorite,
+                );
+              }),
+            ],
+          ),
+          body: Column(
+            children: [
+              Expanded(child: reader),
+              const ReaderAudioPlayer(),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

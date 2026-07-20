@@ -26,6 +26,8 @@ class BookDetailsController extends GetxController {
   final isOffline = false.obs;
   final bookProgressPercent = 0.0.obs;
   final chapterProgress = <String, double>{}.obs;
+  final isBookFavorite = false.obs;
+  final chapterFavoriteStates = <String, bool>{}.obs;
 
   @override
   Future<void> onInit() async {
@@ -52,6 +54,7 @@ class BookDetailsController extends GetxController {
       if (localBook != null) book.value = localBook;
       chapters.value = localChapters;
       await _loadProgress();
+      await _loadFavoriteStates();
 
       final online = await _syncManager.isOnline();
       isOffline.value = !online;
@@ -92,6 +95,28 @@ class BookDetailsController extends GetxController {
   Future<void> _loadProgress() async {
     bookProgressPercent.value = await _repository.getBookProgressPercent(initialBook.id);
     chapterProgress.assignAll(await _repository.getChaptersProgressPercent(initialBook.id));
+  }
+
+  Future<void> _loadFavoriteStates() async {
+    isBookFavorite.value = await _repository.isBookFavorite(initialBook.id);
+    final states = <String, bool>{};
+    for (final chapter in chapters) {
+      states[chapter.id] = await _repository.isChapterFavorite(chapter.id);
+    }
+    chapterFavoriteStates.assignAll(states);
+  }
+
+  Future<void> toggleBookFavorite() async {
+    final newValue = !isBookFavorite.value;
+    final bookId = book.value?.id ?? initialBook.id;
+    await _repository.setBookFavorite(bookId, newValue);
+    isBookFavorite.value = newValue;
+  }
+
+  Future<void> toggleChapterFavorite(String chapterId) async {
+    final newValue = !(chapterFavoriteStates[chapterId] ?? false);
+    await _repository.setChapterFavorite(chapterId, newValue);
+    chapterFavoriteStates[chapterId] = newValue;
   }
 
   List<String> _findOutdatedChapterIds(RemoteBook remote, List<LocalChapter> localChapters) {
