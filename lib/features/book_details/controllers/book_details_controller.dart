@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:book_store/common/utils/snackbar_helper.dart';
+import 'package:book_store/core/services/reading_progress_service.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/remote/models/remote_book.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
@@ -12,6 +15,7 @@ import 'package:get/get.dart';
 class BookDetailsController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
   final SyncManager _syncManager = Get.find<SyncManager>();
+  final ReadingProgressService _progressService = Get.find<ReadingProgressService>();
 
   late final LocalBook initialBook;
 
@@ -29,6 +33,9 @@ class BookDetailsController extends GetxController {
   final isBookFavorite = false.obs;
   final chapterFavoriteStates = <String, bool>{}.obs;
 
+  Worker? _catalogSyncWorker;
+  StreamSubscription<ReadingProgressUpdate>? _progressSubscription;
+
   @override
   Future<void> onInit() async {
     super.onInit();
@@ -41,11 +48,12 @@ class BookDetailsController extends GetxController {
     initialBook = args.book;
     book.value = args.book;
     await loadData();
+    _bindReactiveListeners();
   }
 
-  Future<void> loadData() async {
+  Future<void> loadData({bool silent = false}) async {
     try {
-      isLoading.value = true;
+      if (!silent) isLoading.value = true;
       errorMessage.value = null;
 
       final localBook = await _repository.getBook(initialBook.id);
@@ -56,36 +64,39 @@ class BookDetailsController extends GetxController {
       await _loadProgress();
       await _loadFavoriteStates();
 
-      final online = await _syncManager.isOnline();
-      isOffline.value = !online;
+      // Skip the remote round-trip during silent background refreshes.
+      if (!silent) {
+        final online = await _syncManager.isOnline();
+        isOffline.value = !online;
 
-      if (online) {
-        RemoteBook? fetchedRemoteBook;
-        try {
-          fetchedRemoteBook = await _syncManager.fetchAndSyncBookMetadata(initialBook.id);
-        } catch (e) {
-          debugPrint('Remote fetch failed, using offline source: $e');
-          isOffline.value = true;
-        }
+        if (online) {
+          RemoteBook? fetchedRemoteBook;
+          try {
+            fetchedRemoteBook = await _syncManager.fetchAndSyncBookMetadata(initialBook.id);
+          } catch (e) {
+            debugPrint('Remote fetch failed, using offline source: $e');
+            isOffline.value = true;
+          }
 
-        if (fetchedRemoteBook != null) {
-          remoteBook.value = fetchedRemoteBook;
+          if (fetchedRemoteBook != null) {
+            remoteBook.value = fetchedRemoteBook;
 
-          final updatedBook = await _repository.getBook(initialBook.id);
-          final updatedChapters = await _repository.getChapters(initialBook.id);
-          if (updatedBook != null) book.value = updatedBook;
-          chapters.value = updatedChapters;
-          await _loadProgress();
+            final updatedBook = await _repository.getBook(initialBook.id);
+            final updatedChapters = await _repository.getChapters(initialBook.id);
+            if (updatedBook != null) book.value = updatedBook;
+            chapters.value = updatedChapters;
+            await _loadProgress();
 
-          outdatedChapterIds.value = _findOutdatedChapterIds(fetchedRemoteBook, chapters);
-          hasUpdate.value = fetchedRemoteBook.version > book.value!.version || outdatedChapterIds.isNotEmpty;
+            outdatedChapterIds.value = _findOutdatedChapterIds(fetchedRemoteBook, chapters);
+            hasUpdate.value = fetchedRemoteBook.version > book.value!.version || outdatedChapterIds.isNotEmpty;
+          }
         }
       }
 
-      isLoading.value = false;
+      if (!silent) isLoading.value = false;
     } catch (e) {
-      isLoading.value = false;
-      if (book.value == null) {
+      if (!silent) isLoading.value = false;
+      if (book.value == null && !silent) {
         errorMessage.value = 'Failed to load book details: $e';
       }
       debugPrint('BookDetailsController.loadData error: $e');
@@ -172,4 +183,30 @@ class BookDetailsController extends GetxController {
 
   @override
   Future<void> refresh() => loadData();
+
+  void _bindReactiveListeners() {
+    _catalogSyncWorker = ever(
+      _syncManager.lastCatalogSyncAt,
+      (_) => loadData(silent: true),
+    );
+    _progressSubscription = _progressService.progressUpdates.listen(
+      _onProgressUpdate,
+      onError: (e) => debugPrint('BookDetailsController progress stream error: $e'),
+    );
+  }
+
+  void _onProgressUpdate(ReadingProgressUpdate update) {
+    if (update.bookId != initialBook.id) return;
+
+    // Instantly update the affected chapter and overall book progress.
+    chapterProgress[update.chapterId] = update.chapterProgressPercent;
+    bookProgressPercent.value = update.bookProgressPercent;
+  }
+
+  @override
+  Future<void> onClose() async {
+    _catalogSyncWorker?.dispose();
+    await _progressSubscription?.cancel();
+    super.onClose();
+  }
 }

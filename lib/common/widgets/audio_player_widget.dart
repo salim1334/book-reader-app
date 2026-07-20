@@ -209,37 +209,30 @@ class AudioPlayerWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colors.primaryContainer.withOpacity(0.6),
-            colors.surfaceContainerHighest.withOpacity(0.9),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: theme.colorScheme.surfaceContainer.withOpacity(.98),
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
         ),
         border: Border.all(
-          color: colors.outlineVariant.withOpacity(0.3),
+          color: colors.outlineVariant.withOpacity(0.2),
           width: 0.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: colors.shadow.withOpacity(0.06),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const AudioProgressBar(showTimeLabels: true),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             const _PlaybackControls(mode: AudioPlayerMode.reader),
             const SizedBox(height: 6),
             const _ExtraControls(),

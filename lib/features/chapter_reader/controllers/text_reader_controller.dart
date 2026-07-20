@@ -27,11 +27,13 @@ class TextReaderController extends GetxController {
 
   Worker? _positionWorker;
   Worker? _durationWorker;
+  Timer? _scrollProgressDebounce;
 
   @override
   void onInit() {
     super.onInit();
     scrollController = ScrollController();
+    scrollController.addListener(_onScroll);
     unawaited(reload());
   }
 
@@ -71,6 +73,7 @@ class TextReaderController extends GetxController {
   void onClose() {
     _positionWorker?.dispose();
     _durationWorker?.dispose();
+    _scrollProgressDebounce?.cancel();
     scrollController.removeListener(_onScroll);
     scrollController.dispose();
     super.onClose();
@@ -134,10 +137,17 @@ class TextReaderController extends GetxController {
   }
 
   void _onScroll() {
-    final max = scrollController.position.maxScrollExtent;
+    if (!scrollController.hasClients) return;
+    final position = scrollController.position;
+    final max = position.maxScrollExtent;
     if (max <= 0) return;
-    final progress = (scrollController.offset / max).clamp(0.0, 1.0).toDouble();
-    _chapterReader.updateProgress(progress);
+    final progress = (position.pixels / max).clamp(0.0, 1.0).toDouble();
+
+    // Debounce to avoid writing to the database on every scroll pixel.
+    _scrollProgressDebounce?.cancel();
+    _scrollProgressDebounce = Timer(const Duration(milliseconds: 300), () {
+      _chapterReader.updateProgress(progress);
+    });
   }
 
   void _onPositionChanged(int ms) {

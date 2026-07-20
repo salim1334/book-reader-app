@@ -11,10 +11,12 @@ import 'package:book_store/data/remote/chapter_remote_source.dart';
 import 'package:book_store/data/remote/download_manager.dart';
 import 'package:book_store/data/remote/models/remote_book.dart';
 import 'package:book_store/data/remote/models/remote_chapter.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 /// Coordinates fetching remote books, comparing versions, and updating local DB.
-class SyncManager extends GetxService {
+class SyncManager extends GetxService with WidgetsBindingObserver {
   final BookRemoteSource _bookRemoteSource;
   final ChapterRemoteSource _chapterRemoteSource;
   final DownloadManager _downloadManager;
@@ -26,6 +28,18 @@ class SyncManager extends GetxService {
     this._downloadManager,
   );
 
+  static const _defaultSyncInterval = Duration(minutes: 15);
+  static const _resumeDebounce = Duration(seconds: 3);
+
+  Timer? _periodicSyncTimer;
+  Timer? _resumeSyncTimer;
+
+  /// Reactive flag showing when the last catalog-only background sync completed.
+  final lastCatalogSyncAt = Rxn<DateTime>();
+
+  /// Reactive flag indicating a background sync is currently running.
+  final isBackgroundSyncing = false.obs;
+
   static Future<SyncManager> init() async {
     final manager = SyncManager(
       Get.find<BookRemoteSource>(),
@@ -34,6 +48,71 @@ class SyncManager extends GetxService {
     );
     await manager._ensureDb();
     return manager;
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    WidgetsBinding.instance.addObserver(this);
+    _startPeriodicSync();
+    unawaited(backgroundCatalogSync());
+  }
+
+  @override
+  void onClose() {
+    _stopPeriodicSync();
+    _resumeSyncTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startPeriodicSync();
+      // Debounce to avoid multiple rapid syncs when the OS flutters lifecycle.
+      _resumeSyncTimer?.cancel();
+      _resumeSyncTimer = Timer(_resumeDebounce, backgroundCatalogSync);
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _resumeSyncTimer?.cancel();
+      _stopPeriodicSync();
+    }
+  }
+
+  void _startPeriodicSync() {
+    _stopPeriodicSync();
+    _periodicSyncTimer = Timer.periodic(_defaultSyncInterval, (_) {
+      backgroundCatalogSync();
+    });
+  }
+
+  void _stopPeriodicSync() {
+    _periodicSyncTimer?.cancel();
+    _periodicSyncTimer = null;
+  }
+
+  /// Lightweight catalog-only sync suitable for background/periodic refresh.
+  /// Does not trigger downloads and will not show user-facing errors.
+  Future<void> backgroundCatalogSync() async {
+    if (isBackgroundSyncing.value) return;
+
+    final online = await isOnline();
+    if (!online) return;
+
+    final settings = Get.find<SettingsRepository>();
+    if (settings.offlineMode.value) return;
+
+    isBackgroundSyncing.value = true;
+    try {
+      await syncCatalog();
+      lastCatalogSyncAt.value = DateTime.now();
+    } catch (e) {
+      debugPrint('SyncManager.backgroundCatalogSync error: $e');
+    } finally {
+      isBackgroundSyncing.value = false;
+    }
   }
 
   Future<void> _ensureDb() async {

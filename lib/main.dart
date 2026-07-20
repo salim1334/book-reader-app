@@ -1,6 +1,7 @@
 import 'package:book_store/app.dart';
 import 'package:book_store/core/config/app_config.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
+import 'package:book_store/core/services/reading_progress_service.dart';
 import 'package:book_store/data/local/database_helper.dart';
 import 'package:book_store/data/remote/book_remote_source.dart';
 import 'package:book_store/data/remote/chapter_remote_source.dart';
@@ -36,6 +37,7 @@ void main() async {
     () async => AudioPlayerService().init(),
     permanent: true,
   );
+  Get.put(ReadingProgressService(), permanent: true);
 
   // Remote services
   Get.put(BookRemoteSource(), permanent: true);

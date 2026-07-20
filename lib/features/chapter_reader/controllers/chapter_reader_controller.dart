@@ -1,5 +1,6 @@
 import 'package:book_store/common/utils/snackbar_helper.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
+import 'package:book_store/core/services/reading_progress_service.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
@@ -13,6 +14,7 @@ class ChapterReaderController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
   final AudioPlayerService _audio = Get.find<AudioPlayerService>();
   final SettingsRepository _settings = Get.find<SettingsRepository>();
+  final ReadingProgressService _progressService = Get.find<ReadingProgressService>();
 
   late LocalBook book;
   late LocalChapter chapter;
@@ -181,7 +183,7 @@ class ChapterReaderController extends GetxController {
     double? chapterProgressPercent,
   }) async {
     try {
-      await _repository.saveProgress(
+      await _progressService.saveProgress(
         bookId: book.id,
         chapterId: chapter.id,
         lastPositionMs: positionMs ?? lastPositionMs.value,
