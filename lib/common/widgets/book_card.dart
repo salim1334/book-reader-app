@@ -114,13 +114,13 @@ class BookCard extends StatelessWidget {
                             Icon(
                               typeIcon,
                               size: 14,
-                              color: theme.colorScheme.onPrimaryContainer,
+                              color: theme.colorScheme.onPrimary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               typeLabel,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer,
+                                color: theme.colorScheme.onPrimary,
                                 fontWeight: FontWeight.w500,
                                 fontSize: 11,
                               ),

@@ -33,6 +33,8 @@ class TextReader extends GetView<TextReaderController> {
         segmentKeys: controller.segmentKeys,
       );
 
+      final isSegmented = segments != null && segments.isNotEmpty;
+
       // Wrap with border and page indicator
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -55,14 +57,20 @@ class TextReader extends GetView<TextReaderController> {
           children: [
             // Scrollable text area
             Expanded(
-              child: SingleChildScrollView(
-                controller: controller.scrollController,
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: items,
-                ),
-              ),
+              child: isSegmented
+                  ? SingleChildScrollView(
+                      controller: controller.scrollController,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: items,
+                      ),
+                    )
+                  : ListView(
+                      controller: controller.scrollController,
+                      padding: const EdgeInsets.all(20),
+                      children: items,
+                    ),
             ),
             // Page indicator
             _buildPageIndicator(context),
@@ -96,7 +104,7 @@ class TextReader extends GetView<TextReaderController> {
           baseStyle: baseStyle,
           scale: scale,
           theme: theme,
-          key: segmentKeys.isNotEmpty ? segmentKeys[index] : null,
+          key: index < segmentKeys.length ? segmentKeys[index] : null,
         );
       }).toList();
     }

@@ -81,7 +81,11 @@ class TextReaderController extends GetxController {
       _chapterReader.chapter.id,
       assetType: 'AUDIO',
     );
-    final paths = rows.map((r) => r['file_path'] as String).toList();
+    final paths = rows
+        .map((r) => (r['file_path'] as String?))
+        .whereType<String>()
+        .where((p) => p.isNotEmpty)
+        .toList();
 
     if (paths.isEmpty) {
       await _audio.stop();
@@ -162,10 +166,12 @@ class TextReaderController extends GetxController {
     var index = -1;
     for (var i = 0; i < segments.length; i++) {
       final s = segments[i];
-      if (s.startSeconds != null &&
-          s.endSeconds != null &&
-          seconds >= s.startSeconds! &&
-          seconds <= s.endSeconds!) {
+      final start = s.startSeconds;
+      final end = s.endSeconds;
+      if (start != null &&
+          end != null &&
+          seconds >= start &&
+          seconds <= end) {
         index = i;
         break;
       }

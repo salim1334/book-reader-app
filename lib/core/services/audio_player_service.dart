@@ -28,18 +28,21 @@ class AudioItem {
   });
 
   MediaItem toMediaItem(Duration duration) {
+    final coverUri = artUri;
+    final currentBook = book;
+    final currentChapter = chapter;
     return MediaItem(
       id: id,
       title: title,
-      album: subtitle ?? book?.title ?? '',
-      artist: book?.title ?? '',
+      album: subtitle ?? currentBook?.title ?? '',
+      artist: currentBook?.title ?? '',
       duration: duration,
-      artUri: artUri != null && artUri!.isNotEmpty ? Uri.parse(artUri!) : null,
+      artUri: coverUri != null && coverUri.isNotEmpty ? Uri.parse(coverUri) : null,
       extras: <String, dynamic>{
         'path': path,
         'initialPositionMs': initialPositionMs,
-        if (book != null) 'bookId': book!.id,
-        if (chapter != null) 'chapterId': chapter!.id,
+        if (currentBook != null) 'bookId': currentBook.id,
+        if (currentChapter != null) 'chapterId': currentChapter.id,
       },
     );
   }
@@ -158,11 +161,13 @@ class AudioPlayerService extends GetxService {
     // instead of resetting to the beginning.
     if (queue.items.isNotEmpty) {
       final startItem = queue.items[queue.startIndex];
-      if (startItem.book != null &&
-          startItem.chapter != null &&
+      final startBook = startItem.book;
+      final startChapter = startItem.chapter;
+      if (startBook != null &&
+          startChapter != null &&
           hasMedia.value &&
-          currentBook?.id == startItem.book!.id &&
-          currentChapter?.id == startItem.chapter!.id) {
+          currentBook?.id == startBook.id &&
+          currentChapter?.id == startChapter.id) {
         return;
       }
     }
@@ -230,16 +235,18 @@ class AudioPlayerService extends GetxService {
   Future<void> seek(Duration pos) => _handler.seek(pos);
 
   Future<void> skipToNext() async {
-    if (onSkipToNext != null) {
-      await onSkipToNext!();
+    final onNext = onSkipToNext;
+    if (onNext != null) {
+      await onNext();
       return;
     }
     await _handler.skipToNext();
   }
 
   Future<void> skipToPrevious() async {
-    if (onSkipToPrevious != null) {
-      await onSkipToPrevious!();
+    final onPrevious = onSkipToPrevious;
+    if (onPrevious != null) {
+      await onPrevious();
       return;
     }
     await _handler.skipToPrevious();
@@ -386,7 +393,8 @@ class _BookReaderAudioHandler extends BaseAudioHandler with SeekHandler {
   void _updateMediaItemDuration(Duration? dur) {
     if (dur == null) return;
     final current = mediaItem.valueOrNull;
-    if (current != null && (current.duration == null || current.duration! != dur)) {
+    final currentDuration = current?.duration;
+    if (current != null && (currentDuration == null || currentDuration != dur)) {
       mediaItem.add(current.copyWith(duration: dur));
     }
   }

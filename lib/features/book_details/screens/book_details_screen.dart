@@ -300,7 +300,7 @@ class _UpdateBanner extends GetView<BookDetailsController> {
                     const SizedBox(height: 4),
                     const Text(
                       'Tap update to download the latest changes.',
-                      style: TextStyle(fontSize: 12),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
