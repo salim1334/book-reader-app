@@ -1,3 +1,5 @@
+import 'package:book_store/core/theme/sacred_theme_extension.dart';
+import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
@@ -62,7 +64,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
                 return IconButton(
                   icon: Icon(
                     isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                    color: isFavorite ? Colors.red : null,
+                    color: isFavorite ? context.sacred.gold : null,
                   ),
                   onPressed: controller.togglePageFavorite,
                 );

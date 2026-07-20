@@ -1,3 +1,5 @@
+import 'package:book_store/core/theme/sacred_theme_extension.dart';
+import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:flutter/material.dart';
@@ -106,16 +108,16 @@ class ChapterListTile extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 4,
-                            color: Colors.green,
-                            backgroundColor: Colors.grey.shade300,
+                            color: theme.colorScheme.primary,
+                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           '$progressText completed',
-                          style: const TextStyle(
-                            color: Colors.green,
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -134,7 +136,7 @@ class ChapterListTile extends StatelessWidget {
                       icon: Icon(
                         isFavorite ? Icons.bookmark : Icons.bookmark_border,
                         color: isFavorite
-                            ? Colors.red
+                            ? context.sacred.gold
                             : theme.colorScheme.onSurfaceVariant,
                         size: 22,
                       ),
@@ -185,7 +187,9 @@ class ChapterListTile extends StatelessWidget {
                                         : Icons.check_circle_outline)
                                   : Icons.cloud_download_outlined,
                               color: chapter.isDownloaded
-                                  ? (isOutdated ? Colors.orange : Colors.green)
+                                  ? (isOutdated
+                                      ? theme.colorScheme.secondary
+                                      : theme.colorScheme.primary)
                                   : theme.colorScheme.onSurfaceVariant,
                               size: 24,
                             ),

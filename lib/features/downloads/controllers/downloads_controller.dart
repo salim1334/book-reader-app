@@ -82,9 +82,10 @@ class DownloadsController extends GetxController {
   int get booksSectionCount => books.isNotEmpty ? books.length + 1 : 0;
 
   Widget queueIcon(String status) {
+    final colors = Get.theme.colorScheme;
     return switch (status) {
-      'COMPLETED' => const Icon(Icons.download_done, color: Colors.green),
-      'FAILED' => const Icon(Icons.error, color: Colors.red),
+      'COMPLETED' => Icon(Icons.download_done, color: colors.primary),
+      'FAILED' => Icon(Icons.error, color: colors.error),
       'DOWNLOADING' => const Icon(Icons.downloading),
       'PENDING' => const Icon(Icons.pending),
       _ => const Icon(Icons.download),

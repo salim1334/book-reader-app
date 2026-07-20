@@ -1,3 +1,5 @@
+import 'package:book_store/core/theme/sacred_theme_extension.dart';
+import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/common/widgets/cover_image.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
@@ -96,7 +98,6 @@ class BookCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
 
-                      // Type label as a small rounded container with icon
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -104,7 +105,7 @@ class BookCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primaryContainer.withOpacity(
-                            0.5,
+                            0.2,
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -114,13 +115,13 @@ class BookCard extends StatelessWidget {
                             Icon(
                               typeIcon,
                               size: 14,
-                              color: theme.colorScheme.onPrimary,
+                              color: theme.colorScheme.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               typeLabel,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onPrimary,
+                                color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w500,
                                 fontSize: 11,
                               ),
@@ -138,7 +139,7 @@ class BookCard extends StatelessWidget {
                             value: progressPercent,
                             minHeight: 4,
                             color: theme.colorScheme.primary,
-                            backgroundColor: Colors.grey.shade300,
+                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -156,7 +157,7 @@ class BookCard extends StatelessWidget {
                       icon: Icon(
                         isFavorite ? Icons.bookmark : Icons.bookmark_outline,
                         color: isFavorite
-                            ? Colors.red
+                            ? context.sacred.gold
                             : theme.colorScheme.onSurfaceVariant,
                         size: 24,
                       ),
@@ -205,7 +206,7 @@ class BookCard extends StatelessWidget {
                                   ? Icons.check_circle_outline
                                   : Icons.cloud_download_outlined,
                               color: isDownloaded
-                                  ? Colors.green
+                                  ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurfaceVariant,
                               size: 26,
                             ),

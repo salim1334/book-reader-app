@@ -28,7 +28,7 @@ class HomeHeader extends StatelessWidget {
                 Text(
                   "የኡስታዝ ሳዳት ከማል ኪታቦች ኮሌክሽን",
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

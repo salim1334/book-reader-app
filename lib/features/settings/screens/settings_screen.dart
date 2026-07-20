@@ -1,3 +1,5 @@
+import 'package:book_store/core/theme/sacred_theme_extension.dart';
+import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/features/settings/controllers/settings_controller.dart';
 import 'package:book_store/features/settings/screens/about_screen.dart';
 import 'package:flutter/material.dart';
@@ -21,37 +23,37 @@ class SettingsScreen extends GetView<SettingsController> {
           children: [
             // ---- Appearance ----
             _buildSectionHeader('Appearance'),
-            _buildThemeSwitch(colorScheme),
+            _buildThemeSwitch(context, colorScheme),
             const SizedBox(height: 24),
 
             // ---- Reading Preferences ----
             _buildSectionHeader('Reading Preferences'),
-            _buildReadingSettings(),
+            _buildReadingSettings(context),
             const SizedBox(height: 24),
 
             // ---- Audio Settings ----
             _buildSectionHeader('Audio Settings'),
-            _buildAudioSettings(),
+            _buildAudioSettings(context),
             const SizedBox(height: 24),
 
             // ---- Library Preferences ----
             _buildSectionHeader('Library'),
-            _buildLibrarySettings(),
+            _buildLibrarySettings(context),
             const SizedBox(height: 24),
 
             // ---- Notifications ----
             _buildSectionHeader('Notifications'),
-            _buildNotificationSettings(),
+            _buildNotificationSettings(context),
             const SizedBox(height: 24),
 
             // ---- Data Management ----
             _buildSectionHeader('Data Management'),
-            _buildDataManagement(),
+            _buildDataManagement(context),
             const SizedBox(height: 24),
 
             // ---- About ----
             _buildSectionHeader('About'),
-            _buildAbout(),
+            _buildAbout(context),
             const SizedBox(height: 40),
           ],
         ),
@@ -60,7 +62,7 @@ class SettingsScreen extends GetView<SettingsController> {
   }
 
   // -- Theme Switch --
-  Widget _buildThemeSwitch(ColorScheme colorScheme) {
+  Widget _buildThemeSwitch(BuildContext context, ColorScheme colorScheme) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -82,7 +84,7 @@ class SettingsScreen extends GetView<SettingsController> {
                 ? Icons.dark_mode_rounded
                 : Icons.light_mode_rounded,
             color: controller.themeMode.value == ThemeMode.dark
-                ? Colors.amber
+                ? context.sacred.gold
                 : colorScheme.primary,
           ),
         );
@@ -91,7 +93,8 @@ class SettingsScreen extends GetView<SettingsController> {
   }
 
   // -- Reading Settings --
-  Widget _buildReadingSettings() {
+  Widget _buildReadingSettings(BuildContext context) {
+    final colors = context.colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -99,7 +102,7 @@ class SettingsScreen extends GetView<SettingsController> {
         children: [
           // a text size for text based books
           ListTile(
-            leading: const Icon(Icons.text_fields_rounded, color: Colors.blue),
+            leading: Icon(Icons.text_fields_rounded, color: colors.primary),
             title: const Text('Font Size'),
             subtitle: Obx(() => Text(controller.fontSize.value)),
             trailing: const Icon(Icons.chevron_right_rounded),
@@ -109,9 +112,9 @@ class SettingsScreen extends GetView<SettingsController> {
           // Auto Scroll/next page for chapter reader
           Obx(
             () => SwitchListTile(
-              secondary: const Icon(
+              secondary: Icon(
                 Icons.auto_awesome_rounded,
-                color: Colors.blue,
+                color: colors.primary,
               ),
               title: const Text('Auto-Scroll'),
               subtitle: const Text('Automatically scroll pages'),
@@ -125,14 +128,15 @@ class SettingsScreen extends GetView<SettingsController> {
   }
 
   // -- Audio Settings --
-  Widget _buildAudioSettings() {
+  Widget _buildAudioSettings(BuildContext context) {
+    final colors = context.colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.speed_rounded, color: Colors.purple),
+            leading: Icon(Icons.speed_rounded, color: colors.primary),
             title: const Text('Default Playback Speed'),
             subtitle: Obx(() => Text('${controller.defaultSpeed.value}x')),
             trailing: const Icon(Icons.chevron_right_rounded),
@@ -142,9 +146,9 @@ class SettingsScreen extends GetView<SettingsController> {
           // Auto move to next chapter when the next clicks because one chapter has only one audio
           Obx(
             () => SwitchListTile(
-              secondary: const Icon(
+              secondary: Icon(
                 Icons.skip_next_rounded,
-                color: Colors.purple,
+                color: colors.primary,
               ),
               title: const Text('Auto-Play Next'),
               subtitle: const Text('Automatically play next chapter'),
@@ -158,7 +162,8 @@ class SettingsScreen extends GetView<SettingsController> {
   }
 
   // -- Library Settings --
-  Widget _buildLibrarySettings() {
+  Widget _buildLibrarySettings(BuildContext context) {
+    final colors = context.colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -166,9 +171,9 @@ class SettingsScreen extends GetView<SettingsController> {
         children: [
           Obx(
             () => SwitchListTile(
-              secondary: const Icon(
+              secondary: Icon(
                 Icons.offline_bolt_rounded,
-                color: Colors.green,
+                color: colors.primary,
               ),
               title: const Text('Offline Mode'),
               subtitle: const Text('Show only downloaded content'),
@@ -179,7 +184,7 @@ class SettingsScreen extends GetView<SettingsController> {
           const Divider(height: 0, indent: 60),
           Obx(
             () => SwitchListTile(
-              secondary: const Icon(Icons.download_rounded, color: Colors.green),
+              secondary: Icon(Icons.download_rounded, color: colors.primary),
               title: const Text('Auto-Download'),
               subtitle: const Text('Download new chapters automatically'),
               value: controller.autoDownload.value,
@@ -188,7 +193,7 @@ class SettingsScreen extends GetView<SettingsController> {
           ),
           const Divider(height: 0, indent: 60),
           ListTile(
-            leading: const Icon(Icons.storage_rounded, color: Colors.green),
+            leading: Icon(Icons.storage_rounded, color: colors.primary),
             title: const Text('Storage'),
             subtitle: const Text('Manage downloaded content'),
             trailing: const Icon(Icons.chevron_right_rounded),
@@ -199,7 +204,8 @@ class SettingsScreen extends GetView<SettingsController> {
     );
   }
   // -- Notifications --
-  Widget _buildNotificationSettings() {
+  Widget _buildNotificationSettings(BuildContext context) {
+    final colors = context.colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -207,7 +213,7 @@ class SettingsScreen extends GetView<SettingsController> {
         children: [
           Obx(
             () => SwitchListTile(
-              secondary: const Icon(Icons.book_rounded, color: Colors.teal),
+              secondary: Icon(Icons.book_rounded, color: colors.primary),
               title: const Text('New Books'),
               subtitle: const Text('Notify when new books are added'),
               value: controller.notifyNewBooks.value,
@@ -217,7 +223,7 @@ class SettingsScreen extends GetView<SettingsController> {
           const Divider(height: 0, indent: 60),
           Obx(
             () => SwitchListTile(
-              secondary: const Icon(Icons.update_rounded, color: Colors.teal),
+              secondary: Icon(Icons.update_rounded, color: colors.primary),
               title: const Text('Updates'),
               subtitle: const Text('Notify when content is updated'),
               value: controller.notifyUpdates.value,
@@ -230,42 +236,36 @@ class SettingsScreen extends GetView<SettingsController> {
   }
 
   // -- Data Management --
-  Widget _buildDataManagement() {
+  Widget _buildDataManagement(BuildContext context) {
+    final colors = context.colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(
+            leading: Icon(
               Icons.restore_page_rounded,
-              color: Colors.orange,
+              color: colors.error,
             ),
             title: const Text('Reset Reading Progress'),
             subtitle: const Text('Clear all book and chapter progress.'),
             onTap: controller.resetReadingProgress,
             trailing: const Icon(Icons.chevron_right_rounded),
           ),
-          // const Divider(height: 0, indent: 60),
-          // ListTile(
-          //   leading: const Icon(Icons.cached_rounded, color: Colors.grey),
-          //   title: const Text('Clear Cache'),
-          //   subtitle: const Text('Clear temporary files and cached data'),
-          //   onTap: controller.clearCache,
-          //   trailing: const Icon(Icons.chevron_right_rounded),
-          // ),
         ],
       ),
     );
   }
 
   // -- About --
-  Widget _buildAbout() {
+  Widget _buildAbout(BuildContext context) {
+    final colors = context.colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
-        leading: const Icon(Icons.info_outline_rounded, color: Colors.teal),
+        leading: Icon(Icons.info_outline_rounded, color: colors.primary),
         title: const Text('About this app'),
         subtitle: const Text('Version 1.0.0'),
         trailing: const Icon(Icons.chevron_right_rounded),
@@ -358,6 +358,7 @@ class SettingsScreen extends GetView<SettingsController> {
 
 
   void _showStorageDialog() {
+    final colors = Theme.of(Get.context!).colorScheme;
     Get.dialog(
       AlertDialog(
         title: const Text('Storage'),
@@ -371,9 +372,9 @@ class SettingsScreen extends GetView<SettingsController> {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.delete_forever_rounded,
-                color: Colors.red,
+                color: colors.error,
               ),
               title: const Text('Clear All Downloads'),
               onTap: () {

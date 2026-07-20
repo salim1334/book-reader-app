@@ -21,8 +21,8 @@ abstract final class AppColors {
   static const Color surface = Color(0xFFFFFFFF);
   static const Color onSurface = Color(0xFF121C2A);
   static const Color onSurfaceVariant = Color(0xFF404944);
-  static const Color surfaceContainerLow = Color.fromARGB(255, 255, 239, 250);
-  static const Color surfaceContainerHighest = Color.fromARGB(121, 3, 155, 109);
+  static const Color surfaceContainerLow = Color(0xFFF4F0E6);
+  static const Color surfaceContainerHighest = Color(0xFFE2EDE8);
   static const Color outline = Color(0xFF707974);
   static const Color outlineVariant = Color(0xFFBFC9C3);
 

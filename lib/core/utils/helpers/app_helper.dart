@@ -27,12 +27,13 @@ class AppHelper {
   static void back<T>({T? result}) => Get.back<T>(result: result);
 
   static void showSnack(String message, {bool isError = false}) {
+    final colorScheme = Get.theme.colorScheme;
     Get.snackbar(
       isError ? 'Error' : 'Notice',
       message,
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: isError ? Colors.red.shade100 : Colors.green.shade100,
-      colorText: Colors.black87,
+      backgroundColor: isError ? colorScheme.errorContainer : colorScheme.primaryContainer,
+      colorText: isError ? colorScheme.onErrorContainer : colorScheme.onPrimaryContainer,
       margin: const EdgeInsets.all(16),
     );
   }

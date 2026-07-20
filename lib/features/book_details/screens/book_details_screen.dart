@@ -1,3 +1,5 @@
+import 'package:book_store/core/theme/sacred_theme_extension.dart';
+import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/common/widgets/chapter_list_tile.dart';
 import 'package:book_store/common/widgets/cover_image.dart';
 import 'package:book_store/common/widgets/error_view.dart';
@@ -21,7 +23,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
             return IconButton(
               icon: Icon(
                 isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                color: isFavorite ? Colors.red : null,
+                color: isFavorite ? context.sacred.gold : null,
               ),
               onPressed: controller.toggleBookFavorite,
               tooltip: 'Favorite',
@@ -229,6 +231,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
 
   // ---- Progress bar ----
   Widget _buildProgressBar() {
+    final theme = Theme.of(Get.context!);
     return Obx(() {
       final progress = controller.bookProgressPercent.value;
       return Column(
@@ -239,15 +242,15 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
             children: [
               Text(
                 'Reading progress',
-                style: Theme.of(Get.context!).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(Get.context!).colorScheme.onSurfaceVariant,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(
                 '${(progress * 100).round()}%',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.green,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],
@@ -258,8 +261,8 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              color: Colors.green,
-              backgroundColor: Colors.grey.shade300,
+              color: theme.colorScheme.primary,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
           ),
         ],
@@ -274,48 +277,57 @@ class _UpdateBanner extends GetView<BookDetailsController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Obx(() {
       if (!controller.hasUpdate.value) return const SizedBox.shrink();
       return Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: Colors.orange.shade50,
+        color: colors.secondaryContainer,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              const Icon(Icons.update, color: Colors.orange, size: 28),
+              Icon(Icons.update, color: colors.onSecondaryContainer, size: 28),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'New version available',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                        color: colors.onSecondaryContainer,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Tap update to download the latest changes.',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.onSecondaryContainer.withOpacity(0.7),
+                      ),
                     ),
                   ],
                 ),
               ),
               controller.isLoading.value
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colors.onSecondaryContainer,
+                      ),
                     )
                   : TextButton(
                       onPressed: controller.updateBook,
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
+                        backgroundColor: colors.secondary,
+                        foregroundColor: colors.onSecondary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
