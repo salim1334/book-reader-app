@@ -37,9 +37,7 @@ class HomeHeader extends StatelessWidget {
 
           _HeaderButton(
             icon: Icons.search,
-            onTap: () {
-              // TODO: Search
-            },
+            onTap: () => Get.toNamed(Routes.search),
           ),
 
           const SizedBox(width: 12),

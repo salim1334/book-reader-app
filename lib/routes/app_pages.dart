@@ -12,6 +12,8 @@ import 'package:book_store/features/main_navigation/bindings/main_navigation_bin
 import 'package:book_store/features/main_navigation/screens/main_navigation_screen.dart';
 import 'package:book_store/features/onboarding/bindings/onboarding_binding.dart';
 import 'package:book_store/features/onboarding/screens/onboarding_screen.dart';
+import 'package:book_store/features/search/bindings/search_binding.dart';
+import 'package:book_store/features/search/screens/search_screen.dart';
 import 'package:book_store/features/settings/bindings/settings_binding.dart';
 import 'package:book_store/features/settings/screens/settings_screen.dart';
 import 'package:book_store/features/splash/bindings/splash_binding.dart';
@@ -72,6 +74,12 @@ class AppPages {
       name: Routes.settings,
       page: () => const SettingsScreen(),
       binding: SettingsBinding(),
+    ),
+    GetPage(
+      name: Routes.search,
+      page: () => const SearchScreen(),
+      binding: SearchBinding(),
+      transition: Transition.rightToLeft,
     ),
   ];
 }

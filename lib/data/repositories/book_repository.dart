@@ -111,6 +111,11 @@ class BookRepository extends GetxService {
   Future<List<LocalChapter>> getFavoriteChapters({String? bookId}) =>
       _dao.getFavoriteChapters(bookId: bookId);
 
+  Future<List<LocalBook>> searchBooks(String query) => _dao.searchBooks(query);
+
+  Future<List<LocalChapter>> searchChapters(String query) =>
+      _dao.searchChapters(query);
+
   Future<bool> isPageFavorite({
     required String bookId,
     required String chapterId,

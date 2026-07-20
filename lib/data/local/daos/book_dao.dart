@@ -397,6 +397,28 @@ class BookDao {
     return LocalChapter.fromDb(rows.first);
   }
 
+  Future<List<LocalBook>> searchBooks(String query) async {
+    final pattern = '%$query%';
+    final rows = await _db.query(
+      DbTables.localBooks,
+      where: 'title LIKE ?',
+      whereArgs: [pattern],
+      orderBy: 'id ASC',
+    );
+    return rows.map((e) => LocalBook.fromDb(e)).toList();
+  }
+
+  Future<List<LocalChapter>> searchChapters(String query) async {
+    final pattern = '%$query%';
+    final rows = await _db.query(
+      DbTables.localChapters,
+      where: 'title LIKE ?',
+      whereArgs: [pattern],
+      orderBy: 'book_id ASC, sort_order ASC',
+    );
+    return rows.map((e) => LocalChapter.fromDb(e)).toList();
+  }
+
   Future<void> saveReadingProgress({
     required String bookId,
     required String chapterId,
