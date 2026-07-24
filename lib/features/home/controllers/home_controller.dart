@@ -17,7 +17,8 @@ class HomeController extends GetxController {
   final BookRepository _bookRepository = Get.find<BookRepository>();
   final SyncManager _syncManager = Get.find<SyncManager>();
   final SettingsRepository _settings = Get.find<SettingsRepository>();
-  final ReadingProgressService _progressService = Get.find<ReadingProgressService>();
+  final ReadingProgressService _progressService =
+      Get.find<ReadingProgressService>();
 
   final books = <LocalBook>[].obs;
   final continueReading = Rxn<ContinueReading>();
@@ -53,10 +54,9 @@ class HomeController extends GetxController {
       }
       bookFavorites.assignAll(favorites);
     } catch (e) {
-      debugPrint('HomeController._refreshFavorites error: $e');
+      debugPrint('HomeController._refreshFavorites error:  ');
     }
   }
-
 
   void _bindSettingWorkers() {
     _offlineModeWorker = ever(_settings.offlineMode, (_) => loadBooks());
@@ -72,7 +72,7 @@ class HomeController extends GetxController {
     );
     _progressSubscription = _progressService.progressUpdates.listen(
       _onProgressUpdate,
-      onError: (e) => debugPrint('HomeController progress stream error: $e'),
+      onError: (e) => debugPrint('HomeController progress stream error:  '),
     );
   }
 
@@ -107,7 +107,9 @@ class HomeController extends GetxController {
 
       for (final book in loadedBooks) {
         downloaded[book.id] = await _isBookDownloaded(book);
-        progress[book.id] = await _bookRepository.getBookProgressPercent(book.id);
+        progress[book.id] = await _bookRepository.getBookProgressPercent(
+          book.id,
+        );
         favorites[book.id] = await _bookRepository.isBookFavorite(book.id);
       }
 
@@ -124,9 +126,9 @@ class HomeController extends GetxController {
     } catch (e) {
       if (!silent) {
         isLoading.value = false;
-        errorMessage.value = 'Failed to load books: $e';
+        errorMessage.value = 'Failed to load books:  ';
       }
-      debugPrint('HomeController.loadBooks error: $e');
+      debugPrint('HomeController.loadBooks error:  ');
     }
   }
 
@@ -178,7 +180,8 @@ class HomeController extends GetxController {
     if (updated != null) {
       continueReading.value = updated;
       // Ensure the progress map reflects the latest value as well.
-      bookProgress[updated.book.id] = await _bookRepository.getBookProgressPercent(updated.book.id);
+      bookProgress[updated.book.id] = await _bookRepository
+          .getBookProgressPercent(updated.book.id);
     }
   }
 
@@ -200,7 +203,7 @@ class HomeController extends GetxController {
         }
       }
     } catch (e) {
-      SnackbarHelper.show('Could not refresh catalog: $e');
+      SnackbarHelper.show('Could not refresh catalog:  ');
     }
   }
 
@@ -211,7 +214,7 @@ class HomeController extends GetxController {
       await loadBooks();
       SnackbarHelper.show('${book.title} downloaded');
     } catch (e) {
-      SnackbarHelper.show('Download failed: $e');
+      SnackbarHelper.show('Download failed:  ');
     } finally {
       downloadingBookId.value = null;
     }
@@ -224,10 +227,7 @@ class HomeController extends GetxController {
   }
 
   void openBook(LocalBook book) {
-    Get.toNamed(
-      Routes.bookDetails,
-      arguments: BookDetailsArgs(book: book),
-    );
+    Get.toNamed(Routes.bookDetails, arguments: BookDetailsArgs(book: book));
   }
 
   void openContinueReading() {

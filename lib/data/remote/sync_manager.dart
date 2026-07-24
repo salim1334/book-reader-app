@@ -118,7 +118,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       await syncCatalog();
       lastCatalogSyncAt.value = DateTime.now();
     } catch (e) {
-      debugPrint('SyncManager.backgroundCatalogSync error: $e');
+      debugPrint('SyncManager.backgroundCatalogSync error:  ');
     } finally {
       isBackgroundSyncing.value = false;
     }
@@ -131,8 +131,9 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   /// Simple online check by attempting a short DNS lookup.
   Future<bool> isOnline() async {
     try {
-      await InternetAddress.lookup('example.com')
-          .timeout(const Duration(seconds: 3));
+      await InternetAddress.lookup(
+        'example.com',
+      ).timeout(const Duration(seconds: 3));
       return true;
     } on SocketException catch (_) {
       return false;
@@ -207,7 +208,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         await downloadChapter(
           summary.id,
           onProgress: (chapterProgress) {
-            bookDownloadProgress[bookId] = (i + chapterProgress) / totalChapters;
+            bookDownloadProgress[bookId] =
+                (i + chapterProgress) / totalChapters;
           },
         );
       }
@@ -242,11 +244,14 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       var processedChapters = 0;
       for (final summary in remoteBook.chapters) {
         final local = localChapterMap[summary.id];
-        if (local == null || !local.isDownloaded || summary.version > local.version) {
+        if (local == null ||
+            !local.isDownloaded ||
+            summary.version > local.version) {
           await downloadChapter(
             summary.id,
             onProgress: (chapterProgress) {
-              bookDownloadProgress[bookId] = (processedChapters + chapterProgress) / totalChapters;
+              bookDownloadProgress[bookId] =
+                  (processedChapters + chapterProgress) / totalChapters;
             },
           );
         }
@@ -283,13 +288,15 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       await _persistTextContent(chapter);
 
       // Download images and audio files.
-      final totalAssets = (chapter.pages?.length ?? 0) + (chapter.audios?.length ?? 0);
+      final totalAssets =
+          (chapter.pages?.length ?? 0) + (chapter.audios?.length ?? 0);
       var completedAssets = 0;
       void report() {
         final progress = totalAssets == 0 ? 1.0 : completedAssets / totalAssets;
         chapterDownloadProgress[chapterId] = progress;
         onProgress?.call(progress);
       }
+
       report();
       await _downloadMedia(
         chapter,
@@ -339,14 +346,17 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       await _dao!.insertBook(localBook);
 
       if (notify && _notifiedNewBookIds.add(book.id)) {
-        await Get.find<NotificationService>().showNewBookNotification(book.title);
+        await Get.find<NotificationService>().showNewBookNotification(
+          book.title,
+        );
       }
     } else {
       // Keep an existing downloaded cover unless we are explicitly downloading it.
       String? coverUrl;
       if (downloadCover) {
         coverUrl = book.coverImage;
-      } else if (existing.coverUrl != null && !isRemoteCoverUrl(existing.coverUrl)) {
+      } else if (existing.coverUrl != null &&
+          !isRemoteCoverUrl(existing.coverUrl)) {
         coverUrl = existing.coverUrl;
       } else {
         coverUrl = book.coverImage;
@@ -371,7 +381,9 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         final lastNotified = _notifiedUpdateVersions[book.id] ?? 0;
         if (book.version > lastNotified) {
           _notifiedUpdateVersions[book.id] = book.version;
-          await Get.find<NotificationService>().showUpdateNotification(book.title);
+          await Get.find<NotificationService>().showUpdateNotification(
+            book.title,
+          );
         }
       }
     }

@@ -84,7 +84,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                       const Divider(),
                       const SizedBox(height: 12),
                       Text(
-                        'Chapters',
+                        'ምዕራፎች',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -100,7 +100,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                 if (chapters.isEmpty) {
                   return const SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(child: Text('No chapters available')),
+                    child: Center(child: Text('ምንም ምዕራፍ አልተጫነም')),
                   );
                 }
 
@@ -187,7 +187,7 @@ class _HeaderCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Chip(
                       label: Text(
-                        book.type == LocalBookType.text ? 'TEXT' : 'IMAGE',
+                        book.type == LocalBookType.text ? 'ጽሁፍ' : 'ምስል',
                         style: const TextStyle(fontSize: 12),
                       ),
                       visualDensity: VisualDensity.compact,
@@ -263,7 +263,7 @@ class _ProgressBar extends GetView<BookDetailsController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Reading progress',
+                'የንባብ ደረጃ',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

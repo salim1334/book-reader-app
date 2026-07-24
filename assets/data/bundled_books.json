@@ -1,0 +1,46 @@
+{
+  "books": [
+    {
+      "id": "PUT_REAL_BOOK_ID_FROM_ADMIN_PANEL_HERE",
+      "title": "Book Title",
+      "description": "Short description shown on the book card.",
+      "bookType": "TEXT",
+      "swipeDirection": "RTL",
+      "version": 1,
+      "coverAsset": "assets/data/bundled_books/book1/cover.jpg",
+      "chapters": [
+        {
+          "id": "PUT_REAL_CHAPTER_ID_FROM_ADMIN_PANEL_HERE",
+          "title": "Chapter 1",
+          "sortOrder": 0,
+          "version": 1,
+          "contentText": "Full chapter text goes here. This is stored directly in SQLite, no file copy needed for TEXT chapters."
+        }
+      ]
+    },
+    {
+      "_comment": "Example of an IMAGE-type bundled book (manga/comic style). Remove this key before shipping, it's just documentation.",
+      "id": "PUT_REAL_IMAGE_BOOK_ID_HERE",
+      "title": "Image Book Title",
+      "bookType": "IMAGE",
+      "swipeDirection": "RTL",
+      "version": 1,
+      "coverAsset": "assets/data/bundled_books/book2/cover.jpg",
+      "chapters": [
+        {
+          "id": "PUT_REAL_CHAPTER_ID_HERE",
+          "title": "Chapter 1",
+          "sortOrder": 0,
+          "version": 1,
+          "pages": [
+            { "imageAsset": "assets/data/bundled_books/book2/ch1/page1.jpg", "sortOrder": 0 },
+            { "imageAsset": "assets/data/bundled_books/book2/ch1/page2.jpg", "sortOrder": 1 }
+          ],
+          "audio": [
+            { "audioAsset": "assets/data/bundled_books/book2/ch1/narration.mp3" }
+          ]
+        }
+      ]
+    }
+  ]
+}

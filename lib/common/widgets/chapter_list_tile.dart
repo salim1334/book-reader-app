@@ -33,7 +33,7 @@ class ChapterListTile extends StatelessWidget {
 
     // Amharic subtitle fallbacks
     final subtitleText = chapter.description ??
-        (chapter.isDownloaded ? 'ወርዷል' : 'ለማውረድ ይጫኑ');
+        (chapter.isDownloaded ? 'ወርዷል' : 'ለማውረድ ይጫኑት');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

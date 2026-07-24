@@ -21,7 +21,7 @@ class ImageReader extends GetView<ImageReaderController> {
       final media = controller.media.value;
       if (media == null || media.images.isEmpty) {
         return const Center(
-          child: Text('No downloaded images for this chapter.'),
+          child: Text('ለዚህ ምዕራፍ ምንም የወረደ ምስል የለም'),
         );
       }
 

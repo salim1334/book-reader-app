@@ -15,7 +15,8 @@ import 'package:get/get.dart';
 class BookDetailsController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
   final SyncManager _syncManager = Get.find<SyncManager>();
-  final ReadingProgressService _progressService = Get.find<ReadingProgressService>();
+  final ReadingProgressService _progressService =
+      Get.find<ReadingProgressService>();
 
   late final LocalBook initialBook;
 
@@ -72,9 +73,11 @@ class BookDetailsController extends GetxController {
         if (online) {
           RemoteBook? fetchedRemoteBook;
           try {
-            fetchedRemoteBook = await _syncManager.fetchAndSyncBookMetadata(initialBook.id);
+            fetchedRemoteBook = await _syncManager.fetchAndSyncBookMetadata(
+              initialBook.id,
+            );
           } catch (e) {
-            debugPrint('Remote fetch failed, using offline source: $e');
+            debugPrint('Remote fetch failed, using offline source:  ');
             isOffline.value = true;
           }
 
@@ -82,13 +85,20 @@ class BookDetailsController extends GetxController {
             remoteBook.value = fetchedRemoteBook;
 
             final updatedBook = await _repository.getBook(initialBook.id);
-            final updatedChapters = await _repository.getChapters(initialBook.id);
+            final updatedChapters = await _repository.getChapters(
+              initialBook.id,
+            );
             if (updatedBook != null) book.value = updatedBook;
             chapters.value = updatedChapters;
             await _loadProgress();
 
-            outdatedChapterIds.value = _findOutdatedChapterIds(fetchedRemoteBook, chapters);
-            hasUpdate.value = fetchedRemoteBook.version > book.value!.version || outdatedChapterIds.isNotEmpty;
+            outdatedChapterIds.value = _findOutdatedChapterIds(
+              fetchedRemoteBook,
+              chapters,
+            );
+            hasUpdate.value =
+                fetchedRemoteBook.version > book.value!.version ||
+                outdatedChapterIds.isNotEmpty;
           }
         }
       }
@@ -97,15 +107,19 @@ class BookDetailsController extends GetxController {
     } catch (e) {
       if (!silent) isLoading.value = false;
       if (book.value == null && !silent) {
-        errorMessage.value = 'Failed to load book details: $e';
+        errorMessage.value = 'Failed to load book details:  ';
       }
-      debugPrint('BookDetailsController.loadData error: $e');
+      debugPrint('BookDetailsController.loadData error:  ');
     }
   }
 
   Future<void> _loadProgress() async {
-    bookProgressPercent.value = await _repository.getBookProgressPercent(initialBook.id);
-    chapterProgress.assignAll(await _repository.getChaptersProgressPercent(initialBook.id));
+    bookProgressPercent.value = await _repository.getBookProgressPercent(
+      initialBook.id,
+    );
+    chapterProgress.assignAll(
+      await _repository.getChaptersProgressPercent(initialBook.id),
+    );
   }
 
   Future<void> _loadFavoriteStates() async {
@@ -130,7 +144,10 @@ class BookDetailsController extends GetxController {
     chapterFavoriteStates[chapterId] = newValue;
   }
 
-  List<String> _findOutdatedChapterIds(RemoteBook remote, List<LocalChapter> localChapters) {
+  List<String> _findOutdatedChapterIds(
+    RemoteBook remote,
+    List<LocalChapter> localChapters,
+  ) {
     final localMap = {for (final c in localChapters) c.id: c};
     final outdated = <String>[];
     for (final summary in remote.chapters) {
@@ -147,9 +164,9 @@ class BookDetailsController extends GetxController {
     try {
       await _syncManager.updateBook(book.value!.id);
       await loadData();
-      SnackbarHelper.show('Book updated');
+      SnackbarHelper.show('ማሻሻያው ወርዷል');
     } catch (e) {
-      SnackbarHelper.show('Update failed: $e');
+      SnackbarHelper.show('ማሻሻያ ማውረድ አልተቻለም ድጋሜ ይሞክሩ');
       isLoading.value = false;
     }
   }
@@ -159,9 +176,9 @@ class BookDetailsController extends GetxController {
     try {
       await _syncManager.downloadChapter(chapter.id);
       await loadData();
-      SnackbarHelper.show('${chapter.title} downloaded');
+      SnackbarHelper.show('${chapter.title} ወርዷል');
     } catch (e) {
-      SnackbarHelper.show('Download failed: $e');
+      SnackbarHelper.show('ማውረድ አልተሳካም ድጋሜ ይሞክሩ');
     } finally {
       downloadingChapterId.value = null;
     }
@@ -169,15 +186,12 @@ class BookDetailsController extends GetxController {
 
   void openChapter(LocalChapter chapter) {
     if (!chapter.isDownloaded) {
-      SnackbarHelper.show('Download this chapter to read it');
+      SnackbarHelper.show('ይህን ምዕራፍ ለማንበብ ያውረዱት');
       return;
     }
     Get.toNamed(
       Routes.chapterReader,
-      arguments: ChapterReaderArgs(
-        book: book.value!,
-        chapter: chapter,
-      ),
+      arguments: ChapterReaderArgs(book: book.value!, chapter: chapter),
     );
   }
 
@@ -191,7 +205,8 @@ class BookDetailsController extends GetxController {
     );
     _progressSubscription = _progressService.progressUpdates.listen(
       _onProgressUpdate,
-      onError: (e) => debugPrint('BookDetailsController progress stream error: $e'),
+      onError: (e) =>
+          debugPrint('BookDetailsController progress stream error:  '),
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/features/settings/controllers/settings_controller.dart';
 import 'package:book_store/features/settings/screens/about_screen.dart';
+import 'package:book_store/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -191,7 +192,7 @@ class SettingsScreen extends GetView<SettingsController> {
             title: const Text('ማከማቻ'),
             subtitle: const Text('የወረዱትን ያስተዳድሩ'),
             trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => _showStorageDialog(),
+            onTap: () => Get.toNamed(Routes.downloads),
           ),
         ],
       ),

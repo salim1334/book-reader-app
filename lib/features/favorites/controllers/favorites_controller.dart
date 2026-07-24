@@ -32,7 +32,7 @@ class FavoritesController extends GetxController {
       favoriteChapters.value = chapters;
       favoritePages.value = pages;
     } catch (e) {
-      debugPrint('FavoritesController.load error: $e');
+      debugPrint('FavoritesController.load error:  ');
     } finally {
       isLoading.value = false;
     }

@@ -15,7 +15,8 @@ class ChapterReaderController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
   final AudioPlayerService _audio = Get.find<AudioPlayerService>();
   final SettingsRepository _settings = Get.find<SettingsRepository>();
-  final ReadingProgressService _progressService = Get.find<ReadingProgressService>();
+  final ReadingProgressService _progressService =
+      Get.find<ReadingProgressService>();
 
   late LocalBook book;
   late LocalChapter chapter;
@@ -53,7 +54,9 @@ class ChapterReaderController extends GetxController {
     lastPageIndex.value = initialPageIndex;
     lastPositionMs.value = initialPositionMs;
 
-    _audio.onQueueCompleted = () { _onAudioFinished(); };
+    _audio.onQueueCompleted = () {
+      _onAudioFinished();
+    };
     _audio.onSkipToNext = _skipToNextChapter;
     _audio.onSkipToPrevious = _skipToPreviousChapter;
 
@@ -85,9 +88,7 @@ class ChapterReaderController extends GetxController {
 
   void _applySystemUI() {
     if (isImmersiveMode.value) {
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-      );
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     } else {
       SystemChrome.setEnabledSystemUIMode(
         SystemUiMode.edgeToEdge,
@@ -126,7 +127,7 @@ class ChapterReaderController extends GetxController {
         pageIndex: lastPageIndex.value,
       );
     } catch (e) {
-      debugPrint('Failed to load page favorite state: $e');
+      debugPrint('Failed to load page favorite state:  ');
     }
   }
 
@@ -179,7 +180,7 @@ class ChapterReaderController extends GetxController {
 
     final next = chapters[currentIndex + 1];
     if (!next.isDownloaded) {
-      SnackbarHelper.show('Next chapter is not downloaded.');
+      SnackbarHelper.show('ቀጣዩ ምዕራፍ አልወረደም ያውርዱት።');
       return;
     }
 
@@ -193,7 +194,7 @@ class ChapterReaderController extends GetxController {
 
     final previous = chapters[currentIndex - 1];
     if (!previous.isDownloaded) {
-      SnackbarHelper.show('Previous chapter is not downloaded.');
+      SnackbarHelper.show('ቀዳሚው ምዕራፍ አልወረደም ያውርዱት');
       return;
     }
 
@@ -241,10 +242,11 @@ class ChapterReaderController extends GetxController {
         chapterId: chapter.id,
         lastPositionMs: positionMs ?? lastPositionMs.value,
         lastPageIndex: pageIndex ?? lastPageIndex.value,
-        chapterProgressPercent: chapterProgressPercent ?? this.chapterProgressPercent.value,
+        chapterProgressPercent:
+            chapterProgressPercent ?? this.chapterProgressPercent.value,
       );
     } catch (e) {
-      debugPrint('Failed to save progress: $e');
+      debugPrint('Failed to save progress:  ');
     }
   }
 }

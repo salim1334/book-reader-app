@@ -45,6 +45,22 @@ flutter:
   assets:
     - .env
     - assets/
+    - assets/
+    - assets/data/
+    - assets/data/bundled_books/
+    # Book contents
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmrolj9mq000lbj9wgc6ny40y
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromau3m000tbj9woq7xd35m
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromghsg0013bj9w609r2iyn
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromq6xl001bbj9w0c7ncjhv
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmron6rs8001jbj9w4ksxcv47
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmronjee0001rbj9w38x8bkss
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmrons39m001zbj9wkeodvtk1
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroo1kwz0027bj9wbml65nem
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroodgfg002fbj9wh8heyzgr
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroon56f002nbj9wrxymc3bv
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroouoxg002vbj9w3tqvlk8e
+    - assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cover
 
   # To add more assets (images/audio), extend the assets list.
 

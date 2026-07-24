@@ -40,8 +40,8 @@ class DownloadsController extends GetxController {
       isLoading.value = false;
     } catch (e) {
       isLoading.value = false;
-      errorMessage.value = 'Failed to load downloads: $e';
-      debugPrint('DownloadsController.loadData error: $e');
+      errorMessage.value = 'ማውረድ አልተቻለም ድጋሜ ይሞክሩ';
+      debugPrint('DownloadsController.loadData error:  ');
     }
   }
 
@@ -50,7 +50,7 @@ class DownloadsController extends GetxController {
       await _syncManager.downloadChapter(chapterId);
       await loadData();
     } catch (e) {
-      SnackbarHelper.show('Retry failed: $e');
+      SnackbarHelper.show('ምዕራፍ ማውረድ አልተቻለም ድጋሜ ይሞክሩ');
     }
   }
 

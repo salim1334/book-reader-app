@@ -218,7 +218,7 @@ class AboutScreen extends StatelessWidget {
   }
 
   void _launchEmail(String email) async {
-    final uri = Uri.parse('mailto:$email');
+    final uri = Uri.parse('mailto: mail');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }

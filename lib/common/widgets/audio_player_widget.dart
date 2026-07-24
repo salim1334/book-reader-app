@@ -114,7 +114,7 @@ class AudioPlayerWidget extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
-                                      '$chapterTitle • $remaining left',
+                                      '$chapterTitle • $remaining ይቀራል',
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             fontSize: 11,
@@ -322,7 +322,7 @@ class _PlaybackControls extends StatelessWidget {
           const SizedBox(width: 4),
           _ControlButton(
             icon: Icons.skip_previous_rounded,
-            tooltip: 'Previous chapter',
+            tooltip: 'ቀዳሚ ምዕራፍ',
             onPressed: audio.hasMedia.value ? audio.skipToPrevious : null,
           ),
           const SizedBox(width: 10),
@@ -330,7 +330,7 @@ class _PlaybackControls extends StatelessWidget {
           const SizedBox(width: 10),
           _ControlButton(
             icon: Icons.skip_next_rounded,
-            tooltip: 'Next chapter',
+            tooltip: 'ቀጣይ ምዕራፍ',
             onPressed: audio.hasMedia.value ? audio.skipToNext : null,
           ),
           const SizedBox(width: 4),

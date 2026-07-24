@@ -61,7 +61,7 @@ class BookSearchController extends GetxController {
         books.value = results[0] as List<LocalBook>;
         chapters.value = results[1] as List<LocalChapter>;
       } catch (e) {
-        debugPrint('SearchController._search error: $e');
+        debugPrint('SearchController._search error:  ');
       } finally {
         isLoading.value = false;
       }
@@ -69,10 +69,7 @@ class BookSearchController extends GetxController {
   }
 
   void openBook(LocalBook book) {
-    Get.toNamed(
-      Routes.bookDetails,
-      arguments: BookDetailsArgs(book: book),
-    );
+    Get.toNamed(Routes.bookDetails, arguments: BookDetailsArgs(book: book));
   }
 
   Future<void> openChapter(LocalChapter chapter) async {
@@ -87,10 +84,7 @@ class BookSearchController extends GetxController {
     }
     Get.toNamed(
       Routes.chapterReader,
-      arguments: ChapterReaderArgs(
-        book: book,
-        chapter: chapter,
-      ),
+      arguments: ChapterReaderArgs(book: book, chapter: chapter),
     );
   }
 }
