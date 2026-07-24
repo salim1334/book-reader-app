@@ -17,6 +17,8 @@ class FavoritesController extends GetxController {
   @override
   Future<void> onInit() async {
     super.onInit();
+    ever(_repository.favoriteVersion, (_) => load());
+
     await load();
   }
 
@@ -37,10 +39,7 @@ class FavoritesController extends GetxController {
   }
 
   void openBook(LocalBook book) {
-    Get.toNamed(
-      Routes.bookDetails,
-      arguments: BookDetailsArgs(book: book),
-    );
+    Get.toNamed(Routes.bookDetails, arguments: BookDetailsArgs(book: book));
   }
 
   Future<void> openChapter(LocalChapter chapter) async {
@@ -55,10 +54,7 @@ class FavoritesController extends GetxController {
     }
     Get.toNamed(
       Routes.chapterReader,
-      arguments: ChapterReaderArgs(
-        book: book,
-        chapter: chapter,
-      ),
+      arguments: ChapterReaderArgs(book: book, chapter: chapter),
     );
   }
 
@@ -94,6 +90,18 @@ class FavoritesController extends GetxController {
       pageIndex: pageIndex,
       favorite: false,
     );
+    await load();
+  }
+
+  // remove chapters favorite
+  Future<void> removeChapterFavorite(LocalChapter chapter) async {
+    await _repository.setChapterFavorite(chapter.id, false);
+    await load();
+  }
+
+  // remove books favorite
+  Future<void> removeBooksFavorite(LocalBook book) async {
+    await _repository.setBookFavorite(book.id, false);
     await load();
   }
 }

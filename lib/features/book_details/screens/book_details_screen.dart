@@ -1,9 +1,9 @@
-import 'package:book_store/core/theme/sacred_theme_extension.dart';
-import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/common/widgets/chapter_list_tile.dart';
 import 'package:book_store/common/widgets/cover_image.dart';
 import 'package:book_store/common/widgets/error_view.dart';
 import 'package:book_store/common/widgets/loading_indicator.dart';
+import 'package:book_store/core/theme/sacred_theme_extension.dart';
+import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/features/book_details/controllers/book_details_controller.dart';
 import 'package:flutter/material.dart';
@@ -32,45 +32,49 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
         ],
       ),
       body: Obx(() {
-        if (controller.isLoading.value && controller.book.value == null) {
+        final isLoading = controller.isLoading.value;
+        final book = controller.book.value;
+        final error = controller.errorMessage.value;
+
+        // ---- Handle initial screen states ----
+        if (isLoading && book == null) {
           return const LoadingIndicator();
         }
 
-        final error = controller.errorMessage.value;
-        if (error != null && controller.book.value == null) {
+        if (error != null && book == null) {
           return ErrorView(message: error, onRetry: controller.refresh);
         }
 
-        final book = controller.book.value;
         if (book == null) {
           return const LoadingIndicator();
         }
 
+        // ---- Main Content ----
         return RefreshIndicator(
           onRefresh: controller.refresh,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              // ---- Header Card (cover + info) ----
-              SliverToBoxAdapter(child: _buildHeaderCard(book, context)),
+              // Header Card
+              SliverToBoxAdapter(child: _HeaderCard(book: book)),
 
-              // ---- Progress Bar ----
-              SliverToBoxAdapter(
+              // Progress Bar
+              const SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildProgressBar(),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: _ProgressBar(),
                 ),
               ),
 
-              // ---- Update Banner ----
-              SliverToBoxAdapter(
-                child: const Padding(
+              // Update Banner
+              const SliverToBoxAdapter(
+                child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: _UpdateBanner(),
                 ),
               ),
 
-              // ---- Divider & "Chapters" title ----
+              // Section Title
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -90,33 +94,39 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                 ),
               ),
 
-              // ---- Chapters List ----
-              if (controller.chapters.isEmpty)
-                const SliverFillRemaining(
-                  child: Center(child: Text('No chapters available')),
-                )
-              else
-                SliverPadding(
+              // Chapters List
+              Obx(() {
+                final chapters = controller.chapters;
+                if (chapters.isEmpty) {
+                  return const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: Text('No chapters available')),
+                  );
+                }
+
+                return SliverPadding(
                   padding: const EdgeInsets.only(bottom: 24),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      final chapter = controller.chapters[index];
+                      final chapter = chapters[index];
                       return Obx(() {
                         final isOutdated = controller.outdatedChapterIds
                             .contains(chapter.id);
                         final progress =
                             controller.chapterProgress[chapter.id] ?? 0.0;
+                        final isDownloading =
+                            controller.downloadingChapterId.value == chapter.id;
+                        final isFavorite =
+                            controller.chapterFavoriteStates[chapter.id] ??
+                            false;
+
                         return ChapterListTile(
                           index: index,
                           chapter: chapter,
                           progress: progress,
                           isOutdated: isOutdated,
-                          isDownloading:
-                              controller.downloadingChapterId.value ==
-                              chapter.id,
-                          isFavorite:
-                              controller.chapterFavoriteStates[chapter.id] ??
-                              false,
+                          isDownloading: isDownloading,
+                          isFavorite: isFavorite,
                           onFavorite: () =>
                               controller.toggleChapterFavorite(chapter.id),
                           onTap: () {
@@ -128,19 +138,29 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                           },
                         );
                       });
-                    }, childCount: controller.chapters.length),
+                    }, childCount: chapters.length),
                   ),
-                ),
+                );
+              }),
             ],
           ),
         );
       }),
     );
   }
+}
 
-  // ---- Header: book info (left) + cover (right) ----
-  Widget _buildHeaderCard(LocalBook book, BuildContext context) {
+// ---- Extracted Private Sub-Widgets ----
+
+class _HeaderCard extends StatelessWidget {
+  final LocalBook book;
+
+  const _HeaderCard({required this.book});
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Card(
@@ -151,7 +171,6 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Book info (expanded)
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,8 +212,6 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                 ),
               ),
               const SizedBox(width: 16),
-
-              // Cover image (120x180, like continue reading)
               Hero(
                 tag: 'book_cover_${book.id}',
                 child: Material(
@@ -228,10 +245,15 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
       ),
     );
   }
+}
 
-  // ---- Progress bar ----
-  Widget _buildProgressBar() {
-    final theme = Theme.of(Get.context!);
+class _ProgressBar extends GetView<BookDetailsController> {
+  const _ProgressBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Obx(() {
       final progress = controller.bookProgressPercent.value;
       return Column(
@@ -271,7 +293,6 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
   }
 }
 
-// ---- Update Banner (styled) ----
 class _UpdateBanner extends GetView<BookDetailsController> {
   const _UpdateBanner();
 
@@ -282,6 +303,7 @@ class _UpdateBanner extends GetView<BookDetailsController> {
 
     return Obx(() {
       if (!controller.hasUpdate.value) return const SizedBox.shrink();
+
       return Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -1,4 +1,4 @@
-import 'package:book_store/features/downloads/controllers/downloads_controller.dart';
+import 'package:book_store/features/favorites/controllers/favorites_controller.dart';
 import 'package:book_store/features/home/controllers/home_controller.dart';
 import 'package:book_store/features/main_navigation/controllers/main_navigation_controller.dart';
 import 'package:book_store/features/settings/controllers/settings_controller.dart';
@@ -9,7 +9,7 @@ class MainNavigationBinding extends Bindings {
   void dependencies() {
     Get.put(MainNavigationController());
     Get.put(HomeController());
-    Get.put(DownloadsController());
+    Get.put(FavoritesController());
     Get.put(SettingsController());
   }
 }

@@ -31,8 +31,8 @@ class HomeScreen extends GetView<HomeController> {
         if (controller.books.isEmpty) {
           return EmptyView(
             message: controller.isOffline.value || controller.offlineMode.value
-                ? "You're currently offline. Please connect to the internet to view and download available books."
-                : 'No books available.',
+                ? "በአሁኑ ጊዜ ከመስመር ውጭ ነዎት። የሚገኙ መጻሕፍትን ለማየት እና ለማውረድ እባክዎ ከበይነመረብ (ኢንተርኔት) ጋር ይገናኙ።"
+                : 'ምንም መጻሕፍት አልተገኙም።',
           );
         }
 

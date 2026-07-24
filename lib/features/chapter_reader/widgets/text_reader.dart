@@ -1,5 +1,6 @@
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
+import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
 import 'package:book_store/features/chapter_reader/controllers/text_reader_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,6 +13,9 @@ class TextReader extends GetView<TextReaderController> {
     final segments = controller.chapterReader.chapter.contentSegments;
     final contentText = controller.chapterReader.chapter.contentText;
     final settings = Get.find<SettingsRepository>();
+    final chapterController = Get.find<ChapterReaderController>();
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
 
     return Obx(() {
       final hasAudio = controller.hasAudio.value;
@@ -20,6 +24,7 @@ class TextReader extends GetView<TextReaderController> {
       final scaledStyle = baseStyle?.copyWith(
         fontSize: (baseStyle?.fontSize ?? 16.0) * scale,
       );
+      final immersive = chapterController.isImmersiveMode.value;
 
       // Use segments if available, otherwise fall back to line‑based rendering
       final items = _buildItems(
@@ -35,9 +40,47 @@ class TextReader extends GetView<TextReaderController> {
 
       final isSegmented = segments != null && segments.isNotEmpty;
 
-      // Wrap with border and page indicator
+      // In immersive or landscape, use the full screen for reading.
+      final horizontalMargin = immersive || isLandscape ? 0.0 : 12.0;
+      final verticalMargin = immersive ? 0.0 : 8.0;
+      final contentPadding = immersive || isLandscape
+          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
+          : const EdgeInsets.all(20);
+
+      final child = isSegmented
+          ? SingleChildScrollView(
+              controller: controller.scrollController,
+              padding: contentPadding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: items,
+              ),
+            )
+          : ListView(
+              controller: controller.scrollController,
+              padding: contentPadding,
+              children: items,
+            );
+
+      if (immersive || isLandscape) {
+        // Constrain line length in wide orientations for readability.
+        final boundedChild = Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: child,
+          ),
+        );
+        return Column(
+          children: [
+            Expanded(child: boundedChild),
+            if (!immersive) _buildPageIndicator(context),
+          ],
+        );
+      }
+
+      // Wrap with border and page indicator in normal portrait mode.
       return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        margin: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: verticalMargin),
         decoration: BoxDecoration(
           border: Border.all(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
@@ -55,24 +98,7 @@ class TextReader extends GetView<TextReaderController> {
         ),
         child: Column(
           children: [
-            // Scrollable text area
-            Expanded(
-              child: isSegmented
-                  ? SingleChildScrollView(
-                      controller: controller.scrollController,
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: items,
-                      ),
-                    )
-                  : ListView(
-                      controller: controller.scrollController,
-                      padding: const EdgeInsets.all(20),
-                      children: items,
-                    ),
-            ),
-            // Page indicator
+            Expanded(child: child),
             _buildPageIndicator(context),
           ],
         ),

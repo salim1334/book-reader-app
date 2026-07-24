@@ -45,6 +45,8 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>We use notifications to alert you about new books and content updates.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

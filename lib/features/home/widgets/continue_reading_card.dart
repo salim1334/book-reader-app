@@ -153,7 +153,7 @@ class _Content extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              "Continue Reading",
+              "ማንበብ ይቀጥሉ",
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -194,7 +194,7 @@ class _Content extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Text("completed"),
+            const Text("ተጠናቋል"),
           ],
         ),
       ],

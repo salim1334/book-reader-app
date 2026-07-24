@@ -27,156 +27,156 @@ class DatabaseHelper {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
+      // onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await _createSettingsTables(db);
+    await _createSettingsTables(db); 
     await _createContentTables(db);
     await _createUserAndSyncTables(db);
   }
 
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Production-friendly migration: create missing tables, add missing columns,
-    // and create indexes without dropping existing data.
-    for (var version = oldVersion + 1; version <= newVersion; version++) {
-      await _migrateToVersion(db, version);
-    }
-  }
+  // Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  //   // Production-friendly migration: create missing tables, add missing columns,
+  //   // and create indexes without dropping existing data.
+  //   for (var version = oldVersion + 1; version <= newVersion; version++) {
+  //     await _migrateToVersion(db, version);
+  //   }
+  // }
 
-  Future<void> _migrateToVersion(Database db, int version) async {
-    if (version == 5) {
-      // v5: recreate content tables to ensure id/book_id columns are TEXT
-      // (older dev builds created them as INTEGER PRIMARY KEY, which rejects
-      // CUID strings from the remote API). Settings tables are preserved.
-      await _dropTableIfExists(db, DbTables.downloadedAssets);
-      await _dropTableIfExists(db, DbTables.bookmarks);
-      await _dropTableIfExists(db, DbTables.readingProgress);
-      await _dropTableIfExists(db, DbTables.downloadQueue);
-      await _dropTableIfExists(db, DbTables.syncVersions);
-      await _dropTableIfExists(db, DbTables.localChapters);
-      await _dropTableIfExists(db, DbTables.localBooks);
-      await _createContentTables(db);
-      await _createUserAndSyncTables(db);
-      return;
-    }
+  // Future<void> _migrateToVersion(Database db, int version) async {
+  //   if (version == 5) {
+  //     // v5: recreate content tables to ensure id/book_id columns are TEXT
+  //     // (older dev builds created them as INTEGER PRIMARY KEY, which rejects
+  //     // CUID strings from the remote API). Settings tables are preserved.
+  //     await _dropTableIfExists(db, DbTables.downloadedAssets);
+  //     await _dropTableIfExists(db, DbTables.bookmarks);
+  //     await _dropTableIfExists(db, DbTables.readingProgress);
+  //     await _dropTableIfExists(db, DbTables.downloadQueue);
+  //     await _dropTableIfExists(db, DbTables.syncVersions);
+  //     await _dropTableIfExists(db, DbTables.localChapters);
+  //     await _dropTableIfExists(db, DbTables.localBooks);
+  //     await _createContentTables(db);
+  //     await _createUserAndSyncTables(db);
+  //     return;
+  //   }
 
-    if (version == 6) {
-      // v6: add chapter description and download tracking for partial content
-      await _addColumnIfMissing(
-        db,
-        DbTables.localChapters,
-        'description',
-        'TEXT',
-      );
-      await _addColumnIfMissing(
-        db,
-        DbTables.localChapters,
-        'is_downloaded',
-        'INTEGER NOT NULL DEFAULT 0',
-      );
-      return;
-    }
+  //   if (version == 6) {
+  //     // v6: add chapter description and download tracking for partial content
+  //     await _addColumnIfMissing(
+  //       db,
+  //       DbTables.localChapters,
+  //       'description',
+  //       'TEXT',
+  //     );
+  //     await _addColumnIfMissing(
+  //       db,
+  //       DbTables.localChapters,
+  //       'is_downloaded',
+  //       'INTEGER NOT NULL DEFAULT 0',
+  //     );
+  //     return;
+  //   }
 
-    if (version == 7) {
-      // v7: add book-level swipe direction for image-type readers
-      await _addColumnIfMissing(
-        db,
-        DbTables.localBooks,
-        'swipe_direction',
-        "TEXT NOT NULL DEFAULT 'RTL'",
-      );
-      return;
-    }
+  //   if (version == 7) {
+  //     // v7: add book-level swipe direction for image-type readers
+  //     await _addColumnIfMissing(
+  //       db,
+  //       DbTables.localBooks,
+  //       'swipe_direction',
+  //       "TEXT NOT NULL DEFAULT 'RTL'",
+  //     );
+  //     return;
+  //   }
 
-    if (version == 8) {
-      // v8: reading_progress now tracks every book/chapter combination.
-      // The old PK was book_id only; we need a composite PK and a progress column.
-      const oldName = 'reading_progress_old';
-      await _dropTableIfExists(db, oldName);
-      await db.execute('ALTER TABLE ${DbTables.readingProgress} RENAME TO $oldName');
-      await _createUserAndSyncTables(db);
-      await db.execute('''
-        INSERT INTO ${DbTables.readingProgress}
-          (book_id, chapter_id, last_position_ms, last_page_index, chapter_progress_percent, updated_at)
-        SELECT
-          book_id, chapter_id, last_position_ms, last_page_index, 0.0, updated_at
-        FROM $oldName
-      ''');
-      await _dropTableIfExists(db, oldName);
-      return;
-    }
+  //   if (version == 8) {
+  //     // v8: reading_progress now tracks every book/chapter combination.
+  //     // The old PK was book_id only; we need a composite PK and a progress column.
+  //     const oldName = 'reading_progress_old';
+  //     await _dropTableIfExists(db, oldName);
+  //     await db.execute('ALTER TABLE ${DbTables.readingProgress} RENAME TO $oldName');
+  //     await _createUserAndSyncTables(db);
+  //     await db.execute('''
+  //       INSERT INTO ${DbTables.readingProgress}
+  //         (book_id, chapter_id, last_position_ms, last_page_index, chapter_progress_percent, updated_at)
+  //       SELECT
+  //         book_id, chapter_id, last_position_ms, last_page_index, 0.0, updated_at
+  //       FROM $oldName
+  //     ''');
+  //     await _dropTableIfExists(db, oldName);
+  //     return;
+  //   }
 
-    if (version == 9) {
-      // v9: downloaded assets now store per-page audio timing for image books.
-      await _addColumnIfMissing(
-        db,
-        DbTables.downloadedAssets,
-        'audio_start_time',
-        'REAL',
-      );
-      await _addColumnIfMissing(
-        db,
-        DbTables.downloadedAssets,
-        'audio_end_time',
-        'REAL',
-      );
-      return;
-    }
+  //   if (version == 9) {
+  //     // v9: downloaded assets now store per-page audio timing for image books.
+  //     await _addColumnIfMissing(
+  //       db,
+  //       DbTables.downloadedAssets,
+  //       'audio_start_time',
+  //       'REAL',
+  //     );
+  //     await _addColumnIfMissing(
+  //       db,
+  //       DbTables.downloadedAssets,
+  //       'audio_end_time',
+  //       'REAL',
+  //     );
+  //     return;
+  //   }
 
-    if (version == 10) {
-      // v10: add favorite flags for books and chapters, and a favorite_pages table.
-      await _addColumnIfMissing(
-        db,
-        DbTables.localBooks,
-        'is_favorite',
-        'INTEGER NOT NULL DEFAULT 0',
-      );
-      await _addColumnIfMissing(
-        db,
-        DbTables.localChapters,
-        'is_favorite',
-        'INTEGER NOT NULL DEFAULT 0',
-      );
-      await _createFavoritePagesTable(db);
-      return;
-    }
+  //   if (version == 10) {
+  //     // v10: add favorite flags for books and chapters, and a favorite_pages table.
+  //     await _addColumnIfMissing(
+  //       db,
+  //       DbTables.localBooks,
+  //       'is_favorite',
+  //       'INTEGER NOT NULL DEFAULT 0',
+  //     );
+  //     await _addColumnIfMissing(
+  //       db,
+  //       DbTables.localChapters,
+  //       'is_favorite',
+  //       'INTEGER NOT NULL DEFAULT 0',
+  //     );
+  //     await _createFavoritePagesTable(db);
+  //     return;
+  //   }
 
-    // All other migration steps are additive and idempotent.
-    await _createSettingsTables(db);
-    await _createContentTables(db);
-    await _createUserAndSyncTables(db);
+  //   // All other migration steps are additive and idempotent.
+  //   await _createSettingsTables(db);
+  //   await _createContentTables(db);
+  //   await _createUserAndSyncTables(db);
 
-    if (version >= 4) {
-      await _addColumnIfMissing(
-        db,
-        DbTables.localChapters,
-        'content_segments_json',
-        'TEXT',
-      );
-    }
-  }
+  //   if (version >= 4) {
+  //     await _addColumnIfMissing(
+  //       db,
+  //       DbTables.localChapters,
+  //       'content_segments_json',
+  //       'TEXT',
+  //     );
+  //   }
+  // }
 
-  Future<void> _dropTableIfExists(Database db, String table) async {
-    await db.execute('DROP TABLE IF EXISTS $table');
-  }
+  // Future<void> _dropTableIfExists(Database db, String table) async {
+  //   await db.execute('DROP TABLE IF EXISTS $table');
+  // }
 
-  Future<bool> _hasColumn(Database db, String table, String column) async {
-    final rows = await db.rawQuery('PRAGMA table_info($table)');
-    return rows.any((r) => r['name'] == column);
-  }
+  // Future<bool> _hasColumn(Database db, String table, String column) async {
+  //   final rows = await db.rawQuery('PRAGMA table_info($table)');
+  //   return rows.any((r) => r['name'] == column);
+  // }
 
-  Future<void> _addColumnIfMissing(
-    Database db,
-    String table,
-    String column,
-    String type,
-  ) async {
-    if (!await _hasColumn(db, table, column)) {
-      await db.execute('ALTER TABLE $table ADD COLUMN $column $type');
-    }
-  }
+  // Future<void> _addColumnIfMissing(
+  //   Database db,
+  //   String table,
+  //   String column,
+  //   String type,
+  // ) async {
+  //   if (!await _hasColumn(db, table, column)) {
+  //     await db.execute('ALTER TABLE $table ADD COLUMN $column $type');
+  //   }
+  // }
 
   /// System and configuration settings
   Future<void> _createSettingsTables(Database db) async {

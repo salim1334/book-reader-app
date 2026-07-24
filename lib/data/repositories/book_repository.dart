@@ -8,9 +8,8 @@ import 'package:get/get.dart';
 class BookRepository extends GetxService {
   late final BookDao _dao;
 
-  Future<BookRepository> init() async {
-    final db = await DatabaseHelper.instance.database;
-    _dao = BookDao(db);
+  Future<BookRepository> init({BookDao? dao}) async {
+    _dao = dao ?? BookDao(await DatabaseHelper.instance.database);
     return this;
   }
 
@@ -21,12 +20,15 @@ class BookRepository extends GetxService {
   Future<List<LocalChapter>> getChapters(String bookId) =>
       _dao.getChapters(bookId);
 
-  Future<LocalChapter?> getChapter(String chapterId) => _dao.getChapter(chapterId);
+  Future<LocalChapter?> getChapter(String chapterId) =>
+      _dao.getChapter(chapterId);
 
   Future<bool> hasReadingProgress() => _dao.hasReadingProgress();
 
   Future<Map<String, Object?>?> getLastReadingProgress() =>
       _dao.getLastReadingProgress();
+
+  final favoriteVersion = 0.obs;
 
   Future<void> saveProgress({
     required String bookId,
@@ -55,11 +57,15 @@ class BookRepository extends GetxService {
 
   Future<void> clearReadingProgress() => _dao.clearReadingProgress();
 
-  Future<bool> isBookmarked({required String bookId, required String chapterId}) =>
-      _dao.isBookmarked(bookId: bookId, chapterId: chapterId);
+  Future<bool> isBookmarked({
+    required String bookId,
+    required String chapterId,
+  }) => _dao.isBookmarked(bookId: bookId, chapterId: chapterId);
 
-  Future<void> toggleBookmark({required String bookId, required String chapterId}) =>
-      _dao.toggleBookmark(bookId: bookId, chapterId: chapterId);
+  Future<void> toggleBookmark({
+    required String bookId,
+    required String chapterId,
+  }) => _dao.toggleBookmark(bookId: bookId, chapterId: chapterId);
 
   Future<int> countBooks() => _dao.countBooks();
 
@@ -84,11 +90,11 @@ class BookRepository extends GetxService {
     required String filePath,
     int? sortOrder,
   }) => _dao.insertDownloadedAsset(
-        chapterId: chapterId,
-        assetType: assetType,
-        filePath: filePath,
-        sortOrder: sortOrder,
-      );
+    chapterId: chapterId,
+    assetType: assetType,
+    filePath: filePath,
+    sortOrder: sortOrder,
+  );
 
   Future<List<Map<String, Object?>>> getChapterAssets(
     String chapterId, {
@@ -97,14 +103,23 @@ class BookRepository extends GetxService {
 
   Future<bool> isBookFavorite(String bookId) => _dao.isBookFavorite(bookId);
 
-  Future<void> setBookFavorite(String bookId, bool favorite) =>
-      _dao.setBookFavorite(bookId, favorite);
+  Future<void> setBookFavorite(String bookId, bool favorite) async {
+    await _dao.setBookFavorite(bookId, favorite);
+    // notify any listeners who needed to refresh the favorite list
+    favoriteVersion.value++;
+    return;
+  }
 
   Future<bool> isChapterFavorite(String chapterId) =>
       _dao.isChapterFavorite(chapterId);
 
-  Future<void> setChapterFavorite(String chapterId, bool favorite) =>
-      _dao.setChapterFavorite(chapterId, favorite);
+  Future<void> setChapterFavorite(String chapterId, bool favorite) async {
+    await _dao.setChapterFavorite(chapterId, favorite);
+
+    // notify any listeners who needed to refresh the favorite list
+    favoriteVersion.value++;
+    return;
+  }
 
   Future<List<LocalBook>> getFavoriteBooks() => _dao.getFavoriteBooks();
 
@@ -120,25 +135,29 @@ class BookRepository extends GetxService {
     required String bookId,
     required String chapterId,
     required int pageIndex,
-  }) =>
-      _dao.isPageFavorite(
-        bookId: bookId,
-        chapterId: chapterId,
-        pageIndex: pageIndex,
-      );
+  }) => _dao.isPageFavorite(
+    bookId: bookId,
+    chapterId: chapterId,
+    pageIndex: pageIndex,
+  );
 
   Future<void> setPageFavorite({
     required String bookId,
     required String chapterId,
     required int pageIndex,
     required bool favorite,
-  }) =>
-      _dao.setPageFavorite(
-        bookId: bookId,
-        chapterId: chapterId,
-        pageIndex: pageIndex,
-        favorite: favorite,
-      );
+  }) async {
+    await _dao.setPageFavorite(
+      bookId: bookId,
+      chapterId: chapterId,
+      pageIndex: pageIndex,
+      favorite: favorite,
+    );
+
+    // notify any listeners who needed to refresh the favorite list
+    favoriteVersion.value++;
+    return;
+  }
 
   Future<List<Map<String, Object?>>> getFavoritePages({String? bookId}) =>
       _dao.getFavoritePages(bookId: bookId);

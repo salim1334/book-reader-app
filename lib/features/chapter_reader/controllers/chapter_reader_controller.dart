@@ -8,6 +8,7 @@ import 'package:book_store/features/chapter_reader/controllers/image_reader_cont
 import 'package:book_store/features/chapter_reader/controllers/text_reader_controller.dart';
 import 'package:book_store/features/chapter_reader/presentation/arguments/chapter_reader_args.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class ChapterReaderController extends GetxController {
@@ -29,6 +30,10 @@ class ChapterReaderController extends GetxController {
   final lastPositionMs = 0.obs;
   final chapterProgressPercent = 0.0.obs;
   final isPageFavorite = false.obs;
+
+  /// When true the reader hides the app bar, audio player and system UI for
+  /// an immersive full-screen experience. A tap on the content toggles it.
+  final isImmersiveMode = false.obs;
 
   @override
   Future<void> onInit() async {
@@ -64,6 +69,53 @@ class ChapterReaderController extends GetxController {
     lastPageIndex.value = pageIndex;
     await _loadPageFavoriteState();
     await _saveProgress(pageIndex: pageIndex);
+  }
+
+  /// Toggles immersive reading mode (full-screen, no app bar/audio player).
+  void toggleImmersiveMode() {
+    isImmersiveMode.toggle();
+    _applySystemUI();
+  }
+
+  void setImmersiveMode(bool immersive) {
+    if (isImmersiveMode.value == immersive) return;
+    isImmersiveMode.value = immersive;
+    _applySystemUI();
+  }
+
+  void _applySystemUI() {
+    if (isImmersiveMode.value) {
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.immersiveSticky,
+      );
+    } else {
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.edgeToEdge,
+        overlays: SystemUiOverlay.values,
+      );
+    }
+  }
+
+  /// Allow both portrait and landscape while reading.
+  Future<void> enableReaderOrientations() async {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  /// Reset to portrait when leaving the reader.
+  Future<void> resetOrientations() async {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: SystemUiOverlay.values,
+    );
   }
 
   Future<void> _loadPageFavoriteState() async {
@@ -109,6 +161,7 @@ class ChapterReaderController extends GetxController {
       positionMs: lastPositionMs.value,
       chapterProgressPercent: chapterProgressPercent.value,
     );
+    await resetOrientations();
     super.onClose();
   }
 

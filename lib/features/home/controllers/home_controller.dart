@@ -40,7 +40,23 @@ class HomeController extends GetxController {
     await initialize();
     _bindSettingWorkers();
     _bindReactiveListeners();
+
+    // Instead of calling onInit(), just refresh favorites
+    ever(_bookRepository.favoriteVersion, (_) => _refreshFavorites());
   }
+
+  Future<void> _refreshFavorites() async {
+    try {
+      final favorites = <String, bool>{};
+      for (final book in books) {
+        favorites[book.id] = await _bookRepository.isBookFavorite(book.id);
+      }
+      bookFavorites.assignAll(favorites);
+    } catch (e) {
+      debugPrint('HomeController._refreshFavorites error: $e');
+    }
+  }
+
 
   void _bindSettingWorkers() {
     _offlineModeWorker = ever(_settings.offlineMode, (_) => loadBooks());

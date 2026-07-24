@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:book_store/core/services/notification_service.dart';
 import 'package:book_store/core/utils/asset_url.dart';
 import 'package:book_store/data/local/daos/book_dao.dart';
 import 'package:book_store/data/local/database_helper.dart';
@@ -21,18 +22,26 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   final ChapterRemoteSource _chapterRemoteSource;
   final DownloadManager _downloadManager;
   BookDao? _dao;
+  final BookDao? _providedDao;
 
   SyncManager(
     this._bookRemoteSource,
     this._chapterRemoteSource,
-    this._downloadManager,
-  );
+    this._downloadManager, {
+    BookDao? dao,
+  }) : _providedDao = dao;
 
   static const _defaultSyncInterval = Duration(minutes: 15);
   static const _resumeDebounce = Duration(seconds: 3);
 
   Timer? _periodicSyncTimer;
   Timer? _resumeSyncTimer;
+
+  /// Tracks which new book IDs we have already notified about in this session.
+  final _notifiedNewBookIds = <String>{};
+
+  /// Tracks the highest update version we have already notified about per book.
+  final _notifiedUpdateVersions = <String, int>{};
 
   /// Reactive flag showing when the last catalog-only background sync completed.
   final lastCatalogSyncAt = Rxn<DateTime>();
@@ -116,7 +125,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   }
 
   Future<void> _ensureDb() async {
-    _dao ??= BookDao(await DatabaseHelper.instance.database);
+    _dao ??= _providedDao ?? BookDao(await DatabaseHelper.instance.database);
   }
 
   /// Simple online check by attempting a short DNS lookup.
@@ -152,7 +161,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     try {
       final remoteBooks = await _bookRemoteSource.fetchBooks();
       for (final remoteBook in remoteBooks) {
-        await _syncBookMetadata(remoteBook);
+        await _syncBookMetadata(remoteBook, notify: true);
       }
     } finally {
       syncState.value = SyncState.idle;
@@ -312,6 +321,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     RemoteBook book, {
     bool downloadCover = false,
     bool updateVersions = false,
+    bool notify = false,
   }) async {
     await _ensureDb();
     final existing = await _dao!.getBook(book.id);
@@ -327,6 +337,10 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         version: book.version,
       );
       await _dao!.insertBook(localBook);
+
+      if (notify && _notifiedNewBookIds.add(book.id)) {
+        await Get.find<NotificationService>().showNewBookNotification(book.title);
+      }
     } else {
       // Keep an existing downloaded cover unless we are explicitly downloading it.
       String? coverUrl;
@@ -351,6 +365,14 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         await _dao!.updateBookMetadata(localBook);
       } else {
         await _dao!.updateBookInfo(localBook);
+      }
+
+      if (notify && book.version > existing.version) {
+        final lastNotified = _notifiedUpdateVersions[book.id] ?? 0;
+        if (book.version > lastNotified) {
+          _notifiedUpdateVersions[book.id] = book.version;
+          await Get.find<NotificationService>().showUpdateNotification(book.title);
+        }
       }
     }
 

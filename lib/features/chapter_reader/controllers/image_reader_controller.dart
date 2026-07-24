@@ -45,6 +45,7 @@ class ImageReaderController extends GetxController {
   final isLoading = true.obs;
   final imageCount = 0.obs;
   final media = Rxn<ImageMedia>();
+  final currentPageIndex = 0.obs;
 
   int _lastReportedPage = -1;
 
@@ -68,6 +69,7 @@ class ImageReaderController extends GetxController {
     isLoading.value = true;
     imageCount.value = 0;
     media.value = null;
+    currentPageIndex.value = 0;
     _lastReportedPage = -1;
 
     if (!_isImageBook) {
@@ -123,9 +125,11 @@ class ImageReaderController extends GetxController {
 
     final initialPage = _computeInitialPage(loadedMedia);
     final lastIndex = loadedMedia.images.isEmpty ? 0 : loadedMedia.images.length - 1;
-    pageController = PageController(
-      initialPage: loadedMedia.images.isEmpty ? 0 : initialPage.clamp(0, lastIndex).toInt(),
-    );
+    final safeInitialPage = loadedMedia.images.isEmpty ? 0 : initialPage.clamp(0, lastIndex).toInt();
+    pageController = PageController(initialPage: safeInitialPage);
+
+    currentPageIndex.value = safeInitialPage;
+    _lastReportedPage = safeInitialPage;
 
     media.value = loadedMedia;
     imageCount.value = loadedMedia.images.length;
@@ -156,12 +160,12 @@ class ImageReaderController extends GetxController {
   void _updateCurrentPage(int ms) {
     if (!_settings.autoScroll.value) return;
     if (pageController == null || imageCount.value <= 0) return;
-    if (!pageController!.hasClients || pageController!.page == null) return;
+    if (!pageController!.hasClients) return;
     final timings = media.value?.timings;
     if (timings == null || timings.isEmpty) return;
     final seconds = ms / 1000.0;
     final target = _pageIndexForSeconds(seconds, timings, fallback: 0);
-    final current = pageController!.page!.round();
+    final current = currentPageIndex.value;
     if (target != current) {
       pageController!.animateToPage(
         target,
@@ -198,15 +202,15 @@ class ImageReaderController extends GetxController {
   void onPageChanged(int index) {
     if (index == _lastReportedPage) return;
     _lastReportedPage = index;
+    currentPageIndex.value = index;
     _chapterReader.updatePage(index);
     _reportProgress();
   }
 
   void _reportProgress() {
-    if (pageController == null) return;
     final total = imageCount.value;
     if (total <= 0) return;
-    final index = pageController!.page?.round() ?? _chapterReader.initialPageIndex;
+    final index = currentPageIndex.value.clamp(0, total - 1);
     final progress = ((index + 1) / total).clamp(0.0, 1.0).toDouble();
     _chapterReader.updateProgress(progress);
   }

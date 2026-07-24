@@ -1,3 +1,4 @@
+import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -9,6 +10,7 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final settingsController = Get.find<SettingsRepository>();
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -43,8 +45,8 @@ class HomeHeader extends StatelessWidget {
           const SizedBox(width: 12),
 
           _HeaderButton(
-            icon: Icons.bookmark_border,
-            onTap: () => Get.toNamed(Routes.favorites),
+            icon: settingsController.themeMode.value == ThemeMode.dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+            onTap: () => settingsController.setThemeMode(settingsController.themeMode.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light),
           ),
         ],
       ),

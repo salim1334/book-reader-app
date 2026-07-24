@@ -12,7 +12,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Downloads')),
+      appBar: AppBar(title: const Text('ማውረዶች')),
       body: Column(
         children: [
           _SyncProgressHeader(),
@@ -28,14 +28,16 @@ class DownloadsScreen extends GetView<DownloadsController> {
               }
 
               if (controller.queue.isEmpty && controller.books.isEmpty) {
-                return const EmptyView(message: 'No downloads yet.');
+                return const EmptyView(message: 'እስካሁን ምንም አልወረደም።');
               }
 
               return RefreshIndicator(
                 onRefresh: controller.loadData,
                 child: ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: controller.queueSectionCount + controller.booksSectionCount,
+                  itemCount:
+                      controller.queueSectionCount +
+                      controller.booksSectionCount,
                   itemBuilder: (context, index) {
                     return _buildItem(context, index);
                   },
@@ -56,7 +58,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
       if (index == 0) {
         return const ListTile(
           title: Text(
-            'Download queue',
+            'ለማውረድ የተሰለፉ',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         );
@@ -64,7 +66,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
       if (index <= queue.length) {
         final item = queue[index - 1];
         final chapterId = item['chapter_id'] as String? ?? '';
-        final status = item['status'] as String? ?? 'UNKNOWN';
+        final status = item['status'] as String? ?? 'ያልታወቀ';
         final queueProgress = (item['progress'] as num?)?.toDouble() ?? 0.0;
         final retryCount = (item['retry_count'] as num?)?.toInt() ?? 0;
         final canRetry = status == 'FAILED';
@@ -86,10 +88,10 @@ class DownloadsScreen extends GetView<DownloadsController> {
                   )
                 : controller.queueIcon(status),
             title: Text(
-              'Chapter ${chapterId.length > 8 ? chapterId.substring(0, 8) : chapterId}...',
+              'ምዕራፍ ${chapterId.length > 8 ? chapterId.substring(0, 8) : chapterId}...',
             ),
             subtitle: Text(
-              '$status • ${(progress * 100).toStringAsFixed(0)}% • retries: $retryCount',
+              '$status • ${(progress * 100).toStringAsFixed(0)}% • ድጋሚ ሙከራዎች: $retryCount',
             ),
             trailing: canRetry
                 ? IconButton(
@@ -106,7 +108,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
     if (index == bookOffset) {
       return const ListTile(
         title: Text(
-          'Downloaded books',
+          'የወረዱ መጻሕፍት',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       );
@@ -119,7 +121,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
       leading: const Icon(Icons.book),
       title: Text(book.title),
       subtitle: Text(
-        '${book.type.name} • $chapterCount chapter${chapterCount == 1 ? '' : 's'}',
+        '${book.type.name} • $chapterCount ምዕራፍ${chapterCount == 1 ? '' : 'ች'}',
       ),
       trailing: IconButton(
         icon: const Icon(Icons.delete),
@@ -136,7 +138,8 @@ class _SyncProgressHeader extends StatelessWidget {
 
     return Obx(() {
       final state = syncManager.syncState.value;
-      final isActive = state == SyncState.syncing || state == SyncState.downloading;
+      final isActive =
+          state == SyncState.syncing || state == SyncState.downloading;
 
       return AnimatedSize(
         duration: const Duration(milliseconds: 250),

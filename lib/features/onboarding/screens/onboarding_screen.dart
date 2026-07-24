@@ -22,14 +22,15 @@ class OnboardingScreen extends GetView<OnboardingController> {
               ),
               const SizedBox(height: 32),
               Text(
-                'Book Reader',
+                'በዚ አፕሊኬሽን የሳዳት ከማል ኪታቦችን ያገኛሉ',
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Download books from your author library and read them offline.',
+                'አዳዲስ ኪታቦች ሲጨመሩ የማሳወቂያ መልዕክት እንዲደርሶ የኖትፍኬሽን ፍቃድ ለአፕልኬሽኑ ይስጡ።',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
@@ -38,7 +39,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: controller.completeOnboarding,
-                  child: const Text('Get Started'),
+                  child: const Text('ጀምር'),
                 ),
               ),
             ],

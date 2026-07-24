@@ -15,10 +15,11 @@ class SearchScreen extends GetView<BookSearchController> {
           controller: controller.textController,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: 'Search books or chapters...',
+            hintText: 'መጻሕፍትን ወይም ምዕራፎችን ይፈልጉ...',
             border: InputBorder.none,
             suffixIcon: Obx(() {
-              if (controller.query.value.isEmpty) return const SizedBox.shrink();
+              if (controller.query.value.isEmpty)
+                return const SizedBox.shrink();
               return IconButton(
                 icon: const Icon(Icons.clear),
                 onPressed: controller.clearQuery,
@@ -30,9 +31,7 @@ class SearchScreen extends GetView<BookSearchController> {
       ),
       body: Obx(() {
         if (controller.query.value.isEmpty) {
-          return const Center(
-            child: Text('Type a book or chapter title to search.'),
-          );
+          return const Center(child: Text('ለመፈለግ የመጽሐፍ ወይም የምዕራፍ ርዕስ ይጻፉ።'));
         }
 
         if (controller.isLoading.value) {
@@ -44,7 +43,7 @@ class SearchScreen extends GetView<BookSearchController> {
 
         if (!hasBooks && !hasChapters) {
           return EmptyView(
-            message: 'No results found for "${controller.query.value}".',
+            message: 'ለ"${controller.query.value}" ምንም ውጤት አልተገኘም።',
           );
         }
 
@@ -70,7 +69,7 @@ class SearchScreen extends GetView<BookSearchController> {
 
     if (controller.books.isNotEmpty) {
       if (index == offset) {
-        return _SectionHeader(title: 'Books', count: controller.books.length);
+        return _SectionHeader(title: 'መጻሕፍት', count: controller.books.length);
       }
       offset++;
       if (index < offset + controller.books.length) {
@@ -78,14 +77,13 @@ class SearchScreen extends GetView<BookSearchController> {
         return ListTile(
           leading: const Icon(Icons.menu_book),
           title: Text(book.title),
-          subtitle:
-              book.description != null && book.description!.isNotEmpty
-                  ? Text(
-                    book.description!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                  : null,
+          subtitle: book.description != null && book.description!.isNotEmpty
+              ? Text(
+                  book.description!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : null,
           trailing: const Icon(Icons.chevron_right),
           onTap: () => controller.openBook(book),
         );
@@ -96,7 +94,7 @@ class SearchScreen extends GetView<BookSearchController> {
     if (controller.chapters.isNotEmpty) {
       if (index == offset) {
         return _SectionHeader(
-          title: 'Chapters',
+          title: 'ምዕራፎች',
           count: controller.chapters.length,
         );
       }
@@ -105,7 +103,7 @@ class SearchScreen extends GetView<BookSearchController> {
       return ListTile(
         leading: const Icon(Icons.article),
         title: Text(chapter.title),
-        subtitle: Text('Book ID: ${chapter.bookId}'),
+        subtitle: Text('የመጽሐፍ መታወቂያ: ${chapter.bookId}'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => controller.openChapter(chapter),
       );
@@ -127,9 +125,9 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         '$title ($count)',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }

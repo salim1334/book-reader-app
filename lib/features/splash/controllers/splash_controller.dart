@@ -8,10 +8,12 @@ class SplashController extends GetxController {
   @override
   Future<void> onReady() async {
     super.onReady();
-    await _navigateNext();
+    // wait for a short duration to show the splash screen
+    await Future.delayed(const Duration(seconds: 3));
+    await navigateNext();
   }
 
-  Future<void> _navigateNext() async {
+  Future<void> navigateNext() async {
     final hasSeenOnboarding = await _settingsRepository.hasSeenOnboarding();
     Get.offAllNamed(hasSeenOnboarding ? Routes.main : Routes.onboarding);
   }

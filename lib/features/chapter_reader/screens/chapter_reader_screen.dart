@@ -24,6 +24,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
   void initState() {
     super.initState();
     controller = Get.find<ChapterReaderController>();
+    controller.enableReaderOrientations();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       audio.isReaderActive.value = true;
     });
@@ -31,6 +32,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
 
   @override
   void dispose() {
+    controller.resetOrientations();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       audio.isReaderActive.value = false;
     });
@@ -41,6 +43,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
   Widget build(BuildContext context) {
     return Obx(() {
       controller.chapterKey.value;
+      final immersive = controller.isImmersiveMode.value;
 
       final reader = controller.bookType.value == LocalBookType.text
           ? TextReader(key: controller.chapterKey.value)
@@ -56,25 +59,43 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
           }
         },
         child: Scaffold(
-          appBar: AppBar(
-            title: Text(controller.chapterTitle.value),
-            actions: [
-              Obx(() {
-                final isFavorite = controller.isPageFavorite.value;
-                return IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                    color: isFavorite ? context.sacred.gold : null,
-                  ),
-                  onPressed: controller.togglePageFavorite,
-                );
-              }),
-            ],
-          ),
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          appBar: immersive
+              ? null
+              : AppBar(
+                  title: Text(controller.chapterTitle.value),
+                  actions: [
+                    Obx(() {
+                      final isFavorite = controller.isPageFavorite.value;
+                      return IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                          color: isFavorite ? context.sacred.gold : null,
+                        ),
+                        onPressed: controller.togglePageFavorite,
+                      );
+                    }),
+                    IconButton(
+                      icon: Icon(
+                        immersive ? Icons.fullscreen_exit : Icons.fullscreen,
+                      ),
+                      onPressed: controller.toggleImmersiveMode,
+                      tooltip: 'ሙሉ ገጽ መቀየሪያ',
+                    ),
+                  ],
+                ),
           body: Column(
             children: [
-              Expanded(child: reader),
-              const ReaderAudioPlayer(),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: controller.toggleImmersiveMode,
+                  child: immersive
+                      ? reader
+                      : SafeArea(bottom: false, child: reader),
+                ),
+              ),
+              if (!immersive) const SafeArea(child: ReaderAudioPlayer()),
             ],
           ),
         ),

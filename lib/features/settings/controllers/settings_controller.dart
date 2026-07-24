@@ -1,4 +1,5 @@
 import 'package:book_store/common/utils/snackbar_helper.dart';
+import 'package:book_store/core/services/notification_service.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:flutter/material.dart';
@@ -64,6 +65,12 @@ class SettingsController extends GetxController {
   void toggleNotifyNewBooks(bool value) => _settingsRepository.setNotifyNewBooks(value);
 
   void toggleNotifyUpdates(bool value) => _settingsRepository.setNotifyUpdates(value);
+
+  Future<void> testNotification() async {
+    final notificationService = Get.find<NotificationService>();
+    await notificationService.showTestNotification();
+    SnackbarHelper.show('Test notification sent. Check your notification shade.');
+  }
 
   // ─── Data Management ─────────────────────────────────────
 

@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:book_store/data/local/daos/settings_dao.dart';
 
 class SettingsRepository extends GetxService {
-  final SettingsDao _dao = SettingsDao();
+  final SettingsDao _dao;
+
+  SettingsRepository({SettingsDao? dao}) : _dao = dao ?? SettingsDao();
 
   // ─── Keys ────────────────────────────────────────────
   static const String _keyOnboarding = 'has_seen_onboarding';

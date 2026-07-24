@@ -23,7 +23,7 @@ class ErrorView extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              FilledButton.tonal(onPressed: onRetry, child: const Text('Retry')),
+              FilledButton.tonal(onPressed: onRetry, child: const Text('ደግመህ ሞክር')),
             ],
           ],
         ),

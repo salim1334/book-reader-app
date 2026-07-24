@@ -11,15 +11,15 @@ abstract final class AppConfig {
     }
   }
 
-  static String get apiBaseUrl => _safeGet('API_BASE_URL', 'https://api.example.com');
+  static String get apiBaseUrl => _safeGet('API_BASE_URL', 'https://api.islamickitab.com/api/');
 
-  static String get authorId => _safeGet('AUTHOR_ID', '');
+  static String get authorId => _safeGet('AUTHOR_ID', 'cmroh7yas000gbjo8apaz4lm3');
 
-  static String get apiKey => _safeGet('API_KEY', '');
+  static String get apiKey => _safeGet('API_KEY', 'your-shared-key');
 
-  static String get appEnv => _safeGet('APP_ENV', 'development');
+  static String get appEnv => _safeGet('APP_ENV', 'Production');
 
-  static bool get isDev => appEnv.toLowerCase() == 'development';
+  static bool get isDev => appEnv.toLowerCase() == 'Production';
 
   static void validate() {
     if (kDebugMode && apiKey.isEmpty) {
@@ -32,7 +32,7 @@ abstract final class AppConfig {
         'AppConfig: AUTHOR_ID is empty. Set AUTHOR_ID in .env so the app knows which author it belongs to.',
       );
     }
-    if (kDebugMode && apiBaseUrl == 'https://api.example.com') {
+    if (kDebugMode && apiBaseUrl == 'https://api.islamickitab.com/api/') {
       debugPrint(
         'AppConfig: API_BASE_URL is still the placeholder. Update .env to point to your admin panel.',
       );

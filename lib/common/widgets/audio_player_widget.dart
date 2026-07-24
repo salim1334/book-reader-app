@@ -36,166 +36,141 @@ class AudioPlayerWidget extends StatelessWidget {
     AudioPlayerService audio,
     ThemeData theme,
   ) {
-    return AnimatedSlide(
-  duration: const Duration(milliseconds: 250),
-  curve: Curves.easeOutCubic,
-  offset: const Offset(0, 0),
-  child: AnimatedOpacity(
-    duration: const Duration(milliseconds: 250),
-    opacity: 1,
-    child:Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () async {
-          final book = audio.currentBook;
-          final chapter = audio.currentChapter;
-          if (book == null || chapter == null) return;
-
-          final progress = await Get.find<BookRepository>().getReadingProgress(
-            bookId: book.id,
-            chapterId: chapter.id,
-          );
-          final lastPageIndex =
-              (progress?['last_page_index'] as num?)?.toInt() ?? 0;
-
-          Get.toNamed(
-            Routes.chapterReader,
-            arguments: ChapterReaderArgs(
-              book: book,
-              chapter: chapter,
-              initialPageIndex: lastPageIndex,
-              initialPositionMs: audio.position.value.inMilliseconds,
-            ),
-          );
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainer.withOpacity(.98),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(.05),
-                blurRadius: 8,
-                spreadRadius: 1,
-                offset: const Offset(0, 2),
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer.withOpacity(.98),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.05),
+            blurRadius: 8,
+            spreadRadius: 1,
+            offset: const Offset(0, 2),
           ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.only(
-  topLeft: Radius.circular(18),
-  topRight: Radius.circular(18),
-),
-            child: Material(
-              color: Colors.transparent,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(18),
+          topRight: Radius.circular(18),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () async {
+              final book = audio.currentBook;
+              final chapter = audio.currentChapter;
+              if (book == null || chapter == null) return;
+
+              final progress = await Get.find<BookRepository>()
+                  .getReadingProgress(bookId: book.id, chapterId: chapter.id);
+              final lastPageIndex =
+                  (progress?['last_page_index'] as num?)?.toInt() ?? 0;
+
+              Get.toNamed(
+                Routes.chapterReader,
+                arguments: ChapterReaderArgs(
+                  book: book,
+                  chapter: chapter,
+                  initialPageIndex: lastPageIndex,
+                  initialPositionMs: audio.position.value.inMilliseconds,
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // ---- Cover (left) ----
-                    const _CoverArt(mode: AudioPlayerMode.mini),
-                    const SizedBox(width: 8),
-                    // ---- Info & progress (right) ----
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Row: title + controls
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const _CoverArt(mode: AudioPlayerMode.mini),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Obx(() {
+                                final bookTitle =
+                                    audio.currentBook?.title ?? '';
+                                final chapterTitle =
+                                    audio.currentChapter?.title ?? '';
+                                final remaining = _formatRemaining(
+                                  audio.duration.value - audio.position.value,
+                                );
+
+                                return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Obx(() {
-                                      final bookTitle =
-                                          audio.currentBook?.title ?? '';
-                                      final chapterTitle =
-                                          audio.currentChapter?.title ?? '';
-                                      final remaining = _formatRemaining(
-                                        audio.duration.value -
-                                            audio.position.value,
-                                      );
-
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            bookTitle,
-                                            style: theme.textTheme.titleSmall
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w700,
-                                                  letterSpacing: .2,
-                                                ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                    Text(
+                                      bookTitle,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: .2,
                                           ),
-                                          Text(
-                                            '$chapterTitle • $remaining left',
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                                  fontSize: 11,
-                                                  color: theme
-                                                      .colorScheme
-                                                      .onSurfaceVariant,
-                                                ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      '$chapterTitle • $remaining left',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            fontSize: 11,
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
                                           ),
-                                        ],
-                                      );
-                                    }),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ],
-                                ),
+                                );
+                              }),
+                            ),
+                            const _PlayPauseButton(mode: AudioPlayerMode.mini),
+                            IconButton(
+                              icon: const Icon(Icons.close_rounded, size: 18),
+                              onPressed: audio.stop,
+                              color: theme.colorScheme.onSurfaceVariant,
+                              splashRadius: 18,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 28,
+                                minHeight: 28,
                               ),
-                              const _PlayPauseButton(
-                                mode: AudioPlayerMode.mini,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.close_rounded, size: 18),
-                                onPressed: audio.stop,
-                                color: theme.colorScheme.onSurfaceVariant,
-                                splashRadius: 18,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(
-                                  minWidth: 28,
-                                  minHeight: 28,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          const AudioProgressBar(
-                            trackHeight: 2,
-                            thumbRadius: 0,
-                            showTimeLabels: true,
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        const AudioProgressBar(
+                          trackHeight: 2,
+                          thumbRadius: 0,
+                          showTimeLabels: false,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
-    ),),);
+    );
   }
 
-  /// Helper to format remaining time as "MM:SS"
+  /// Helper to format remaining time cleanly as "MM:SS" or "H:MM:SS"
   String _formatRemaining(Duration duration) {
     if (duration.isNegative) return '00:00';
+    final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
@@ -226,16 +201,16 @@ class AudioPlayerWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+      child: const Padding(
+        padding: EdgeInsets.fromLTRB(16, 6, 16, 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const AudioProgressBar(showTimeLabels: true),
-            const SizedBox(height: 6),
-            const _PlaybackControls(mode: AudioPlayerMode.reader),
-            const SizedBox(height: 6),
-            const _ExtraControls(),
+            AudioProgressBar(showTimeLabels: true),
+            SizedBox(height: 6),
+            _PlaybackControls(mode: AudioPlayerMode.reader),
+            SizedBox(height: 6),
+            _ExtraControls(),
           ],
         ),
       ),
@@ -327,7 +302,6 @@ class _PlaybackControls extends StatelessWidget {
     }
 
     final audio = Get.find<AudioPlayerService>();
-    final compact = mode == AudioPlayerMode.reader;
 
     return Obx(() {
       return Row(
@@ -345,21 +319,21 @@ class _PlaybackControls extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: compact ? 4 : 8),
+          const SizedBox(width: 4),
           _ControlButton(
             icon: Icons.skip_previous_rounded,
             tooltip: 'Previous chapter',
             onPressed: audio.hasMedia.value ? audio.skipToPrevious : null,
           ),
-          SizedBox(width: compact ? 10 : 16),
+          const SizedBox(width: 10),
           _PlayPauseButton(mode: mode),
-          SizedBox(width: compact ? 10 : 16),
+          const SizedBox(width: 10),
           _ControlButton(
             icon: Icons.skip_next_rounded,
             tooltip: 'Next chapter',
             onPressed: audio.hasMedia.value ? audio.skipToNext : null,
           ),
-          SizedBox(width: compact ? 4 : 8),
+          const SizedBox(width: 4),
           _ControlButton(
             icon: Icons.forward_10_rounded,
             tooltip: 'Forward 10s',
