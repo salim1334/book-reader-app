@@ -1,43 +1,293 @@
 {
   "books": [
     {
-      "id": "PUT_REAL_BOOK_ID_FROM_ADMIN_PANEL_HERE",
-      "title": "Book Title",
-      "description": "Short description shown on the book card.",
-      "bookType": "TEXT",
-      "swipeDirection": "RTL",
-      "version": 1,
-      "coverAsset": "assets/data/bundled_books/book1/cover.jpg",
-      "chapters": [
-        {
-          "id": "PUT_REAL_CHAPTER_ID_FROM_ADMIN_PANEL_HERE",
-          "title": "Chapter 1",
-          "sortOrder": 0,
-          "version": 1,
-          "contentText": "Full chapter text goes here. This is stored directly in SQLite, no file copy needed for TEXT chapters."
-        }
-      ]
-    },
-    {
-      "_comment": "Example of an IMAGE-type bundled book (manga/comic style). Remove this key before shipping, it's just documentation.",
-      "id": "PUT_REAL_IMAGE_BOOK_ID_HERE",
-      "title": "Image Book Title",
+      "id": "cmrolfi59000jbj9wf8fp7t4m",
+      "title": "300 ነጥቦች ኢስላምን ለህፃናት",
+      "description": "300 ነጥቦች ኢስላምን ለህፃናት ማስገንዘብ ከሰላት አሰጋገድ ዚክሮች ጭምር",
       "bookType": "IMAGE",
-      "swipeDirection": "RTL",
+      "swipeDirection": "LTR",
       "version": 1,
-      "coverAsset": "assets/data/bundled_books/book2/cover.jpg",
+      "coverAsset": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cover/300_____________________________________________1784273093327_b0s759oggh9.png",
       "chapters": [
         {
-          "id": "PUT_REAL_CHAPTER_ID_HERE",
-          "title": "Chapter 1",
-          "sortOrder": 0,
+          "id": "cmrolj9mq000lbj9wgc6ny40y",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 1)",
+          "orderIndex": 0,
           "version": 1,
           "pages": [
-            { "imageAsset": "assets/data/bundled_books/book2/ch1/page1.jpg", "sortOrder": 0 },
-            { "imageAsset": "assets/data/bundled_books/book2/ch1/page2.jpg", "sortOrder": 1 }
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmrolj9mq000lbj9wgc6ny40y/300_____________________________________________pa_1784272113627_wue4vlm6ikm.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 164
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmrolj9mq000lbj9wgc6ny40y/300_____________________________________________pa_1784272120377_2lfcr91bo1w.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 165,
+              "audioEndTime": 425
+            }
           ],
           "audio": [
-            { "audioAsset": "assets/data/bundled_books/book2/ch1/narration.mp3" }
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmrolj9mq000lbj9wgc6ny40y/300_ለህፃናት_ክፍል_1.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmromau3m000tbj9woq7xd35m",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 2)",
+          "orderIndex": 1,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromau3m000tbj9woq7xd35m/300_____________________________________________pa_1784273393964_r8t4qg2h2bf.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 64
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromau3m000tbj9woq7xd35m/300_____________________________________________pa_1784273402368_4dj30iv0km9.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 65,
+              "audioEndTime": 289
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromau3m000tbj9woq7xd35m/300_____________________________________________pa_1784273410946_stev12zo5s.jpg",
+              "orderIndex": 2,
+              "audioStartTime": 290,
+              "audioEndTime": 387.6
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromau3m000tbj9woq7xd35m/300_ለህፃናት_ክፍል_2.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmromghsg0013bj9w609r2iyn",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 3)",
+          "orderIndex": 2,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromghsg0013bj9w609r2iyn/300_____________________________________________pa_1784273899199_mm058g66lke.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 251
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromghsg0013bj9w609r2iyn/300_____________________________________________pa_1784273918141_47yda3ha27i.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 252,
+              "audioEndTime": 535
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromghsg0013bj9w609r2iyn/300_ለህፃናት_ክፍል_3.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmromq6xl001bbj9w0c7ncjhv",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 4)",
+          "orderIndex": 3,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromq6xl001bbj9w0c7ncjhv/300_____________________________________________pa_1784274642528_9udwhxxml8j.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 219
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromq6xl001bbj9w0c7ncjhv/300_____________________________________________pa_1784274753545_eg5otq3akzk.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 220,
+              "audioEndTime": 505
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmromq6xl001bbj9w0c7ncjhv/300_ለህፃናት_ክፍል_4.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmron6rs8001jbj9w4ksxcv47",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 5)",
+          "orderIndex": 4,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmron6rs8001jbj9w4ksxcv47/300_____________________________________________pa_1784275248175_o42noreqopr.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 417
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmron6rs8001jbj9w4ksxcv47/300_____________________________________________pa_1784275367865_l3918g50hbi.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 418,
+              "audioEndTime": 601
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmron6rs8001jbj9w4ksxcv47/300_ለህፃናት_ክፍል_5.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmronjee0001rbj9w38x8bkss",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 6)",
+          "orderIndex": 5,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmronjee0001rbj9w38x8bkss/300_____________________________________________pa_1784275751657_rnpp1mol0cq.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 462
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmronjee0001rbj9w38x8bkss/300_____________________________________________pa_1784275782681_531p3y2trt5.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 463,
+              "audioEndTime": 708
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmronjee0001rbj9w38x8bkss/300_ለህፃናት_ክፍል_6.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmrons39m001zbj9wkeodvtk1",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 7)",
+          "orderIndex": 6,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmrons39m001zbj9wkeodvtk1/300_____________________________________________pa_1784276113455_4klo3wmupvn.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 342
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmrons39m001zbj9wkeodvtk1/300_____________________________________________pa_1784276260407_a7wd0vwpw7.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 343,
+              "audioEndTime": 432
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmrons39m001zbj9wkeodvtk1/300_ለህፃናት_ክፍል_7.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmroo1kwz0027bj9wbml65nem",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 8)",
+          "orderIndex": 7,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroo1kwz0027bj9wbml65nem/300_____________________________________________pa_1784276608833_js443gu20zp.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 452
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroo1kwz0027bj9wbml65nem/300_____________________________________________pa_1784276751997_yan1b5bmeri.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 453,
+              "audioEndTime": 794
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroo1kwz0027bj9wbml65nem/300_ለህፃናት_ክፍል_8.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmroodgfg002fbj9wh8heyzgr",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 9)",
+          "orderIndex": 8,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroodgfg002fbj9wh8heyzgr/300_____________________________________________pa_1784277110826_wzfzkadu9k9.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 252
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroodgfg002fbj9wh8heyzgr/300_____________________________________________pa_1784277236548_d80nc75dtcw.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 253,
+              "audioEndTime": 577
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroodgfg002fbj9wh8heyzgr/300_ለህፃናት_ክፍል_9.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmroon56f002nbj9wrxymc3bv",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 10)",
+          "orderIndex": 9,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroon56f002nbj9wrxymc3bv/300_____________________________________________pa_1784277500719_xfi5q45pwxe.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 222
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroon56f002nbj9wrxymc3bv/300_____________________________________________pa_1784277527654_y8zu8rz42ij.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 223,
+              "audioEndTime": 757
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroon56f002nbj9wrxymc3bv/300_ለህፃናት_ክፍል_10.mp3"
+            }
+          ]
+        },
+        {
+          "id": "cmroouoxg002vbj9w3tqvlk8e",
+          "title": "300 ነጥቦች ለህፃናት ክፍል (ክፍል 11)",
+          "orderIndex": 10,
+          "version": 1,
+          "pages": [
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroouoxg002vbj9w3tqvlk8e/300_____________________________________________pa_1784277816401_tfs8sg9kzhp.jpg",
+              "orderIndex": 0,
+              "audioStartTime": 0.0,
+              "audioEndTime": 582
+            },
+            {
+              "imagePath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroouoxg002vbj9w3tqvlk8e/300_____________________________________________pa_1784277973736_s9mxwo6xtxa.jpg",
+              "orderIndex": 1,
+              "audioStartTime": 582,
+              "audioEndTime": 1132
+            }
+          ],
+          "audio": [
+            {
+              "audioPath": "assets/data/bundled_books/cmrolfi59000jbj9wf8fp7t4m/cmroouoxg002vbj9w3tqvlk8e/300_ለህፃናት_ክፍል_11.mp3"
+            }
           ]
         }
       ]

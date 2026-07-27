@@ -21,7 +21,7 @@ class ContinueReadingCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, right: 10, left: 10),
       child: SizedBox(
-        height: 215,
+        height: 230,
         child: Stack(
           clipBehavior: Clip.none,
           children: [

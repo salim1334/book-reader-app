@@ -11,6 +11,13 @@ import 'package:get/get.dart';
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
+  // on init check if there's any change in continue reaing and refresh nessaryparts
+  // @override
+  // void onInit() {
+  //   super.onInit();
+  //   controller.checkContinueReading();
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

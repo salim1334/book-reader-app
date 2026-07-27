@@ -46,9 +46,10 @@ class BundledContentSeeder {
 
       // Only mark as done on success, so a bad/missing manifest doesn't
       // permanently skip seeding.
+      debugPrint('BundledContentSeeder: ✅✅✅✅✅✅✅ seeded ${books.length} book(s)');
       await _settingsDao.setBool(_flagKey, true);
     } catch (e, st) {
-      debugPrint('BundledContentSeeder: failed to seed bundled content: $e\n$st');
+      debugPrint('BundledContentSeeder: ❌❌❌❌❌❌❌❌ failed to seed bundled content: $e\n$st');
     }
   }
 
@@ -78,7 +79,9 @@ class BundledContentSeeder {
           bookId: bookId,
           title: ch['title'] as String,
           description: ch['description'] as String?,
-          sortOrder: (ch['sortOrder'] as num?)?.toInt() ?? 0,
+          sortOrder: (ch['orderIndex'] as num?)?.toInt() ??
+              (ch['sortOrder'] as num?)?.toInt() ??
+              0,
           contentText: ch['contentText'] as String?,
           version: (ch['version'] as num?)?.toInt() ?? 1,
           isDownloaded: true,
@@ -109,8 +112,14 @@ class BundledContentSeeder {
       final pages = ch['pages'] as List<dynamic>? ?? [];
       for (final pageRaw in pages) {
         final page = pageRaw as Map<String, dynamic>;
+        final pageSortOrder =
+            (page['orderIndex'] as num?)?.toInt() ??
+            (page['sortOrder'] as num?)?.toInt();
+        final pageAudioStart = (page['audioStartTime'] as num?)?.toDouble();
+        final pageAudioEnd = (page['audioEndTime'] as num?)?.toDouble();
+
         final localPath = await _copyAsset(
-          page['imageAsset'] as String,
+          (page['imagePath'] as String? ?? page['imageAsset'] as String? ?? ''),
           assetType: 'images',
           bookId: bookId,
           chapterId: chapterId,
@@ -119,17 +128,36 @@ class BundledContentSeeder {
           chapterId: chapterId,
           assetType: 'IMAGE',
           filePath: localPath,
-          sortOrder: (page['sortOrder'] as num?)?.toInt(),
-          audioStartTime: (page['audioStartTime'] as num?)?.toDouble(),
-          audioEndTime: (page['audioEndTime'] as num?)?.toDouble(),
+          sortOrder: pageSortOrder,
+          audioStartTime: pageAudioStart,
+          audioEndTime: pageAudioEnd,
         );
+
+        final pageAudioAsset =
+            page['audioPath'] as String? ?? page['audioAsset'] as String?;
+        if (pageAudioAsset != null && pageAudioAsset.isNotEmpty) {
+          final audioLocalPath = await _copyAsset(
+            pageAudioAsset,
+            assetType: 'audio',
+            bookId: bookId,
+            chapterId: chapterId,
+          );
+          await _dao.insertDownloadedAsset(
+            chapterId: chapterId,
+            assetType: 'AUDIO',
+            filePath: audioLocalPath,
+            sortOrder: pageSortOrder,
+            audioStartTime: pageAudioStart,
+            audioEndTime: pageAudioEnd,
+          );
+        }
       }
 
       final audios = ch['audio'] as List<dynamic>? ?? [];
       for (final audioRaw in audios) {
         final audio = audioRaw as Map<String, dynamic>;
         final localPath = await _copyAsset(
-          audio['audioAsset'] as String,
+          (audio['audioPath'] as String? ?? audio['audioAsset'] as String? ?? ''),
           assetType: 'audio',
           bookId: bookId,
           chapterId: chapterId,

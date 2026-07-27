@@ -8,6 +8,7 @@ import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/book_details/presentation/arguments/book_details_args.dart';
 import 'package:book_store/features/chapter_reader/presentation/arguments/chapter_reader_args.dart';
+import 'package:book_store/features/main_navigation/controllers/main_navigation_controller.dart';
 import 'package:book_store/features/home/domain/entities/continue_reading.dart';
 import 'package:book_store/routes/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class HomeController extends GetxController {
   Worker? _offlineModeWorker;
   Worker? _autoDownloadWorker;
   Worker? _catalogSyncWorker;
+  Worker? _selectedIndexWorker;
   StreamSubscription<ReadingProgressUpdate>? _progressSubscription;
   @override
   Future<void> onInit() async {
@@ -41,6 +43,7 @@ class HomeController extends GetxController {
     await initialize();
     _bindSettingWorkers();
     _bindReactiveListeners();
+    _bindTabWorker();
 
     // Instead of calling onInit(), just refresh favorites
     ever(_bookRepository.favoriteVersion, (_) => _refreshFavorites());
@@ -57,6 +60,12 @@ class HomeController extends GetxController {
       debugPrint('HomeController._refreshFavorites error:  ');
     }
   }
+
+  // if there's anychange in progress the home page will notify the screen to refresh
+  // isMinifyEnabled = true isShrinkResources = true
+  // void checkContinueReading() {
+  //   _onProgressUpdate(_progressService.getCurrentProgress());
+  // }
 
   void _bindSettingWorkers() {
     _offlineModeWorker = ever(_settings.offlineMode, (_) => loadBooks());
@@ -76,11 +85,28 @@ class HomeController extends GetxController {
     );
   }
 
+  void _bindTabWorker() {
+    try {
+      final mainNav = Get.find<MainNavigationController>();
+      _selectedIndexWorker = ever(
+        mainNav.selectedIndex,
+        (index) {
+          if (index == 0) {
+            refreshContinueReading();
+          }
+        },
+      );
+    } catch (_) {
+      // Main navigation may not be available in all environments.
+    }
+  }
+
   @override
   Future<void> onClose() async {
     _offlineModeWorker?.dispose();
     _autoDownloadWorker?.dispose();
     _catalogSyncWorker?.dispose();
+    _selectedIndexWorker?.dispose();
     await _progressSubscription?.cancel();
     super.onClose();
   }
@@ -171,11 +197,11 @@ class HomeController extends GetxController {
     // If the currently shown "continue reading" book changed, refresh it.
     final cont = continueReading.value;
     if (cont != null && cont.book.id == update.bookId) {
-      _refreshContinueReading();
+      refreshContinueReading();
     }
   }
 
-  Future<void> _refreshContinueReading() async {
+  Future<void> refreshContinueReading() async {
     final updated = await _loadContinueReading();
     if (updated != null) {
       continueReading.value = updated;

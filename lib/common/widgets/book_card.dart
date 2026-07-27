@@ -78,7 +78,7 @@ class BookCard extends StatelessWidget {
                       const SizedBox(height: 6),
 
                       // Format type badge
-                      _TypeBadge(label: typeLabel, icon: typeIcon),
+                      _TypeBadge(label: typeLabel, icon: typeIcon, isDownloaded: isDownloaded),
 
                       // Reading progress bar
                       if (isDownloaded && progressPercent > 0) ...[
@@ -188,8 +188,9 @@ class _BookCover extends StatelessWidget {
 class _TypeBadge extends StatelessWidget {
   final String label;
   final IconData icon;
+  final bool isDownloaded;
 
-  const _TypeBadge({required this.label, required this.icon});
+  const _TypeBadge({required this.label, required this.icon, required this.isDownloaded});
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +202,7 @@ class _TypeBadge extends StatelessWidget {
         color: theme.colorScheme.primaryContainer.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: isDownloaded ? Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: theme.colorScheme.primary),
@@ -210,6 +211,20 @@ class _TypeBadge extends StatelessWidget {
             label,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w500,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ): Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.download, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            "መጽሐፉን ለማውረድ ይጫኑት",
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
               fontSize: 11,
             ),

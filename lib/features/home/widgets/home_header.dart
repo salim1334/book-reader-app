@@ -28,7 +28,7 @@ class HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  "የኡስታዝ ሳዳት ከማል ኪታቦች ኮሌክሽን",
+                  "የሳዳት ከማል ኪታቦች",
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -45,8 +45,14 @@ class HomeHeader extends StatelessWidget {
           const SizedBox(width: 12),
 
           _HeaderButton(
-            icon: settingsController.themeMode.value == ThemeMode.dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-            onTap: () => settingsController.setThemeMode(settingsController.themeMode.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light),
+            icon: settingsController.themeMode.value == ThemeMode.dark
+                ? Icons.dark_mode_rounded
+                : Icons.light_mode_rounded,
+            onTap: () => settingsController.setThemeMode(
+              settingsController.themeMode.value == ThemeMode.light
+                  ? ThemeMode.dark
+                  : ThemeMode.light,
+            ),
           ),
         ],
       ),

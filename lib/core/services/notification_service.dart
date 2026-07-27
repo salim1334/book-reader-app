@@ -70,9 +70,20 @@ class NotificationService extends GetxService {
     return true;
   }
 
+  /// Checks whether notification permission has already been granted.
+  Future<bool> isPermissionGranted() async {
+    if (Platform.isAndroid) {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      return await androidPlugin?.areNotificationsEnabled() ?? false;
+    }
+    return true;
+  }
+
   /// Shows a test notification so the user can verify the channel works.
   Future<void> showTestNotification() async {
-    final allowed = await requestPermission();
+    final allowed = await isPermissionGranted();
     if (!allowed) {
       debugPrint('Notification permission not granted.');
       return;
@@ -149,7 +160,7 @@ class NotificationService extends GetxService {
     required String body,
     String? payload,
   }) async {
-    final allowed = await requestPermission();
+    final allowed = await isPermissionGranted();
     if (!allowed) return;
 
     final androidDetails = AndroidNotificationDetails(
