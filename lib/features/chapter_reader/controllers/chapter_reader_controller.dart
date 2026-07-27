@@ -228,7 +228,6 @@ class ChapterReaderController extends GetxController {
 
     chapterTitle.value = newChapter.title;
     bookType.value = book.type;
-    chapterKey.value = UniqueKey();
   }
 
   Future<void> _saveProgress({

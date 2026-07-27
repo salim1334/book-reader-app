@@ -12,7 +12,7 @@ class AboutScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About'),
+        title: const Text('ስለ አፕሊኬሽኑ'),
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: colorScheme.onSurface,
@@ -39,21 +39,14 @@ class AboutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Book Reader',
+                  'የሳዳት ከማል መጽሐፍት',
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Version 1.0.0',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your digital library for Islamic books.',
+                  'የሳዳት ከማል (አቡ መርየም) ኪታቦች (ደርሶች) የሚለቀቁበት የሞባይል መተግበሪያ',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -67,68 +60,33 @@ class AboutScreen extends StatelessWidget {
           // ---- About the App ----
           _buildSection(
             context,
-            title: 'About the App',
+            title: 'ስለ አፕሊኬሽኑ',
             children: [
               _buildInfoRow(
                 icon: Icons.description_rounded,
                 text:
-                    'A modern, offline-first book reader and audiobook player for Islamic literature.',
+                    'የተለያዩ ኪታቦችን ከድምጽ ጋረ ከኢንተርኔት ውጭ የሚሰራ አፕልኬሽን።',
               ),
               _buildInfoRow(
                 icon: Icons.featured_play_list_rounded,
-                text: 'Read, listen, and organize your books with ease.',
+                text: 'መጽሐፍትን በቀላሉ ያንብቡ፣ ያዳምጡ እና የደረሱበትን ደረጃ ይከታተሉ',
               ),
-              _buildInfoRow(
-                icon: Icons.cloud_sync_rounded,
-                text: 'Sync progress across devices (coming soon).',
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // ---- About the Books ----
-          _buildSection(
-            context,
-            title: 'About the Books',
-            children: [
               _buildInfoRow(
                 icon: Icons.book_rounded,
                 text:
-                    'Collection of authentic Islamic texts by Ustadh Sadat Kemal.',
+                    'በኡስታዝ ሳዳት ከማል የተዘጋጁ የኢስላማዊ ጽሑፎች ስብስብ።',
               ),
               _buildInfoRow(
                 icon: Icons.audio_file_rounded,
-                text: 'High-quality audio narrations for immersive listening.',
-              ),
-              _buildInfoRow(
-                icon: Icons.translate_rounded,
-                text:
-                    'Texts available in multiple languages (Amharic, Arabic, English).',
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // ---- About the Reader ----
-          _buildSection(
-            context,
-            title: 'Reader Features',
-            children: [
-              _buildInfoRow(
-                icon: Icons.text_fields_rounded,
-                text: 'Adjustable font size and reading direction (LTR/RTL).',
+                text: 'ከጽሁፉ ጋር አንድላይ የሚገኝ የድምጽ ቅጂ',
               ),
               _buildInfoRow(
                 icon: Icons.auto_awesome_rounded,
-                text: 'Auto-scroll mode for hands-free reading.',
+                text: 'እጅ ሳይጠቀሙ ለማንበብ የሚረዳ የራስ-ሰር ገጽ የመቀያየር ሁኔታ።',
               ),
               _buildInfoRow(
                 icon: Icons.speed_rounded,
-                text: 'Variable playback speed for audio chapters.',
-              ),
-              _buildInfoRow(
-                icon: Icons.bedtime_rounded,
-                text: 'Sleep timer for audio playback.',
+                text: 'ለድምጽ ምዕራፎች የሚቀያየር የማጫወቻ ፍጥነት።',
               ),
             ],
           ),
@@ -137,25 +95,26 @@ class AboutScreen extends StatelessWidget {
           // ---- Credits / Built by ----
           _buildSection(
             context,
-            title: 'Built by',
+            title: 'ያበለጸገው',
             children: [
               _buildInfoRow(
-                icon: Icons.person_rounded,
-                text: 'Developed with ❤️ by the Book Reader Team.',
-              ),
-              _buildInfoRow(
-                icon: Icons.code_rounded,
-                text: 'Flutter • GetX • SQLite • audio_service',
+                icon: Icons.business_rounded,
+                text: 'በአላርም ቴክኖሎጂ የበለጸገ',
               ),
               _buildInfoRow(
                 icon: Icons.email_rounded,
-                text: 'support@bookreader.com',
-                onTap: () => _launchEmail('support@bookreader.com'),
+                text: 'alarmtechsolution9@gmail.com',
+                onTap: () => _launchEmail('alarmtechsolution9@gmail.com'),
               ),
               _buildInfoRow(
-                icon: Icons.link_rounded,
-                text: 'Visit our website',
-                onTap: () => _launchUrl('https://bookreader.com'),
+                icon: Icons.phone_rounded,
+                text: '0933330933',
+                onTap: () => _launchPhone('0933330933'),
+              ),
+              _buildInfoRow(
+                icon: Icons.phone_rounded,
+                text: '0933313133',
+                onTap: () => _launchPhone('0933313133'),
               ),
             ],
           ),
@@ -164,7 +123,7 @@ class AboutScreen extends StatelessWidget {
           // ---- Footer ----
           Center(
             child: Text(
-              '© 2026 Book Reader App. All rights reserved.',
+              '© 2026 አላርም ቴክኖሎጂ። መብቱ በህግ የተጠበቀ ነው።',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant.withOpacity(0.5),
               ),
@@ -218,7 +177,14 @@ class AboutScreen extends StatelessWidget {
   }
 
   void _launchEmail(String email) async {
-    final uri = Uri.parse('mailto: mail');
+    final uri = Uri.parse('mailto:$email');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  void _launchPhone(String phone) async {
+    final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }

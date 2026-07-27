@@ -46,7 +46,7 @@ class BundledContentSeeder {
 
       // Only mark as done on success, so a bad/missing manifest doesn't
       // permanently skip seeding.
-      debugPrint('BundledContentSeeder: ✅✅✅✅✅✅✅ seeded ${books.length} book(s)');
+      // debugPrint('BundledContentSeeder: ✅✅✅✅✅✅✅ seeded ${books.length} book(s)');
       await _settingsDao.setBool(_flagKey, true);
     } catch (e, st) {
       debugPrint('BundledContentSeeder: ❌❌❌❌❌❌❌❌ failed to seed bundled content: $e\n$st');

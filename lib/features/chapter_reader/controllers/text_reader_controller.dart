@@ -52,9 +52,7 @@ class TextReaderController extends GetxController {
     final newSegmentCount = segments?.length ?? 0;
     // Keep a long-enough list so the old widget doesn't access a stale shorter
     // list while the chapter change is in flight.
-    if (newSegmentCount > segmentKeys.length) {
-      segmentKeys = List.generate(newSegmentCount, (_) => GlobalKey());
-    }
+    segmentKeys = List.generate(newSegmentCount, (_) => GlobalKey());
 
     if (scrollController.hasClients) {
       scrollController.jumpTo(0);

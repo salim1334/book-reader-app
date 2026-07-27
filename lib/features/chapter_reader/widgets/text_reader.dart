@@ -14,19 +14,21 @@ class TextReader extends GetView<TextReaderController> {
     final contentText = controller.chapterReader.chapter.contentText;
     final settings = Get.find<SettingsRepository>();
     final chapterController = Get.find<ChapterReaderController>();
-    final orientation = MediaQuery.of(context).orientation;
-    final isLandscape = orientation == Orientation.landscape;
 
     return Obx(() {
-      final hasAudio = controller.hasAudio.value;
-      final scale = settings.fontSizeScale.value;
-      final baseStyle = Theme.of(context).textTheme.bodyLarge;
-      final scaledStyle = baseStyle?.copyWith(
-        fontSize: (baseStyle?.fontSize ?? 16.0) * scale,
-      );
+      final orientation = MediaQuery.of(context).orientation;
+      final isLandscape = orientation == Orientation.landscape;
       final immersive = chapterController.isImmersiveMode.value;
 
-      // Use segments if available, otherwise fall back to line‑based rendering
+      final hasAudio = controller.hasAudio.value;
+      final scale = settings.fontSizeScale.value;
+
+      final baseStyle = Theme.of(context).textTheme.bodyLarge;
+      final scaledStyle = baseStyle?.copyWith(
+        fontSize: (baseStyle.fontSize ?? 16.0) * scale,
+      );
+
+      // Build content items
       final items = _buildItems(
         context: context,
         segments: segments,
@@ -40,14 +42,13 @@ class TextReader extends GetView<TextReaderController> {
 
       final isSegmented = segments != null && segments.isNotEmpty;
 
-      // In immersive or landscape, use the full screen for reading.
-      final horizontalMargin = immersive || isLandscape ? 0.0 : 12.0;
-      final verticalMargin = immersive ? 0.0 : 8.0;
+      // Dynamic padding only
       final contentPadding = immersive || isLandscape
           ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
           : const EdgeInsets.all(20);
 
-      final child = isSegmented
+      // IMPORTANT: ONE scrollable instance only
+      final Widget scrollable = isSegmented
           ? SingleChildScrollView(
               controller: controller.scrollController,
               padding: contentPadding,
@@ -62,44 +63,50 @@ class TextReader extends GetView<TextReaderController> {
               children: items,
             );
 
-      if (immersive || isLandscape) {
-        // Constrain line length in wide orientations for readability.
-        final boundedChild = Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: child,
+      // Constrain width in landscape for readability
+      final Widget readerContent = Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isLandscape ? 720 : double.infinity,
           ),
-        );
-        return Column(
-          children: [
-            Expanded(child: boundedChild),
-            if (!immersive) _buildPageIndicator(context),
-          ],
-        );
-      }
-
-      // Wrap with border and page indicator in normal portrait mode.
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: verticalMargin),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          color: Theme.of(context).colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          child: scrollable,
         ),
+      );
+
+      // SINGLE widget tree for all modes
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        margin: immersive || isLandscape
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: immersive || isLandscape
+            ? null
+            : BoxDecoration(
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                color: Theme.of(context).colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.shadow.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
         child: Column(
           children: [
-            Expanded(child: child),
-            _buildPageIndicator(context),
+            Expanded(child: readerContent),
+
+            // Hide only the indicator, not the scrollable
+            if (!immersive) _buildPageIndicator(context),
           ],
         ),
       );
@@ -214,7 +221,9 @@ class TextReader extends GetView<TextReaderController> {
     return AnimatedBuilder(
       animation: controller.scrollController,
       builder: (context, child) {
-        if (!controller.scrollController.hasClients) {
+        final scroll = controller.scrollController;
+
+        if (!scroll.hasClients || !scroll.position.hasViewportDimension) {
           return const SizedBox.shrink();
         }
 

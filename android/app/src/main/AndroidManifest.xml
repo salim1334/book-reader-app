@@ -7,7 +7,7 @@
     
 
     <application
-        android:label="ሳዳት ከማል ኪታቦች"
+        android:label="የሳዳት ከማል ኪታቦች"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:allowBackup="true"

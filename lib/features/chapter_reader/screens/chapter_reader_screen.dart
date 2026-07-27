@@ -1,6 +1,5 @@
-import 'package:book_store/core/theme/sacred_theme_extension.dart';
-import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
+import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
 import 'package:book_store/features/chapter_reader/widgets/image_reader.dart';
@@ -46,8 +45,8 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
       final immersive = controller.isImmersiveMode.value;
 
       final reader = controller.bookType.value == LocalBookType.text
-          ? TextReader(key: controller.chapterKey.value)
-          : ImageReader(key: controller.chapterKey.value);
+          ? const TextReader()
+          : const ImageReader();
 
       return PopScope(
         canPop: true,
@@ -90,7 +89,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onTap: controller.toggleImmersiveMode,
-                  child: immersive
+                  child: immersive && controller.bookType.value == LocalBookType.image 
                       ? reader
                       : SafeArea(bottom: false, child: reader),
                 ),
