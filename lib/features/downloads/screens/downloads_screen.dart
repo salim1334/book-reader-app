@@ -12,7 +12,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ማውረዶች')),
+      appBar: AppBar(title: const Text('የወረዱ መጽሐፍት')),
       body: Column(
         children: [
           _SyncProgressHeader(),
@@ -58,7 +58,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
       if (index == 0) {
         return const ListTile(
           title: Text(
-            'ለማውረድ የተሰለፉ',
+            'ለመውረድ የተሰለፉ',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         );
@@ -123,10 +123,12 @@ class DownloadsScreen extends GetView<DownloadsController> {
       subtitle: Text(
         '${book.type.name} • $chapterCount ምዕራፍ${chapterCount == 1 ? '' : 'ች'}',
       ),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete),
-        onPressed: () => controller.deleteBook(book),
-      ),
+      trailing: book.id != "cmrolfi59000jbj9wf8fp7t4m"
+          ? IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => controller.deleteBook(book),
+            )
+          : null,
     );
   }
 }
