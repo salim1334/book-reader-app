@@ -20,6 +20,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
   late final ChapterReaderController controller;
   final AudioPlayerService audio = Get.find<AudioPlayerService>();
   bool _landscapeImmersiveDefaulted = false;
+  bool _portraitImmersiveDefaulted = false;
 
   @override
   void initState() {
@@ -32,16 +33,23 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
-    if (isLandscape && !_landscapeImmersiveDefaulted) {
+void didChangeDependencies() {
+  super.didChangeDependencies();
+  final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+  if (isLandscape) {
+    _portraitImmersiveDefaulted = false;
+    if (!_landscapeImmersiveDefaulted) {
       _landscapeImmersiveDefaulted = true;
       controller.setImmersiveMode(true);
-    } else if (!isLandscape) {
-      _landscapeImmersiveDefaulted = false;
+    }
+  } else {
+    _landscapeImmersiveDefaulted = false;
+    if (!_portraitImmersiveDefaulted) {
+      _portraitImmersiveDefaulted = true;
+      controller.setImmersiveMode(false);
     }
   }
+}
 
   @override
   void dispose() {
