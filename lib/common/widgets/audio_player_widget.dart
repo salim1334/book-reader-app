@@ -181,6 +181,8 @@ class AudioPlayerWidget extends StatelessWidget {
     ThemeData theme,
   ) {
     final colors = theme.colorScheme;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final compact = isLandscape;
 
     return Container(
       decoration: BoxDecoration(
@@ -201,16 +203,45 @@ class AudioPlayerWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: const Padding(
-        padding: EdgeInsets.fromLTRB(16, 6, 16, 10),
-        child: Column(
+      child: Padding(
+        padding: compact
+            ? const EdgeInsets.fromLTRB(10, 2, 10, 6)
+            : const EdgeInsets.fromLTRB(16, 6, 16, 10),
+        child: compact ? Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AudioProgressBar(showTimeLabels: true),
-            SizedBox(height: 6),
-            _PlaybackControls(mode: AudioPlayerMode.reader),
-            SizedBox(height: 6),
-            _ExtraControls(),
+            AudioProgressBar(
+              showTimeLabels: true,
+              trackHeight: 3,
+              thumbRadius: 5,
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _PlaybackControls(
+                    mode: AudioPlayerMode.reader,
+                    compact: true,
+                  ),
+                  _ExtraControls(compact: true),
+                ],
+              ),
+            ),
+          ],
+        ) : Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AudioProgressBar(
+              showTimeLabels: true,
+              trackHeight: compact ? 3 : 4,
+              thumbRadius: compact ? 5 : 7,
+            ),
+            SizedBox(height: compact ? 4 : 6),
+            _PlaybackControls(mode: AudioPlayerMode.reader, compact: compact),
+            SizedBox(height: compact ? 4 : 6),
+            _ExtraControls(compact: compact),
           ],
         ),
       ),
@@ -292,13 +323,14 @@ class _ArtworkPlaceholder extends StatelessWidget {
 // ---------- PLAYBACK CONTROLS ----------
 class _PlaybackControls extends StatelessWidget {
   final AudioPlayerMode mode;
+  final bool compact;
 
-  const _PlaybackControls({required this.mode});
+  const _PlaybackControls({required this.mode, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     if (mode == AudioPlayerMode.mini) {
-      return const _PlayPauseButton(mode: AudioPlayerMode.mini);
+      return _PlayPauseButton(mode: AudioPlayerMode.mini, compact: compact);
     }
 
     final audio = Get.find<AudioPlayerService>();
@@ -318,22 +350,25 @@ class _PlaybackControls extends StatelessWidget {
                 ),
               ),
             ),
+            compact: compact,
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: compact ? 2 : 4),
           _ControlButton(
             icon: Icons.skip_previous_rounded,
             tooltip: 'ቀዳሚ ምዕራፍ',
             onPressed: audio.hasMedia.value ? audio.skipToPrevious : null,
+            compact: compact,
           ),
-          const SizedBox(width: 10),
-          _PlayPauseButton(mode: mode),
-          const SizedBox(width: 10),
+          SizedBox(width: compact ? 6 : 10),
+          _PlayPauseButton(mode: mode, compact: compact),
+          SizedBox(width: compact ? 6 : 10),
           _ControlButton(
             icon: Icons.skip_next_rounded,
             tooltip: 'ቀጣይ ምዕራፍ',
             onPressed: audio.hasMedia.value ? audio.skipToNext : null,
+            compact: compact,
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: compact ? 2 : 4),
           _ControlButton(
             icon: Icons.forward_10_rounded,
             tooltip: 'Forward 10s',
@@ -345,6 +380,7 @@ class _PlaybackControls extends StatelessWidget {
                 ),
               ),
             ),
+            compact: compact,
           ),
         ],
       );
@@ -357,11 +393,13 @@ class _ControlButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
+  final bool compact;
 
   const _ControlButton({
     required this.icon,
     required this.tooltip,
     this.onPressed,
+    this.compact = false,
   });
 
   @override
@@ -369,15 +407,18 @@ class _ControlButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return IconButton(
-      iconSize: 30,
+      iconSize: compact ? 24 : 30,
       tooltip: tooltip,
       onPressed: onPressed,
       icon: Icon(icon),
       color: colorScheme.onSurfaceVariant,
       disabledColor: colorScheme.onSurface.withOpacity(0.2),
-      splashRadius: 18,
+      splashRadius: compact ? 14 : 18,
       padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      constraints: BoxConstraints(
+        minWidth: compact ? 30 : 36,
+        minHeight: compact ? 30 : 36,
+      ),
     );
   }
 }
@@ -385,8 +426,12 @@ class _ControlButton extends StatelessWidget {
 // ---------- PLAY/PAUSE BUTTON ----------
 class _PlayPauseButton extends StatelessWidget {
   final AudioPlayerMode mode;
+  final bool compact;
 
-  const _PlayPauseButton({required this.mode});
+  const _PlayPauseButton({
+    required this.mode,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -417,9 +462,13 @@ class _PlayPauseButton extends StatelessWidget {
       }
 
       // Reader mode – large circular button
+      final buttonSize = compact ? 44.0 : 60.0;
+      final iconSize = compact ? 26.0 : 34.0;
+      final progressSize = compact ? 20.0 : 24.0;
+
       return SizedBox(
-        width: 60,
-        height: 60,
+        width: buttonSize,
+        height: buttonSize,
         child: FilledButton(
           onPressed: audio.togglePlayPause,
           style: FilledButton.styleFrom(
@@ -431,9 +480,9 @@ class _PlayPauseButton extends StatelessWidget {
             shadowColor: colorScheme.primary.withOpacity(0.3),
           ),
           child: isLoading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
+              ? SizedBox(
+                  width: progressSize,
+                  height: progressSize,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     color: Colors.white,
@@ -441,7 +490,7 @@ class _PlayPauseButton extends StatelessWidget {
                 )
               : Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  size: 34,
+                  size: iconSize,
                 ),
         ),
       );
@@ -451,13 +500,19 @@ class _PlayPauseButton extends StatelessWidget {
 
 // ---------- EXTRA CONTROLS (speed + volume) ----------
 class _ExtraControls extends StatelessWidget {
-  const _ExtraControls();
+  final bool compact;
+
+  const _ExtraControls({this.compact = false});
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [AudioSpeedButton(), SizedBox(width: 16), AudioVolumeButton()],
+      children: [
+        AudioSpeedButton(compact: compact),
+        SizedBox(width: compact ? 10 : 16),
+        AudioVolumeButton(compact: compact),
+      ],
     );
   }
 }

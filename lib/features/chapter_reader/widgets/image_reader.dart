@@ -32,6 +32,8 @@ class ImageReader extends GetView<ImageReaderController> {
 
       final immersive = chapterController.isImmersiveMode.value;
 
+      final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
       return Stack(
         fit: StackFit.expand,
 
@@ -61,6 +63,10 @@ class ImageReader extends GetView<ImageReaderController> {
 
                 scaleStateController: pageController.scaleController,
 
+                initialScale: isLandscape
+                    ? PhotoViewComputedScale.contained * 2.5
+                    : PhotoViewComputedScale.contained,
+
                 minScale: PhotoViewComputedScale.contained,
 
                 maxScale: PhotoViewComputedScale.covered * 4,
@@ -68,7 +74,7 @@ class ImageReader extends GetView<ImageReaderController> {
             },
           ),
 
-          if (controller.isZoomed && controller.currentPageIndex.value > 0)
+          if (controller.currentPageIndex.value > 0)
             Positioned(
               left: 12,
 
@@ -87,8 +93,7 @@ class ImageReader extends GetView<ImageReaderController> {
               ),
             ),
 
-          if (controller.isZoomed &&
-              controller.currentPageIndex.value < total - 1)
+          if (controller.currentPageIndex.value < total - 1)
             Positioned(
               right: 12,
 

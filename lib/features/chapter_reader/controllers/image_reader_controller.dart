@@ -263,9 +263,18 @@ class ImageReaderController extends GetxController {
   void onPageChanged(int index) {
     if (index == _lastReportedPage) return;
 
+    final previousIndex = _lastReportedPage;
+
     _lastReportedPage = index;
 
     currentPageIndex.value = index;
+
+    // Reset the page we are leaving and the page we just landed on so
+    // zoom does not persist across pages.
+    if (previousIndex >= 0) {
+      photoControllers[previousIndex]?.reset();
+    }
+    currentPhotoController.reset();
 
     currentScale.value = currentPhotoController.scale;
 

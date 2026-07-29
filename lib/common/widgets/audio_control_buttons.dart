@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 /// A playback‑speed button that displays the current value and opens a popup
 /// menu with preset speed options.
 class AudioSpeedButton extends StatelessWidget {
-  const AudioSpeedButton({super.key});
+  final bool compact;
+
+  const AudioSpeedButton({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +23,7 @@ class AudioSpeedButton extends StatelessWidget {
         items: speeds,
         onSelected: audio.setSpeed,
         itemLabel: (speed) => '${speed}x',
+        compact: compact,
       );
     });
   }
@@ -29,7 +32,9 @@ class AudioSpeedButton extends StatelessWidget {
 /// A volume button that displays the current volume percentage and opens a
 /// popup menu with preset volume options.
 class AudioVolumeButton extends StatelessWidget {
-  const AudioVolumeButton({super.key});
+  final bool compact;
+
+  const AudioVolumeButton({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +57,7 @@ class AudioVolumeButton extends StatelessWidget {
         items: volumes,
         onSelected: audio.setVolume,
         itemLabel: (v) => '${(v * 100).round()}%',
+        compact: compact,
       );
     });
   }
@@ -67,6 +73,7 @@ class _ValuePopupButton<T> extends StatelessWidget {
   final List<T> items;
   final ValueChanged<T> onSelected;
   final String Function(T) itemLabel;
+  final bool compact;
 
   const _ValuePopupButton({
     required this.icon,
@@ -76,6 +83,7 @@ class _ValuePopupButton<T> extends StatelessWidget {
     required this.items,
     required this.onSelected,
     required this.itemLabel,
+    this.compact = false,
   });
 
   @override
@@ -99,7 +107,7 @@ class _ValuePopupButton<T> extends StatelessWidget {
           .map(
             (item) => PopupMenuItem<T>(
               value: item,
-              height: 44,
+              height: compact ? 36 : 44,
               child: Row(
                 children: [
                   // Selected indicator (checkmark or radio)
@@ -107,15 +115,18 @@ class _ValuePopupButton<T> extends StatelessWidget {
                     Icon(
                       Icons.check_circle_rounded,
                       color: colorScheme.primary,
-                      size: 18,
+                      size: compact ? 16 : 18,
                     )
                   else
-                    const SizedBox(width: 18),
-                  const SizedBox(width: 12),
+                    SizedBox(width: compact ? 16 : 18),
+                  SizedBox(width: compact ? 8 : 12),
                   Expanded(
                     child: Text(
                       itemLabel(item),
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: (compact
+                              ? theme.textTheme.bodySmall
+                              : theme.textTheme.bodyMedium)
+                          ?.copyWith(
                         fontWeight: item == value
                             ? FontWeight.w600
                             : FontWeight.normal,
@@ -131,10 +142,13 @@ class _ValuePopupButton<T> extends StatelessWidget {
           )
           .toList(),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 14,
+          vertical: compact ? 5 : 8,
+        ),
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(compact ? 18 : 24),
           border: Border.all(
             color: colorScheme.outline.withOpacity(0.2),
             width: 0.5,
@@ -143,19 +157,26 @@ class _ValuePopupButton<T> extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
-            const SizedBox(width: 8),
+            Icon(
+              icon,
+              size: compact ? 18 : 20,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            SizedBox(width: compact ? 6 : 8),
             Text(
               valueLabel,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: (compact
+                      ? theme.textTheme.bodySmall
+                      : theme.textTheme.bodyMedium)
+                  ?.copyWith(
                 color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: compact ? 2 : 4),
             Icon(
               Icons.keyboard_arrow_down_rounded,
-              size: 18,
+              size: compact ? 16 : 18,
               color: colorScheme.onSurfaceVariant,
             ),
           ],

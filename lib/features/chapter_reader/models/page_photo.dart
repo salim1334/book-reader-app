@@ -12,8 +12,8 @@ class PagePhotoController {
   double get scale => photoController.scale ?? 1.0;
 
   void reset() {
-    scaleController.scaleState = PhotoViewScaleState.initial;
-    photoController.scale = 1.0;
+    photoController.reset();
+    scaleController.reset();
   }
 
   void zoomIn() {

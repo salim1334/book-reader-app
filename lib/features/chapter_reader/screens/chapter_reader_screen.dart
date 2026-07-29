@@ -18,6 +18,7 @@ class ChapterReaderScreen extends StatefulWidget {
 class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
   late final ChapterReaderController controller;
   final AudioPlayerService audio = Get.find<AudioPlayerService>();
+  bool _landscapeImmersiveDefaulted = false;
 
   @override
   void initState() {
@@ -27,6 +28,18 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       audio.isReaderActive.value = true;
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    if (isLandscape && !_landscapeImmersiveDefaulted) {
+      _landscapeImmersiveDefaulted = true;
+      controller.setImmersiveMode(true);
+    } else if (!isLandscape) {
+      _landscapeImmersiveDefaulted = false;
+    }
   }
 
   @override
