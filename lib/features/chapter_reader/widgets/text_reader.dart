@@ -18,7 +18,7 @@ class TextReader extends GetView<TextReaderController> {
     return Obx(() {
       final orientation = MediaQuery.of(context).orientation;
       final isLandscape = orientation == Orientation.landscape;
-      final immersive = chapterController.isImmersiveMode.value;
+      // final immersive = chapterController.isImmersiveMode.value;
 
       final hasAudio = controller.hasAudio.value;
       final scale = settings.fontSizeScale.value;
@@ -43,15 +43,15 @@ class TextReader extends GetView<TextReaderController> {
       final isSegmented = segments != null && segments.isNotEmpty;
 
       // Dynamic padding only
-      final contentPadding = immersive || isLandscape
-          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
-          : const EdgeInsets.all(20);
+      // final contentPadding = immersive || isLandscape
+      //     ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
+      //     : const EdgeInsets.all(20);
 
       // IMPORTANT: ONE scrollable instance only
       final Widget scrollable = isSegmented
           ? SingleChildScrollView(
               controller: controller.scrollController,
-              padding: contentPadding,
+              padding: EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: items,
@@ -59,7 +59,7 @@ class TextReader extends GetView<TextReaderController> {
             )
           : ListView(
               controller: controller.scrollController,
-              padding: contentPadding,
+              padding: EdgeInsets.all(20),
               children: items,
             );
 
@@ -77,10 +77,10 @@ class TextReader extends GetView<TextReaderController> {
       return AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        margin: immersive || isLandscape
+        margin: isLandscape
             ? EdgeInsets.zero
             : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: immersive || isLandscape
+        decoration: isLandscape
             ? null
             : BoxDecoration(
                 border: Border.all(
@@ -106,7 +106,7 @@ class TextReader extends GetView<TextReaderController> {
             Expanded(child: readerContent),
 
             // Hide only the indicator, not the scrollable
-            if (!immersive) _buildPageIndicator(context),
+            _buildPageIndicator(context),
           ],
         ),
       );

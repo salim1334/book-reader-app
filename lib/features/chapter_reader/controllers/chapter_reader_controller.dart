@@ -10,6 +10,7 @@ import 'package:book_store/features/chapter_reader/presentation/arguments/chapte
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:photo_view/photo_view.dart';
 
 class ChapterReaderController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
@@ -17,6 +18,7 @@ class ChapterReaderController extends GetxController {
   final SettingsRepository _settings = Get.find<SettingsRepository>();
   final ReadingProgressService _progressService =
       Get.find<ReadingProgressService>();
+  final Map<int, PhotoViewController> photoControllers = {};
 
   late LocalBook book;
   late LocalChapter chapter;

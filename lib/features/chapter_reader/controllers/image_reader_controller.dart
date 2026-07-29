@@ -1,13 +1,15 @@
 import 'dart:async';
 
-import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:book_store/core/utils/asset_url.dart';
+import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
+import 'package:book_store/features/chapter_reader/models/page_photo.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:photo_view/photo_view.dart';
 
 class PageTiming {
   final int orderIndex;
@@ -37,54 +39,104 @@ class ImageReaderController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
   final AudioPlayerService _audio = Get.find<AudioPlayerService>();
   final SettingsRepository _settings = Get.find<SettingsRepository>();
-  late final ChapterReaderController _chapterReader = Get.find<ChapterReaderController>();
+
+  late final ChapterReaderController _chapterReader =
+      Get.find<ChapterReaderController>();
 
   ChapterReaderController get chapterReader => _chapterReader;
 
+  final Map<int, PagePhotoController> photoControllers = {};
+
   PageController? pageController;
+
   final isLoading = true.obs;
   final imageCount = 0.obs;
   final media = Rxn<ImageMedia>();
   final currentPageIndex = 0.obs;
 
-  int _lastReportedPage = -1;
+  final RxDouble currentScale = 1.0.obs;
 
   Worker? _pageWorker;
 
+  int _lastReportedPage = -1;
+
   bool get _isImageBook => _chapterReader.book.type != LocalBookType.text;
+
+  PagePhotoController getPhotoController(int index) {
+    return photoControllers.putIfAbsent(index, () {
+      final photoController = PhotoViewController();
+
+      final scaleController = PhotoViewScaleStateController();
+
+      photoController.outputStateStream.listen((state) {
+        if (currentPageIndex.value == index) {
+          currentScale.value = state.scale ?? 1.0;
+        }
+      });
+
+      return PagePhotoController(
+        photoController: photoController,
+        scaleController: scaleController,
+      );
+    });
+  }
+
+  PagePhotoController get currentPhotoController =>
+      getPhotoController(currentPageIndex.value);
 
   @override
   void onInit() {
     super.onInit();
+
     unawaited(reload());
   }
 
-  /// (Re)loads this chapter's images, audio and page controller. Called from
-  /// onInit and from ChapterReaderController.loadChapter when switching
-  /// chapters in place.
   Future<void> reload() async {
     _pageWorker?.dispose();
+
     pageController?.dispose();
+
+    for (final page in photoControllers.values) {
+      page.dispose();
+    }
+
+    photoControllers.clear();
 
     isLoading.value = true;
     imageCount.value = 0;
     media.value = null;
     currentPageIndex.value = 0;
+    currentScale.value = 1.0;
+
     _lastReportedPage = -1;
 
     if (!_isImageBook) {
       isLoading.value = false;
-      update();
       return;
     }
 
-    await _initMedia();
+    try {
+      await _initMedia();
+    } catch (e, stack) {
+      debugPrint('Image reader failed: $e');
+      debugPrintStack(stackTrace: stack);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   @override
   void onClose() {
     _pageWorker?.dispose();
+
     pageController?.dispose();
+
+    for (final page in photoControllers.values) {
+      page.dispose();
+    }
+
+    photoControllers.clear();
+
     super.onClose();
   }
 
@@ -93,11 +145,13 @@ class ImageReaderController extends GetxController {
 
     if (loadedMedia.audio.isNotEmpty) {
       final artUri = coverArtUri(_chapterReader.book);
-      final isSameChapter = _audio.isCurrentBookChapter(
+
+      final sameChapter = _audio.isCurrentBookChapter(
         _chapterReader.book,
         _chapterReader.chapter,
       );
-      if (!isSameChapter) {
+
+      if (!sameChapter) {
         await _audio.playQueue(
           AudioQueue(
             items: [
@@ -124,49 +178,61 @@ class ImageReaderController extends GetxController {
     }
 
     final initialPage = _computeInitialPage(loadedMedia);
-    final lastIndex = loadedMedia.images.isEmpty ? 0 : loadedMedia.images.length - 1;
-    final safeInitialPage = loadedMedia.images.isEmpty ? 0 : initialPage.clamp(0, lastIndex).toInt();
-    pageController = PageController(initialPage: safeInitialPage);
 
-    currentPageIndex.value = safeInitialPage;
-    _lastReportedPage = safeInitialPage;
+    final maxPage = loadedMedia.images.length - 1;
+
+    final safePage = loadedMedia.images.isEmpty
+        ? 0
+        : initialPage.clamp(0, maxPage);
+
+    pageController = PageController(initialPage: safePage);
+
+    currentPageIndex.value = safePage;
+    _lastReportedPage = safePage;
 
     media.value = loadedMedia;
+
     imageCount.value = loadedMedia.images.length;
+
     isLoading.value = false;
 
-    if (loadedMedia.timings.any((t) => t.startSeconds != null && t.endSeconds != null)) {
-      _pageWorker = interval(
-        _audio.position,
-        (pos) => _updateCurrentPage(pos.inMilliseconds),
-        time: const Duration(milliseconds: 500),
-      );
+    if (loadedMedia.timings.any(
+      (e) => e.startSeconds != null && e.endSeconds != null,
+    )) {
+      _pageWorker = interval(_audio.position, (position) {
+        _updateCurrentPage(position.inMilliseconds);
+      }, time: const Duration(milliseconds: 500));
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _reportProgress());
   }
 
   int _computeInitialPage(ImageMedia media) {
-    final timings = media.timings;
-    if (timings.isEmpty) return _chapterReader.initialPageIndex;
-    final seconds = _chapterReader.initialPositionMs / 1000.0;
+    if (media.timings.isEmpty) {
+      return _chapterReader.initialPageIndex;
+    }
+
     return _pageIndexForSeconds(
-      seconds,
-      timings,
+      _chapterReader.initialPositionMs / 1000,
+      media.timings,
       fallback: _chapterReader.initialPageIndex,
     );
   }
 
   void _updateCurrentPage(int ms) {
     if (!_settings.autoScroll.value) return;
-    if (pageController == null || imageCount.value <= 0) return;
+
+    if (pageController == null) return;
+
     if (!pageController!.hasClients) return;
+
     final timings = media.value?.timings;
+
     if (timings == null || timings.isEmpty) return;
-    final seconds = ms / 1000.0;
-    final target = _pageIndexForSeconds(seconds, timings, fallback: 0);
-    final current = currentPageIndex.value;
-    if (target != current) {
+
+    final target = _pageIndexForSeconds(ms / 1000, timings, fallback: 0);
+
+    if (target != currentPageIndex.value) {
       pageController!.animateToPage(
         target,
         duration: const Duration(milliseconds: 400),
@@ -182,66 +248,124 @@ class ImageReaderController extends GetxController {
   }) {
     for (var i = 0; i < timings.length; i++) {
       final t = timings[i];
-      if (t.startSeconds != null && t.endSeconds != null) {
-        if (seconds >= t.startSeconds! && seconds <= t.endSeconds!) {
-          return i;
-        }
+
+      if (t.startSeconds != null &&
+          t.endSeconds != null &&
+          seconds >= t.startSeconds! &&
+          seconds <= t.endSeconds!) {
+        return i;
       }
     }
-    for (var i = 0; i < timings.length; i++) {
-      final t = timings[i];
-      if (t.startSeconds != null && seconds < t.startSeconds!) {
-        return i > 0 ? i - 1 : 0;
-      }
-    }
-    final valid = timings.where((t) => t.startSeconds != null && t.endSeconds != null);
-    if (valid.isNotEmpty) return timings.length - 1;
+
     return fallback;
   }
 
   void onPageChanged(int index) {
     if (index == _lastReportedPage) return;
+
     _lastReportedPage = index;
+
     currentPageIndex.value = index;
+
+    currentScale.value = currentPhotoController.scale;
+
     _chapterReader.updatePage(index);
+
     _reportProgress();
   }
 
+  bool get isZoomed => currentScale.value > 1.0;
+
   void _reportProgress() {
-    final total = imageCount.value;
-    if (total <= 0) return;
-    final index = currentPageIndex.value.clamp(0, total - 1);
-    final progress = ((index + 1) / total).clamp(0.0, 1.0).toDouble();
+    if (imageCount.value <= 0) return;
+
+    final progress = ((currentPageIndex.value + 1) / imageCount.value).clamp(
+      0.0,
+      1.0,
+    );
+
     _chapterReader.updateProgress(progress);
   }
 
   Future<ImageMedia> _loadMedia() async {
-    final imageRows = await _repository.getChapterAssets(
-      _chapterReader.chapter.id,
-      assetType: 'IMAGE',
+    final imageRows = List<Map<String, dynamic>>.from(
+      await _repository.getChapterAssets(
+        _chapterReader.chapter.id,
+        assetType: 'IMAGE',
+      ),
     );
+
+    imageRows.sort((a, b) {
+      final aOrder = (a['sort_order'] as num?)?.toInt() ?? 0;
+
+      final bOrder = (b['sort_order'] as num?)?.toInt() ?? 0;
+
+      return aOrder.compareTo(bOrder);
+    });
+
     final images = <String>[];
+
     final timings = <PageTiming>[];
-    for (final r in imageRows) {
-      final path = r['file_path'] as String? ?? '';
+
+    for (final row in imageRows) {
+      final path = row['file_path'] as String? ?? '';
+
       if (path.isEmpty) continue;
-      final order = (r['sort_order'] as num?)?.toInt() ?? 0;
-      final start = (r['audio_start_time'] as num?)?.toDouble();
-      final end = (r['audio_end_time'] as num?)?.toDouble();
+
       images.add(path);
-      timings.add(PageTiming(
-        orderIndex: order,
-        startSeconds: start,
-        endSeconds: end,
-      ));
+
+      timings.add(
+        PageTiming(
+          orderIndex: (row['sort_order'] as int?) ?? 0,
+          startSeconds: (row['audio_start_time'] as num?)?.toDouble(),
+          endSeconds: (row['audio_end_time'] as num?)?.toDouble(),
+        ),
+      );
     }
 
     final audioRows = await _repository.getChapterAssets(
       _chapterReader.chapter.id,
       assetType: 'AUDIO',
     );
-    final audio = audioRows.map((r) => r['file_path'] as String).toList();
+
+    final audio = audioRows.map((e) => e['file_path'] as String).toList();
 
     return ImageMedia(images: images, audio: audio, timings: timings);
+  }
+
+  void nextPage() {
+    if (pageController == null) return;
+
+    if (currentPageIndex.value >= imageCount.value - 1) return;
+
+    pageController!.nextPage(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.ease,
+    );
+  }
+
+  void previousPage() {
+    if (pageController == null) return;
+
+    if (currentPageIndex.value <= 0) return;
+
+    pageController!.previousPage(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.ease,
+    );
+  }
+
+  void zoomIn() {
+    currentPhotoController.zoomIn();
+  }
+
+  void zoomOut() {
+    currentPhotoController.zoomOut();
+  }
+
+  void resetZoom() {
+    currentPhotoController.reset();
+
+    currentScale.value = 1.0;
   }
 }
