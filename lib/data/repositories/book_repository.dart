@@ -84,6 +84,8 @@ class BookRepository extends GetxService {
   Future<List<Map<String, Object?>>> getDownloadQueue({String? status}) =>
       _dao.getQueue(status: status);
 
+  Future<void> deleteQueueItem(String chapterId) => _dao.deleteQueueItem(chapterId);
+
   Future<void> recordDownloadedAsset({
     required String chapterId,
     required String assetType,

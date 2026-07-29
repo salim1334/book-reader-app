@@ -214,7 +214,7 @@ class HomeController extends GetxController {
   Future<void> autoSync() async {
     final online = await _syncManager.isOnline();
     isOffline.value = !online || _settings.offlineMode.value;
-    if (!online) return;
+    if (!online || _settings.offlineMode.value) return;
 
     try {
       await _syncManager.syncCatalog();

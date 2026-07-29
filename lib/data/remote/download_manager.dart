@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:book_store/core/utils/asset_url.dart';
 import 'package:book_store/data/remote/api_client.dart';
+import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Manages downloading remote media files to device storage.
@@ -26,6 +27,39 @@ class DownloadManager {
     return '${folder.path}/$fileName';
   }
 
+  Future<void> _deleteIfEmpty(File file) async {
+    if (file.existsSync()) {
+      if (file.lengthSync() == 0) {
+        await file.delete();
+      }
+    }
+  }
+
+  Future<void> _safeDelete(File file) async {
+    if (file.existsSync()) {
+      await file.delete();
+    }
+  }
+
+  /// Tries to get the expected file size from the server without downloading
+  /// the body. Returns `null` if the server does not report it.
+  Future<int?> _fetchContentLength(
+    String url, {
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      final response = await _client.dio.head(
+        url,
+        cancelToken: cancelToken,
+      );
+      final header = response.headers.value('content-length');
+      if (header != null) return int.tryParse(header);
+    } catch (_) {
+      // Fall back to re-download if the server does not support HEAD.
+    }
+    return null;
+  }
+
   /// Downloads an asset from a remote path and returns the local path.
   /// The remotePath is expected to be a relative path such as
   /// `/uploads/images/{bookId}/{chapterId}/{fileName}`.
@@ -35,33 +69,59 @@ class DownloadManager {
     required String chapterId,
     required String remotePath,
     void Function(int received, int total)? onProgress,
+    CancelToken? cancelToken,
   }) async {
     final localFilePath = await _localPath(assetType, bookId, chapterId, remotePath);
     final localFile = File(localFilePath);
 
-    if (localFile.existsSync()) {
-      // Optionally check size/hash here if caching logic needs invalidation.
-      return localFilePath;
-    }
+    await _deleteIfEmpty(localFile);
 
     final url = resolveAssetUrl(remotePath);
-    final response = await _client.dio.download(
-      url,
-      localFilePath,
-      onReceiveProgress: (received, total) {
-        if (total != -1) {
-          onProgress?.call(received, total);
-        }
-      },
-    );
 
-    if (response.statusCode != null &&
-        response.statusCode! >= 200 &&
-        response.statusCode! < 300) {
-      return localFilePath;
+    if (localFile.existsSync()) {
+      final expectedSize = await _fetchContentLength(
+        url,
+        cancelToken: cancelToken,
+      );
+      final actualSize = localFile.lengthSync();
+      if (expectedSize == null) {
+        // Cannot verify: re-download to be safe.
+        await _safeDelete(localFile);
+      } else if (actualSize == expectedSize) {
+        return localFilePath;
+      } else {
+        await _safeDelete(localFile);
+      }
     }
+    try {
+      final response = await _client.dio.download(
+        url,
+        localFilePath,
+        cancelToken: cancelToken,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            onProgress?.call(received, total);
+          }
+        },
+      );
 
-    throw Exception('Failed to download $remotePath: ${response.statusCode}');
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        // Guard against 0-byte or unexpectedly small writes.
+        if (!localFile.existsSync() || localFile.lengthSync() == 0) {
+          await _safeDelete(localFile);
+          throw Exception('Downloaded file is empty: $remotePath');
+        }
+        return localFilePath;
+      }
+
+      await _safeDelete(localFile);
+      throw Exception('Failed to download $remotePath: ${response.statusCode}');
+    } catch (e) {
+      await _safeDelete(localFile);
+      rethrow;
+    }
   }
 
   Future<void> deleteAsset(String localPath) async {

@@ -33,7 +33,7 @@ class BookCard extends StatelessWidget {
       case LocalBookType.text:
         return ('ጽሑፍ', Icons.text_snippet);
       case LocalBookType.image:
-        return ('ምስል', Icons.swap_horiz);
+        return ('ምስል', Icons.image);
     }
   }
 

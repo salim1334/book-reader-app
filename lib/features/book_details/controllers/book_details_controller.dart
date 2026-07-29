@@ -167,20 +167,22 @@ class BookDetailsController extends GetxController {
       SnackbarHelper.show('ማሻሻያው ወርዷል');
     } catch (e) {
       SnackbarHelper.show('ማሻሻያ ማውረድ አልተቻለም ድጋሜ ይሞክሩ');
+    } finally {
       isLoading.value = false;
     }
   }
 
   Future<void> downloadChapter(LocalChapter chapter) async {
+    if (downloadingChapterId.value == chapter.id) return;
     downloadingChapterId.value = chapter.id;
     try {
       await _syncManager.downloadChapter(chapter.id);
-      await loadData();
       SnackbarHelper.show('${chapter.title} ወርዷል');
     } catch (e) {
       SnackbarHelper.show('ማውረድ አልተሳካም ድጋሜ ይሞክሩ');
     } finally {
       downloadingChapterId.value = null;
+      await loadData();
     }
   }
 

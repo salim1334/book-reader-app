@@ -8,6 +8,7 @@ import 'package:book_store/data/remote/book_remote_source.dart';
 import 'package:book_store/data/remote/chapter_remote_source.dart';
 import 'package:book_store/data/remote/download_manager.dart';
 import 'package:book_store/data/remote/models/remote_book.dart';
+import 'package:dio/dio.dart';
 import 'package:book_store/data/remote/models/remote_chapter.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
@@ -185,6 +186,7 @@ class FakeDownloadManager extends DownloadManager {
     required String chapterId,
     required String remotePath,
     void Function(int received, int total)? onProgress,
+    CancelToken? cancelToken,
   }) async {
     final key = '$assetType/$bookId/$chapterId/$remotePath';
     if (_pathByRemote.containsKey(key)) return _pathByRemote[key]!;

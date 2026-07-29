@@ -319,7 +319,7 @@ class _UpdateBanner extends GetView<BookDetailsController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'New version available',
+                      'አዲስ ስሪት ተገኝቷል',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: colors.onSecondaryContainer,
@@ -327,7 +327,7 @@ class _UpdateBanner extends GetView<BookDetailsController> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Tap update to download the latest changes.',
+                      'የቅርብ ለውጦችን ለማውረድ ማሻሻያ ይጫኑ።',
                       style: TextStyle(
                         fontSize: 12,
                         color: colors.onSecondaryContainer.withOpacity(0.7),

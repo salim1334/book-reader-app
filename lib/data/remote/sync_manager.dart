@@ -13,6 +13,7 @@ import 'package:book_store/data/remote/download_manager.dart';
 import 'package:book_store/data/remote/models/remote_book.dart';
 import 'package:book_store/data/remote/models/remote_chapter.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -33,6 +34,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
 
   static const _defaultSyncInterval = Duration(minutes: 15);
   static const _resumeDebounce = Duration(seconds: 3);
+  static const _maxRetries = 3;
 
   Timer? _periodicSyncTimer;
   Timer? _resumeSyncTimer;
@@ -42,6 +44,12 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
 
   /// Tracks the highest update version we have already notified about per book.
   final _notifiedUpdateVersions = <String, int>{};
+
+  /// Tracks in-flight book/chapter downloads to prevent duplicate work.
+  final _activeDownloads = <String, Future<void>>{};
+
+  /// Tokens for cancelling in-flight chapter downloads.
+  final _cancelTokens = <String, CancelToken>{};
 
   /// Reactive flag showing when the last catalog-only background sync completed.
   final lastCatalogSyncAt = Rxn<DateTime>();
@@ -103,7 +111,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   }
 
   /// Lightweight catalog-only sync suitable for background/periodic refresh.
-  /// Does not trigger downloads and will not show user-facing errors.
+  /// Also retries PENDING or FAILED queue items and will not show user-facing errors.
   Future<void> backgroundCatalogSync() async {
     if (isBackgroundSyncing.value) return;
 
@@ -117,6 +125,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     try {
       await syncCatalog();
       lastCatalogSyncAt.value = DateTime.now();
+      await _processDownloadQueue();
     } catch (e) {
       debugPrint('SyncManager.backgroundCatalogSync error:  ');
     } finally {
@@ -141,6 +150,38 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       return false;
     } catch (_) {
       return false;
+    }
+  }
+
+  /// Ensures the device is online and the user has not enabled offline mode.
+  Future<void> _guardOnlineAndOfflineMode() async {
+    if (!await isOnline()) {
+      throw Exception('No internet connection');
+    }
+    final settings = Get.find<SettingsRepository>();
+    if (settings.offlineMode.value) {
+      throw Exception('Offline mode is enabled');
+    }
+  }
+
+  /// Runs [task] with a single-flight key, so only one concurrent download
+  /// per book or chapter is active at a time.
+  Future<void> _runSingleFlight(
+    String key,
+    Future<void> Function(CancelToken cancelToken) task,
+  ) async {
+    if (_activeDownloads.containsKey(key)) {
+      return await _activeDownloads[key]!;
+    }
+    final token = CancelToken();
+    _cancelTokens[key] = token;
+    final future = task(token);
+    _activeDownloads[key] = future;
+    try {
+      await future;
+    } finally {
+      _activeDownloads.remove(key);
+      _cancelTokens.remove(key);
     }
   }
 
@@ -186,86 +227,98 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   /// Downloads an entire book (metadata, cover, and every chapter).
   Future<void> downloadBook(String bookId) async {
     await _ensureDb();
-    syncState.value = SyncState.downloading;
-    bookDownloadProgress[bookId] = 0.0;
-    try {
-      final remoteBook = await _bookRemoteSource.fetchBook(bookId);
-      if (!remoteBook.isPublished) {
-        throw Exception('Book $bookId is not published');
-      }
-      await _syncBookMetadata(
-        remoteBook,
-        downloadCover: true,
-        updateVersions: true,
-      );
+    await _runSingleFlight('book:$bookId', (token) async {
+      await _guardOnlineAndOfflineMode();
 
-      await _downloadCover(bookId, remoteBook.coverImage);
-
-      final totalChapters = remoteBook.chapters.length;
-      for (var i = 0; i < totalChapters; i++) {
-        final summary = remoteBook.chapters[i];
-        bookDownloadProgress[bookId] = i / totalChapters;
-        await downloadChapter(
-          summary.id,
-          onProgress: (chapterProgress) {
-            bookDownloadProgress[bookId] =
-                (i + chapterProgress) / totalChapters;
-          },
+      syncState.value = SyncState.downloading;
+      bookDownloadProgress[bookId] = 0.0;
+      try {
+        final remoteBook = await _bookRemoteSource.fetchBook(bookId);
+        if (!remoteBook.isPublished) {
+          throw Exception('Book $bookId is not published');
+        }
+        await _syncBookMetadata(
+          remoteBook,
+          downloadCover: true,
+          updateVersions: true,
         );
+
+        await _downloadCover(
+          bookId,
+          remoteBook.coverImage,
+          cancelToken: token,
+        );
+
+        final totalChapters = remoteBook.chapters.length;
+        for (var i = 0; i < totalChapters; i++) {
+          final summary = remoteBook.chapters[i];
+          bookDownloadProgress[bookId] = i / totalChapters;
+          await downloadChapter(
+            summary.id,
+            onProgress: (chapterProgress) {
+              bookDownloadProgress[bookId] =
+                  (i + chapterProgress) / totalChapters;
+            },
+          );
+        }
+        bookDownloadProgress[bookId] = 1.0;
+      } finally {
+        syncState.value = SyncState.idle;
+        currentDownload?.value = '';
       }
-      bookDownloadProgress[bookId] = 1.0;
-    } finally {
-      syncState.value = SyncState.idle;
-      currentDownload?.value = '';
-    }
+    });
   }
 
   /// Re-downloads only chapters whose version is newer than the local copy,
   /// along with any updated book metadata and cover image.
   Future<void> updateBook(String bookId) async {
     await _ensureDb();
-    syncState.value = SyncState.downloading;
-    bookDownloadProgress[bookId] = 0.0;
-    try {
-      final remoteBook = await _bookRemoteSource.fetchBook(bookId);
-      if (!remoteBook.isPublished) {
-        throw Exception('Book $bookId is not published');
-      }
-      await _syncBookMetadata(
-        remoteBook,
-        downloadCover: true,
-        updateVersions: false,
-      );
+    await _runSingleFlight('book:$bookId', (token) async {
+      await _guardOnlineAndOfflineMode();
 
-      final localChapters = await _dao!.getChapters(bookId);
-      final localChapterMap = {for (final c in localChapters) c.id: c};
-
-      final totalChapters = remoteBook.chapters.length;
-      var processedChapters = 0;
-      for (final summary in remoteBook.chapters) {
-        final local = localChapterMap[summary.id];
-        if (local == null ||
-            !local.isDownloaded ||
-            summary.version > local.version) {
-          await downloadChapter(
-            summary.id,
-            onProgress: (chapterProgress) {
-              bookDownloadProgress[bookId] =
-                  (processedChapters + chapterProgress) / totalChapters;
-            },
-          );
+      syncState.value = SyncState.downloading;
+      bookDownloadProgress[bookId] = 0.0;
+      try {
+        final remoteBook = await _bookRemoteSource.fetchBook(bookId);
+        if (!remoteBook.isPublished) {
+          throw Exception('Book $bookId is not published');
         }
-        processedChapters++;
-        bookDownloadProgress[bookId] = processedChapters / totalChapters;
-      }
+        await _syncBookMetadata(
+          remoteBook,
+          downloadCover: true,
+          updateVersions: false,
+        );
 
-      await _downloadCover(bookId, remoteBook.coverImage);
-      await _dao!.updateBookVersion(bookId, remoteBook.version);
-      bookDownloadProgress[bookId] = 1.0;
-    } finally {
-      syncState.value = SyncState.idle;
-      currentDownload?.value = '';
-    }
+        final localChapters = await _dao!.getChapters(bookId);
+        final localChapterMap = {for (final c in localChapters) c.id: c};
+
+        final totalChapters = remoteBook.chapters.length;
+        var processedChapters = 0;
+        for (final summary in remoteBook.chapters) {
+          final local = localChapterMap[summary.id];
+          if (local == null ||
+              !local.isDownloaded ||
+              summary.version > local.version) {
+            await downloadChapter(
+              summary.id,
+              onProgress: (chapterProgress) {
+                bookDownloadProgress[bookId] =
+                    (processedChapters + chapterProgress) / totalChapters;
+              },
+            );
+          }
+          processedChapters++;
+          bookDownloadProgress[bookId] = processedChapters / totalChapters;
+        }
+
+        await _downloadCover(bookId, remoteBook.coverImage);
+        await _dao!.updateBookVersion(bookId, remoteBook.version);
+        bookDownloadProgress[bookId] = 1.0;
+      } finally {
+        syncState.value = SyncState.idle;
+        currentDownload?.value = '';
+      }
+    });
   }
 
   /// Downloads the content and media for a single chapter and marks it as
@@ -275,52 +328,119 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     void Function(double progress)? onProgress,
   }) async {
     await _ensureDb();
-    syncState.value = SyncState.downloading;
-    currentDownload?.value = 'Fetching chapter...';
-    chapterDownloadProgress[chapterId] = 0.0;
-    try {
-      final chapter = await _chapterRemoteSource.fetchPages(chapterId);
+    final existing = await _dao!.getChapter(chapterId);
+    if (existing == null) {
+      throw Exception('Chapter $chapterId not found locally');
+    }
 
-      // Remove stale assets before re-downloading (important for updates).
-      await _deleteChapterAssets(chapterId);
+    return _runSingleFlight('chapter:$chapterId', (token) async {
+      syncState.value = SyncState.downloading;
+      currentDownload?.value = 'Fetching chapter...';
+      chapterDownloadProgress[chapterId] = 0.0;
 
-      // Persist text content for TEXT chapters.
-      await _persistTextContent(chapter);
+      final queueItem = await _dao!.getQueueItem(chapterId);
+      final retryCount = (queueItem?['retry_count'] as num?)?.toInt() ?? 0;
 
-      // Download images and audio files.
-      final totalAssets =
-          (chapter.pages?.length ?? 0) + (chapter.audios?.length ?? 0);
-      var completedAssets = 0;
-      void report() {
-        final progress = totalAssets == 0 ? 1.0 : completedAssets / totalAssets;
-        chapterDownloadProgress[chapterId] = progress;
-        onProgress?.call(progress);
+      await _dao!.insertQueueItem(
+        chapterId: chapterId,
+        bookId: existing.bookId,
+        status: 'PENDING',
+        progress: 0.0,
+        retryCount: retryCount,
+      );
+
+      try {
+        await _guardOnlineAndOfflineMode();
+        await _dao!.updateQueueStatus(
+          chapterId: chapterId,
+          status: 'DOWNLOADING',
+          progress: 0.0,
+        );
+
+        final chapter = await _chapterRemoteSource.fetchPages(chapterId);
+
+        // Remove stale assets before re-downloading (important for updates).
+        await _deleteChapterAssets(chapterId);
+
+        // Persist text content for TEXT chapters.
+        await _persistTextContent(chapter);
+
+        // Download images and audio files.
+        final totalAssets =
+            (chapter.pages?.length ?? 0) + (chapter.audios?.length ?? 0);
+        var completedAssets = 0;
+        void report() {
+          final progress =
+              totalAssets == 0 ? 1.0 : completedAssets / totalAssets;
+          chapterDownloadProgress[chapterId] = progress;
+          onProgress?.call(progress);
+        }
+
+        report();
+        await _downloadMedia(
+          chapter,
+          onAssetComplete: () {
+            completedAssets++;
+            report();
+          },
+          cancelToken: token,
+        );
+        chapterDownloadProgress[chapterId] = 1.0;
+        onProgress?.call(1.0);
+
+        // Record the downloaded content version.
+        final localChapter = LocalChapter(
+          id: chapter.id,
+          bookId: chapter.bookId,
+          title: chapter.title,
+          sortOrder: chapter.orderIndex,
+          version: chapter.version,
+        );
+        await _dao!.updateChapterMetadata(localChapter);
+        await _dao!.markChapterDownloaded(chapterId, true);
+
+        await _dao!.deleteQueueItem(chapterId);
+      } catch (e) {
+        if (e is DioException && e.type == DioExceptionType.cancel) {
+          await _dao!.deleteQueueItem(chapterId);
+          return;
+        }
+        await _dao!.incrementRetryCount(chapterId);
+        await _dao!.updateQueueStatus(
+          chapterId: chapterId,
+          status: 'FAILED',
+          progress: 0.0,
+        );
+        rethrow;
+      } finally {
+        syncState.value = SyncState.idle;
+        currentDownload?.value = '';
       }
+    });
+  }
 
-      report();
-      await _downloadMedia(
-        chapter,
-        onAssetComplete: () {
-          completedAssets++;
-          report();
-        },
-      );
-      chapterDownloadProgress[chapterId] = 1.0;
-      onProgress?.call(1.0);
+  /// Cancels an in-flight chapter download, if any.
+  void cancelDownload(String chapterId) {
+    _cancelTokens['chapter:$chapterId']?.cancel();
+  }
 
-      // Record the downloaded content version.
-      final localChapter = LocalChapter(
-        id: chapter.id,
-        bookId: chapter.bookId,
-        title: chapter.title,
-        sortOrder: chapter.orderIndex,
-        version: chapter.version,
-      );
-      await _dao!.updateChapterMetadata(localChapter);
-      await _dao!.markChapterDownloaded(chapterId, true);
-    } finally {
-      syncState.value = SyncState.idle;
-      currentDownload?.value = '';
+  /// Processes PENDING queue items and retries FAILED items up to _maxRetries.
+  Future<void> _processDownloadQueue() async {
+    await _ensureDb();
+    final queue = await _dao!.getQueue();
+    for (final item in queue) {
+      final status = item['status'] as String? ?? '';
+      final chapterId = item['chapter_id'] as String? ?? '';
+      final retryCount = (item['retry_count'] as num?)?.toInt() ?? 0;
+
+      if (status == 'PENDING' ||
+          (status == 'FAILED' && retryCount < _maxRetries)) {
+        try {
+          await downloadChapter(chapterId);
+        } catch (e) {
+          debugPrint('SyncManager._processDownloadQueue error: $e');
+        }
+      }
     }
   }
 
@@ -412,13 +532,18 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _downloadCover(String bookId, String? coverImage) async {
+  Future<void> _downloadCover(
+    String bookId,
+    String? coverImage, {
+    CancelToken? cancelToken,
+  }) async {
     if (coverImage == null || coverImage.isEmpty) return;
     final localPath = await _downloadManager.downloadAsset(
       assetType: 'images',
       bookId: bookId,
       chapterId: 'cover',
       remotePath: coverImage,
+      cancelToken: cancelToken,
     );
     await _dao!.updateBookCover(bookId, localPath);
   }
@@ -453,6 +578,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   Future<void> _downloadMedia(
     RemoteChapter chapter, {
     void Function()? onAssetComplete,
+    CancelToken? cancelToken,
   }) async {
     final bookId = chapter.bookId;
 
@@ -462,6 +588,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
           bookId,
           chapter.id,
           page.imagePath,
+          cancelToken: cancelToken,
         );
         await _dao!.insertDownloadedAsset(
           chapterId: chapter.id,
@@ -481,6 +608,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
           bookId,
           chapter.id,
           audio.audioPath,
+          cancelToken: cancelToken,
         );
         await _dao!.insertDownloadedAsset(
           chapterId: chapter.id,
@@ -506,14 +634,16 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   Future<String> _downloadImage(
     String bookId,
     String chapterId,
-    String remotePath,
-  ) async {
+    String remotePath, {
+    CancelToken? cancelToken,
+  }) async {
     currentDownload?.value = 'Downloading image...';
     return _downloadManager.downloadAsset(
       assetType: 'images',
       bookId: bookId,
       chapterId: chapterId,
       remotePath: remotePath,
+      cancelToken: cancelToken,
       onProgress: (received, total) {
         currentDownload?.value =
             'Image: ${(received / total * 100).toStringAsFixed(0)}%';
@@ -524,14 +654,16 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   Future<String> _downloadAudio(
     String bookId,
     String chapterId,
-    String remotePath,
-  ) async {
+    String remotePath, {
+    CancelToken? cancelToken,
+  }) async {
     currentDownload?.value = 'Downloading audio...';
     return _downloadManager.downloadAsset(
       assetType: 'audio',
       bookId: bookId,
       chapterId: chapterId,
       remotePath: remotePath,
+      cancelToken: cancelToken,
       onProgress: (received, total) {
         currentDownload?.value =
             'Audio: ${(received / total * 100).toStringAsFixed(0)}%';

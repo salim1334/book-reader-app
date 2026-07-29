@@ -48,6 +48,8 @@ void main() {
       when(() => repository.getBooks()).thenAnswer((_) async => books);
       when(() => repository.getChapters('b1')).thenAnswer((_) async => chapters);
       when(() => repository.getDownloadQueue()).thenAnswer((_) async => queue);
+      when(() => repository.getChapter('c1')).thenAnswer((_) async => chapters.first);
+      when(() => repository.getBook('b1')).thenAnswer((_) async => books.first);
 
       final controller = DownloadsController();
       Get.put(controller);
@@ -55,7 +57,23 @@ void main() {
 
       expect(controller.books.length, 1);
       expect(controller.chapterCounts['b1'], 1);
+      expect(controller.downloadedCounts['b1'], 0);
       expect(controller.queue.length, 1);
+      expect(controller.isLoading.value, false);
+    });
+
+    test('cancelQueueItem removes the queue entry and refreshes', () async {
+      when(() => repository.getBooks()).thenAnswer((_) async => []);
+      when(() => repository.getDownloadQueue()).thenAnswer((_) async => []);
+      when(() => repository.deleteQueueItem('c1'))
+          .thenAnswer((_) async {});
+
+      final controller = DownloadsController();
+      Get.put(controller);
+
+      await controller.cancelQueueItem('c1');
+
+      verify(() => repository.deleteQueueItem('c1')).called(1);
       expect(controller.isLoading.value, false);
     });
 

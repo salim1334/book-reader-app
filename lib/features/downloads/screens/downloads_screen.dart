@@ -66,41 +66,69 @@ class DownloadsScreen extends GetView<DownloadsController> {
       if (index <= queue.length) {
         final item = queue[index - 1];
         final chapterId = item['chapter_id'] as String? ?? '';
+        final bookId = item['book_id'] as String? ?? '';
         final status = item['status'] as String? ?? 'ያልታወቀ';
         final queueProgress = (item['progress'] as num?)?.toDouble() ?? 0.0;
         final retryCount = (item['retry_count'] as num?)?.toInt() ?? 0;
         final canRetry = status == 'FAILED';
         final isDownloading = status == 'DOWNLOADING';
-        return Obx(() {
-          final liveProgress = isDownloading
-              ? Get.find<SyncManager>().chapterDownloadProgress[chapterId]
-              : null;
-          final progress = liveProgress ?? queueProgress;
-          return ListTile(
-            leading: isDownloading
-                ? SizedBox(
+        final chapterTitle = controller.queueChapterTitles[chapterId] ??
+            (chapterId.length > 8
+                ? 'ምዕራፍ ${chapterId.substring(0, 8)}...'
+                : 'ምዕራፍ $chapterId');
+        final bookTitle = controller.queueBookTitles[bookId] ??
+            (bookId.length > 8
+                ? 'መጽሐፍ ${bookId.substring(0, 8)}...'
+                : 'መጽሐፍ $bookId');
+        final progressText =
+            '${(queueProgress * 100).toStringAsFixed(0)}%';
+        final statusLabel = controller.queueStatusLabel(status);
+        return ListTile(
+          leading: isDownloading
+              ? Obx(() {
+                  final live = Get.find<SyncManager>()
+                      .chapterDownloadProgress[chapterId];
+                  final progress = live ?? queueProgress;
+                  return SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
                       value: progress,
                       strokeWidth: 2,
                     ),
-                  )
-                : controller.queueIcon(status),
-            title: Text(
-              'ምዕራፍ ${chapterId.length > 8 ? chapterId.substring(0, 8) : chapterId}...',
-            ),
-            subtitle: Text(
-              '$status • ${(progress * 100).toStringAsFixed(0)}% • ድጋሚ ሙከራዎች: $retryCount',
-            ),
-            trailing: canRetry
-                ? IconButton(
-                    icon: const Icon(Icons.replay),
-                    onPressed: () => controller.retryChapter(chapterId),
-                  )
-                : null,
-          );
-        });
+                  );
+                })
+              : controller.queueIcon(status),
+          title: Text(bookTitle),
+          subtitle: isDownloading
+              ? Obx(() {
+                  final live = Get.find<SyncManager>()
+                      .chapterDownloadProgress[chapterId];
+                  final progress = live ?? queueProgress;
+                  return Text(
+                    '$chapterTitle • $statusLabel • ${(progress * 100).toStringAsFixed(0)}% • ድጋሚ ሙከራዎች: $retryCount',
+                  );
+                })
+              : Text(
+                  '$chapterTitle • $statusLabel • $progressText • ድጋሚ ሙከራዎች: $retryCount',
+                ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (canRetry)
+                IconButton(
+                  icon: const Icon(Icons.replay),
+                  tooltip: 'ድጋሜ ይሞክሩ',
+                  onPressed: () => controller.retryChapter(chapterId),
+                ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip: status == 'DOWNLOADING' ? 'አቋርጥ' : 'አስወግድ',
+                onPressed: () => controller.cancelQueueItem(chapterId),
+              ),
+            ],
+          ),
+        );
       }
     }
 
@@ -116,19 +144,33 @@ class DownloadsScreen extends GetView<DownloadsController> {
 
     final bookIndex = index - bookOffset - 1;
     final book = books[bookIndex];
-    final chapterCount = controller.chapterCounts[book.id] ?? 0;
     return ListTile(
       leading: const Icon(Icons.book),
       title: Text(book.title),
-      subtitle: Text(
-        '${book.type.name} • $chapterCount ምዕራፍ${chapterCount == 1 ? '' : 'ች'}',
-      ),
-      trailing: book.id != "cmrolfi59000jbj9wf8fp7t4m"
-          ? IconButton(
+      subtitle: Obx(() {
+        final total = controller.chapterCounts[book.id] ?? 0;
+        final downloaded = controller.downloadedCounts[book.id] ?? 0;
+        final live =
+            Get.find<SyncManager>().bookDownloadProgress[book.id];
+        final progress = live ?? (total > 0 ? downloaded / total : 0.0);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${book.type.name} • $downloaded / $total ምዕራፍ ተወርዋል',
+            ),
+            const SizedBox(height: 4),
+            LinearProgressIndicator(value: progress),
+          ],
+        );
+      }),
+      trailing: controller.isBundledBook(book.id)
+          ? null
+          : IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () => controller.deleteBook(book),
-            )
-          : null,
+            ),
     );
   }
 }

@@ -665,6 +665,16 @@ class BookDao {
     );
   }
 
+  Future<Map<String, Object?>?> getQueueItem(String chapterId) async {
+    final rows = await _db.query(
+      DbTables.downloadQueue,
+      where: 'chapter_id = ?',
+      whereArgs: [chapterId],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
   Future<List<Map<String, Object?>>> getQueue({String? status}) async {
     String? where;
     List<Object?>? whereArgs;

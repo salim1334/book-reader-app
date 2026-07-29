@@ -96,6 +96,24 @@ void main() {
         audioEndTime: any(named: 'audioEndTime'),
       ),
     ).thenAnswer((_) async {});
+    when(() => dao.getQueueItem(any())).thenAnswer((_) async => null);
+    when(
+      () => dao.insertQueueItem(
+        chapterId: any(named: 'chapterId'),
+        bookId: any(named: 'bookId'),
+        status: any(named: 'status'),
+        progress: any(named: 'progress'),
+        retryCount: any(named: 'retryCount'),
+      ),
+    ).thenAnswer((_) async {});
+    when(
+      () => dao.updateQueueStatus(
+        chapterId: any(named: 'chapterId'),
+        status: any(named: 'status'),
+        progress: any(named: 'progress'),
+      ),
+    ).thenAnswer((_) async {});
+    when(() => dao.incrementRetryCount(any())).thenAnswer((_) async {});
 
     when(() => notificationService.showNewBookNotification(any()))
         .thenAnswer((_) async {});
@@ -152,7 +170,18 @@ void main() {
   });
 
   group('SyncManager.downloadBook', () {
-    setUp(() => syncManager.delegateDownloadChapter = true);
+    setUp(() {
+      syncManager.delegateDownloadChapter = true;
+      when(() => dao.getChapter('c1')).thenAnswer(
+        (_) async => const LocalChapter(
+          id: 'c1',
+          bookId: 'b1',
+          title: 'Chapter 1',
+          sortOrder: 0,
+          version: 1,
+        ),
+      );
+    });
 
     test('downloads cover and a single text chapter', () async {
       bookRemote.addBook(
@@ -228,7 +257,18 @@ void main() {
   });
 
   group('SyncManager.downloadChapter', () {
-    setUp(() => syncManager.delegateDownloadChapter = true);
+    setUp(() {
+      syncManager.delegateDownloadChapter = true;
+      when(() => dao.getChapter('c1')).thenAnswer(
+        (_) async => const LocalChapter(
+          id: 'c1',
+          bookId: 'b1',
+          title: 'Chapter 1',
+          sortOrder: 0,
+          version: 1,
+        ),
+      );
+    });
 
     test('downloads images and audio assets', () async {
       chapterRemote.addChapter(
@@ -281,6 +321,52 @@ void main() {
           audioEndTime: any(named: 'audioEndTime'),
         ),
       ).called(1);
+    });
+
+    test('marks queue FAILED when offline and increments retry count', () async {
+      syncManager.isOnlineResult = false;
+
+      await expectLater(
+        syncManager.downloadChapter('c1'),
+        throwsA(isA<Exception>()),
+      );
+
+      verify(
+        () => dao.insertQueueItem(
+          chapterId: 'c1',
+          bookId: 'b1',
+          status: 'PENDING',
+          progress: 0.0,
+          retryCount: 0,
+        ),
+      ).called(1);
+      verify(() => dao.incrementRetryCount('c1')).called(1);
+      verify(
+        () => dao.updateQueueStatus(
+          chapterId: 'c1',
+          status: 'FAILED',
+          progress: 0.0,
+        ),
+      ).called(1);
+    });
+
+    test('joins an in-progress chapter download instead of starting a second one', () async {
+      chapterRemote.addChapter(
+        const RemoteChapter(
+          id: 'c1',
+          bookId: 'b1',
+          title: 'Chapter 1',
+          orderIndex: 0,
+          version: 1,
+        ),
+      );
+
+      final first = syncManager.downloadChapter('c1');
+      final second = syncManager.downloadChapter('c1');
+
+      await Future.wait([first, second]);
+
+      verify(() => dao.markChapterDownloaded('c1', true)).called(1);
     });
   });
 }

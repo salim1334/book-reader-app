@@ -20,6 +20,8 @@ import 'package:path_provider/path_provider.dart';
 /// will just update its title/order over time, and updateBook() will pull
 /// any real content updates later. No special-casing needed anywhere else.
 class BundledContentSeeder {
+  /// Populated after seeding so other code can identify bundled books.
+  static final Set<String> bundledBookIds = {};
   BundledContentSeeder(this._dao, {SettingsDao? settingsDao})
       : _settingsDao = settingsDao ?? SettingsDao();
 
@@ -32,14 +34,17 @@ class BundledContentSeeder {
   static const String _manifestAssetPath = 'assets/data/bundled_books.json';
 
   Future<void> seedIfNeeded() async {
+    final manifestRaw = await rootBundle.loadString(_manifestAssetPath);
+    final manifest = jsonDecode(manifestRaw) as Map<String, dynamic>;
+    final books = (manifest['books'] as List<dynamic>? ?? []);
+    bundledBookIds.addAll(
+      books.map((b) => (b as Map<String, dynamic>)['id'] as String),
+    );
+
     final alreadySeeded = await _settingsDao.getBool(_flagKey);
     if (alreadySeeded) return;
 
     try {
-      final manifestRaw = await rootBundle.loadString(_manifestAssetPath);
-      final manifest = jsonDecode(manifestRaw) as Map<String, dynamic>;
-      final books = (manifest['books'] as List<dynamic>? ?? []);
-
       for (final raw in books) {
         await _seedBook(raw as Map<String, dynamic>);
       }
