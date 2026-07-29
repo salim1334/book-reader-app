@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:book_store/core/constants/app_enums.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
 import 'package:book_store/features/chapter_reader/controllers/image_reader_controller.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,11 @@ class ImageReader extends GetView<ImageReaderController> {
 
       final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
+      final settings = Get.find<SettingsRepository>();
+      final scrollDirection = settings.imagePageVerticalScroll.value
+          ? Axis.vertical
+          : Axis.horizontal;
+
       return Stack(
         fit: StackFit.expand,
 
@@ -42,6 +48,8 @@ class ImageReader extends GetView<ImageReaderController> {
             pageController: controller.pageController,
 
             itemCount: total,
+
+            scrollDirection: scrollDirection,
 
             reverse:
                 controller.chapterReader.book.swipeDirection ==
@@ -74,43 +82,76 @@ class ImageReader extends GetView<ImageReaderController> {
             },
           ),
 
-          if (controller.currentPageIndex.value > 0)
-            Positioned(
-              left: 12,
-
-              top: 0,
-
-              bottom: 0,
-
-              child: Center(
-                child: IconButton(
-                  iconSize: 40,
-
-                  onPressed: controller.previousPage,
-
-                  icon: const Icon(Icons.chevron_left, color: Colors.grey),
+          if (scrollDirection == Axis.horizontal)
+            ...[
+              if (controller.currentPageIndex.value > 0)
+                Positioned(
+                  left: 12,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: IconButton(
+                      iconSize: 40,
+                      onPressed: controller.previousPage,
+                      icon: const Icon(
+                        Icons.chevron_left,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-
-          if (controller.currentPageIndex.value < total - 1)
-            Positioned(
-              right: 12,
-
-              top: 0,
-
-              bottom: 0,
-
-              child: Center(
-                child: IconButton(
-                  iconSize: 40,
-
-                  onPressed: controller.nextPage,
-
-                  icon: const Icon(Icons.chevron_right, color: Colors.grey),
+              if (controller.currentPageIndex.value < total - 1)
+                Positioned(
+                  right: 12,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: IconButton(
+                      iconSize: 40,
+                      onPressed: controller.nextPage,
+                      icon: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+            ]
+          else
+            ...[
+              if (controller.currentPageIndex.value > 0)
+                Positioned(
+                  top: 60,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: IconButton(
+                      iconSize: 40,
+                      onPressed: controller.previousPage,
+                      icon: const Icon(
+                        Icons.keyboard_arrow_up,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              if (controller.currentPageIndex.value < total - 1)
+                Positioned(
+                  bottom: 60,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: IconButton(
+                      iconSize: 40,
+                      onPressed: controller.nextPage,
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
 
           if (!immersive)
             Positioned(

@@ -15,6 +15,7 @@ class SettingsRepository extends GetxService {
   static const String _keyFontSize = 'font_size';
   static const String _keyFontSizeSlider = 'font_size_slider';
   static const String _keyAutoScroll = 'auto_scroll';
+  static const String _keyImagePageVerticalScroll = 'image_page_vertical_scroll';
 
   // Audio settings
   static const String _keyDefaultSpeed = 'default_speed';
@@ -33,6 +34,7 @@ class SettingsRepository extends GetxService {
   final RxString fontSize = 'Medium'.obs;
   final RxDouble fontSizeScale = 1.0.obs;
   final RxBool autoScroll = true.obs;
+  final RxBool imagePageVerticalScroll = false.obs;
   final RxDouble defaultSpeed = 1.0.obs;
   final RxBool autoPlayNext = true.obs;
   final RxBool offlineMode = false.obs;
@@ -51,6 +53,7 @@ class SettingsRepository extends GetxService {
     fontSize.value = await getFontSize();
     fontSizeScale.value = await getFontSizeSlider();
     autoScroll.value = await getAutoScroll();
+    imagePageVerticalScroll.value = await getImagePageVerticalScroll();
     defaultSpeed.value = await getDefaultSpeed();
     autoPlayNext.value = await getAutoPlayNext();
     offlineMode.value = await getOfflineMode();
@@ -103,6 +106,13 @@ class SettingsRepository extends GetxService {
   Future<void> setAutoScroll(bool value) async {
     autoScroll.value = value;
     await _dao.setBool(_keyAutoScroll, value);
+  }
+
+  Future<bool> getImagePageVerticalScroll() async =>
+      await _dao.getBool(_keyImagePageVerticalScroll, defaultValue: false);
+  Future<void> setImagePageVerticalScroll(bool value) async {
+    imagePageVerticalScroll.value = value;
+    await _dao.setBool(_keyImagePageVerticalScroll, value);
   }
 
   // ─── Audio Settings ──────────────────────────────────
@@ -163,6 +173,8 @@ class SettingsRepository extends GetxService {
     fontSizeScale.value = 1.0;
     await _dao.setBool(_keyAutoScroll, true);
     autoScroll.value = true;
+    await _dao.setBool(_keyImagePageVerticalScroll, false);
+    imagePageVerticalScroll.value = false;
 
     await _dao.setDouble(_keyDefaultSpeed, 1.0);
     defaultSpeed.value = 1.0;

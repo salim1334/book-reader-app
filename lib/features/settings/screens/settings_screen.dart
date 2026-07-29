@@ -120,6 +120,25 @@ class SettingsScreen extends GetView<SettingsController> {
               onChanged: controller.toggleAutoScroll,
             ),
           ),
+          const Divider(height: 0, indent: 60),
+          Obx(
+            () => SwitchListTile(
+              secondary: Icon(
+                controller.imagePageVerticalScroll.value
+                    ? Icons.swipe_down_alt_rounded
+                    : Icons.swipe_left_alt_rounded,
+                color: colors.primary,
+              ),
+              title: const Text('የገጽ መሸጋገሪያ አቅጣጫ'),
+              subtitle: Text(
+                controller.imagePageVerticalScroll.value
+                    ? 'ወደላይ ማንሸራተት (Vertical)'
+                    : 'አግድም ማንሸራተት (Horizontal)',
+              ),
+              value: controller.imagePageVerticalScroll.value,
+              onChanged: controller.toggleImagePageVerticalScroll,
+            ),
+          ),
         ],
       ),
     );

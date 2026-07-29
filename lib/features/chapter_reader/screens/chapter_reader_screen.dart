@@ -1,6 +1,7 @@
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
 import 'package:book_store/features/chapter_reader/widgets/image_reader.dart';
 import 'package:book_store/features/chapter_reader/widgets/reader_audio_player.dart';
@@ -56,6 +57,9 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
     return Obx(() {
       controller.chapterKey.value;
       final immersive = controller.isImmersiveMode.value;
+      final settings = Get.find<SettingsRepository>();
+      final isImageBook =
+          controller.bookType.value == LocalBookType.image;
 
       final reader = controller.bookType.value == LocalBookType.text
           ? const TextReader()
@@ -89,10 +93,22 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
                     }),
                     IconButton(
                       icon: Icon(
-                        immersive ? Icons.fullscreen_exit : Icons.fullscreen,
+                        isImageBook
+                            ? (settings.imagePageVerticalScroll.value
+                                ? Icons.swipe_up_alt_rounded
+                                : Icons.swipe_left_alt_rounded)
+                            : (immersive
+                                ? Icons.fullscreen_exit
+                                : Icons.fullscreen),
                       ),
-                      onPressed: controller.toggleImmersiveMode,
-                      tooltip: 'ሙሉ ገጽ መቀየሪያ',
+                      onPressed: isImageBook
+                          ? () => settings.setImagePageVerticalScroll(
+                                !settings.imagePageVerticalScroll.value,
+                              )
+                          : controller.toggleImmersiveMode,
+                      tooltip: isImageBook
+                          ? 'የማሸጋገሪያ አቅጣጫ ቀይር'
+                          : 'ሙሉ ገጽ መቀየሪያ',
                     ),
                   ],
                 ),

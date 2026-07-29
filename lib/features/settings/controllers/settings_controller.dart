@@ -16,6 +16,7 @@ class SettingsController extends GetxController {
   RxString get fontSize => _settingsRepository.fontSize;
   RxDouble get fontSizeSlider => _settingsRepository.fontSizeScale;
   RxBool get autoScroll => _settingsRepository.autoScroll;
+  RxBool get imagePageVerticalScroll => _settingsRepository.imagePageVerticalScroll;
 
   // ─── Audio Settings ──────────────────────────────────────
   RxDouble get defaultSpeed => _settingsRepository.defaultSpeed;
@@ -50,6 +51,9 @@ class SettingsController extends GetxController {
   }
 
   void toggleAutoScroll(bool value) => _settingsRepository.setAutoScroll(value);
+
+  void toggleImagePageVerticalScroll(bool value) =>
+      _settingsRepository.setImagePageVerticalScroll(value);
 
   // ─── Audio Settings ──────────────────────────────────────
   void setDefaultSpeed(double value) => _settingsRepository.setDefaultSpeed(value);
