@@ -5,6 +5,7 @@ import 'package:book_store/common/widgets/loading_indicator.dart';
 import 'package:book_store/core/theme/sacred_theme_extension.dart';
 import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
+import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:book_store/features/book_details/controllers/book_details_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -119,11 +120,15 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                         final isFavorite =
                             controller.chapterFavoriteStates[chapter.id] ??
                             false;
+                        final syncManager = Get.find<SyncManager>();
 
                         return ChapterListTile(
                           index: index,
                           chapter: chapter,
                           progress: progress,
+                          downloadProgress:
+                              syncManager.chapterDownloadProgress[chapter.id] ??
+                                  0.0,
                           isOutdated: isOutdated,
                           isDownloading: isDownloading,
                           isFavorite: isFavorite,

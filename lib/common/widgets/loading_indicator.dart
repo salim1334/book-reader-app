@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class LoadingIndicator extends StatelessWidget {
-  /// Optional text to display below the spinner.
+  /// Optional text to display below the loader.
   final String? message;
 
-  /// Optional progress value (0.0 – 1.0) for a determinate indicator.
-  /// If null, an indeterminate spinner is shown.
+  /// Optional progress value (0.0 – 1.0).
+  /// - null or <= 0: circular indeterminate loader.
+  /// - > 0 and < 1: linear determinate loader with percentage.
+  /// - == 1: success check.
   final double? progress;
 
   const LoadingIndicator({super.key, this.message, this.progress});
@@ -13,6 +15,7 @@ class LoadingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final value = (progress == null || progress! <= 0) ? null : progress;
 
     return Center(
       child: Card(
@@ -23,23 +26,41 @@ class LoadingIndicator extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Spinner or determinate progress ring
-              progress != null
-                  ? SizedBox(
-                      width: 52,
-                      height: 52,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 5,
-                        color: theme.colorScheme.primary,
-                        backgroundColor: theme.colorScheme.primaryContainer,
+              if (value == null)
+                SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 5,
+                    color: theme.colorScheme.primary,
+                  ),
+                )
+              else if (value >= 1)
+                Icon(
+                  Icons.check_circle,
+                  size: 52,
+                  color: theme.colorScheme.primary,
+                )
+              else
+                SizedBox(
+                  width: 120,
+                  child: Column(
+                    children: [
+                      LinearProgressIndicator(
+                        value: value,
+                        minHeight: 8,
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                    )
-                  : const SizedBox(
-                      width: 52,
-                      height: 52,
-                      child: CircularProgressIndicator(strokeWidth: 5),
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${(value * 100).toStringAsFixed(0)}%',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (message != null) ...[
                 const SizedBox(height: 18),
                 Text(

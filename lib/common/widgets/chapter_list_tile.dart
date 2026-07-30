@@ -215,17 +215,18 @@ class _DownloadIndicator extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           CircularProgressIndicator(
-            value: progress,
+            value: progress > 0 ? progress : null,
             strokeWidth: 2.5,
             color: theme.colorScheme.primary,
           ),
-          Text(
-            '${(progress * 100).round()}%',
-            style: const TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.bold,
+          if (progress > 0)
+            Text(
+              '${(progress * 100).round()}%',
+              style: const TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
         ],
       ),
     );

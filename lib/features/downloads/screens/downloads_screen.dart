@@ -58,7 +58,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
       if (index == 0) {
         return const ListTile(
           title: Text(
-            'ለመውረድ የተሰለፉ',
+            'የማውረድ ተራ',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         );
@@ -93,7 +93,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
-                      value: progress,
+                      value: progress > 0 ? progress : null,
                       strokeWidth: 2,
                     ),
                   );
@@ -152,7 +152,10 @@ class DownloadsScreen extends GetView<DownloadsController> {
         final downloaded = controller.downloadedCounts[book.id] ?? 0;
         final live =
             Get.find<SyncManager>().bookDownloadProgress[book.id];
-        final progress = live ?? (total > 0 ? downloaded / total : 0.0);
+        final storedProgress = total > 0 ? downloaded / total : 0.0;
+        final progress = live != null
+            ? (live > 0 ? live : null)
+            : storedProgress;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -184,6 +187,8 @@ class _SyncProgressHeader extends StatelessWidget {
       final state = syncManager.syncState.value;
       final isActive =
           state == SyncState.syncing || state == SyncState.downloading;
+      final progress = _activeProgress(syncManager);
+      final hasProgress = progress != null && progress > 0;
 
       return AnimatedSize(
         duration: const Duration(milliseconds: 250),
@@ -193,10 +198,25 @@ class _SyncProgressHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const LinearProgressIndicator(),
+                    if (hasProgress)
+                      LinearProgressIndicator(value: progress)
+                    else
+                      const Row(
+                        children: [
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: CircularProgressIndicator(strokeWidth: 3),
+                          ),
+                          SizedBox(width: 12),
+                          Text('በማውረድ ላይ...'),
+                        ],
+                      ),
                     const SizedBox(height: 8),
                     Text(
-                      '${state.name}...',
+                      hasProgress
+                          ? '${state.name}... ${(progress * 100).toStringAsFixed(0)}%'
+                          : '${state.name}...',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     if (syncManager.currentDownload != null)
@@ -212,5 +232,24 @@ class _SyncProgressHeader extends StatelessWidget {
             : const SizedBox.shrink(),
       );
     });
+  }
+
+  double? _activeProgress(SyncManager syncManager) {
+    double total = 0.0;
+    int count = 0;
+    for (final value in syncManager.bookDownloadProgress.values) {
+      if (value > 0 && value < 1) {
+        total += value;
+        count++;
+      }
+    }
+    for (final value in syncManager.chapterDownloadProgress.values) {
+      if (value > 0 && value < 1) {
+        total += value;
+        count++;
+      }
+    }
+    if (count == 0) return null;
+    return total / count;
   }
 }

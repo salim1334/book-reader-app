@@ -203,7 +203,20 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     try {
       final remoteBooks = await _bookRemoteSource.fetchBooks();
       for (final remoteBook in remoteBooks) {
-        await _syncBookMetadata(remoteBook, notify: true);
+        var bookToSync = remoteBook;
+        // The list endpoint may not return chapter summaries. If it doesn't,
+        // fetch each book's full details so chapter metadata is also stored
+        // automatically, just like the book metadata.
+        if (remoteBook.chapters.isEmpty) {
+          try {
+            bookToSync = await _bookRemoteSource.fetchBook(remoteBook.id);
+          } catch (e) {
+            debugPrint(
+              'SyncManager.syncCatalog: could not fetch chapters for ${remoteBook.id}:  ',
+            );
+          }
+        }
+        await _syncBookMetadata(bookToSync, notify: true);
       }
     } finally {
       syncState.value = SyncState.idle;

@@ -247,29 +247,23 @@ class _DownloadIndicator extends StatelessWidget {
     return SizedBox(
       width: 40,
       height: 40,
-      child: progress <= 0 ? Stack(
+      child: Stack(
         alignment: Alignment.center,
         children: [
           CircularProgressIndicator(
-            value: progress,
-                  strokeWidth: 2.5,
-                  color: theme.colorScheme.primary,
-                  backgroundColor: theme.colorScheme.onPrimary,
-          ),
-        ],
-      ) : Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: progress,
+            value: progress > 0 ? progress : null,
             strokeWidth: 2.5,
             color: theme.colorScheme.primary,
             backgroundColor: theme.colorScheme.onPrimary,
           ),
-          Text(
-            '${(progress * 100).round()}%',
-            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-          ),
+          if (progress > 0)
+            Text(
+              '${(progress * 100).round()}%',
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
         ],
       ),
     );

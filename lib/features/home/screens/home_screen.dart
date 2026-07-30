@@ -2,6 +2,7 @@ import 'package:book_store/common/widgets/book_card.dart';
 import 'package:book_store/common/widgets/empty_view.dart';
 import 'package:book_store/common/widgets/error_view.dart';
 import 'package:book_store/common/widgets/loading_indicator.dart';
+import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:book_store/features/home/controllers/home_controller.dart';
 import 'package:book_store/features/home/widgets/continue_reading_card.dart';
 import 'package:book_store/features/home/widgets/home_header.dart';
@@ -38,7 +39,7 @@ class HomeScreen extends GetView<HomeController> {
         if (controller.books.isEmpty) {
           return EmptyView(
             message: controller.isOffline.value || controller.offlineMode.value
-                ? "በአሁኑ ጊዜ ከመስመር ውጭ ነዎት። የሚገኙ መጻሕፍትን ለማየት እና ለማውረድ እባክዎ ከበይነመረብ (ኢንተርኔት) ጋር ይገናኙ።"
+                ? "በአሁኑ ጊዜ ከኔትዎርክ ውጭ ነዎት። ሌሎች የሳዳት ከማልን መጻሕፍትን ለማየት እና ለማውረድ እባክዎ ከኢንተርኔት ጋር ይገናኙ።"
                 : 'ምንም መጻሕፍት አልተገኙም።',
           );
         }
@@ -79,12 +80,17 @@ class HomeScreen extends GetView<HomeController> {
                     controller.downloadedBooks[book.id] ?? false;
 
                 final isFavorite = controller.bookFavorites[book.id] ?? false;
+                final syncManager = Get.find<SyncManager>();
+                final isDownloading =
+                    controller.downloadingBookId.value == book.id;
 
                 return BookCard(
                   book: book,
                   isDownloaded: isDownloaded,
-                  isDownloading: controller.downloadingBookId.value == book.id,
+                  isDownloading: isDownloading,
                   progressPercent: controller.bookProgress[book.id] ?? 0.0,
+                  downloadProgress:
+                      syncManager.bookDownloadProgress[book.id] ?? 0.0,
                   isFavorite: isFavorite,
                   onDownload: () => controller.downloadBook(book),
                   onTap: () => controller.openBook(book),
