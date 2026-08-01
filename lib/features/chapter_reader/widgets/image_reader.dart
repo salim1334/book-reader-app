@@ -51,9 +51,12 @@ class ImageReader extends GetView<ImageReaderController> {
 
             scrollDirection: scrollDirection,
 
+            // Reverse the page order only for horizontal RTL books.
+            // For vertical scrolling, both LTR and RTL should start at the top.
             reverse:
+                scrollDirection == Axis.horizontal &&
                 controller.chapterReader.book.swipeDirection ==
-                SwipeDirection.rtl,
+                    SwipeDirection.rtl,
 
             scrollPhysics: controller.isZoomed
                 ? const NeverScrollableScrollPhysics()
