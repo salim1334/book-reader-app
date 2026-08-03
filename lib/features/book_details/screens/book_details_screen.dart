@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/common/widgets/chapter_list_tile.dart';
 import 'package:book_store/common/widgets/cover_image.dart';
 import 'package:book_store/common/widgets/error_view.dart';
@@ -27,7 +28,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                 color: isFavorite ? context.sacred.gold : null,
               ),
               onPressed: controller.toggleBookFavorite,
-              tooltip: 'Favorite',
+              tooltip: AppTexts.bookDetailsFavoriteTooltip,
             );
           }),
         ],
@@ -85,7 +86,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                       const Divider(),
                       const SizedBox(height: 12),
                       Text(
-                        'ምዕራፎች',
+                        AppTexts.bookDetailsChaptersTitle,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -101,7 +102,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                 if (chapters.isEmpty) {
                   return const SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(child: Text('ምንም ምዕራፍ አልተጫነም')),
+                    child: Center(child: Text(AppTexts.bookDetailsEmptyChapters)),
                   );
                 }
 
@@ -192,7 +193,9 @@ class _HeaderCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Chip(
                       label: Text(
-                        book.type == LocalBookType.text ? 'ጽሁፍ' : 'ምስል',
+                        book.type == LocalBookType.text
+                            ? AppTexts.bookTypeText
+                            : AppTexts.bookTypeImage,
                         style: const TextStyle(fontSize: 12),
                       ),
                       visualDensity: VisualDensity.compact,
@@ -268,13 +271,13 @@ class _ProgressBar extends GetView<BookDetailsController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'የንባብ ደረጃ',
+                AppTexts.bookDetailsProgressLabel,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(
-                '${(progress * 100).round()}%',
+                AppTexts.percentage(progress),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.primary,
@@ -324,7 +327,7 @@ class _UpdateBanner extends GetView<BookDetailsController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'አዲስ ስሪት ተገኝቷል',
+                      AppTexts.bookDetailsUpdateAvailable,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: colors.onSecondaryContainer,
@@ -332,7 +335,7 @@ class _UpdateBanner extends GetView<BookDetailsController> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'የቅርብ ለውጦችን ለማውረድ ማሻሻያ ይጫኑ።',
+                      AppTexts.bookDetailsUpdateBody,
                       style: TextStyle(
                         fontSize: 12,
                         color: colors.onSecondaryContainer.withOpacity(0.7),
@@ -359,7 +362,7 @@ class _UpdateBanner extends GetView<BookDetailsController> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      child: const Text('UPDATE'),
+                      child: const Text(AppTexts.bookDetailsUpdateButton),
                     ),
             ],
           ),

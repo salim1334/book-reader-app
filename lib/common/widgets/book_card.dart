@@ -1,4 +1,5 @@
 import 'package:book_store/common/widgets/cover_image.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:flutter/material.dart';
@@ -31,9 +32,9 @@ class BookCard extends StatelessWidget {
   (String label, IconData icon) _getTypeInfo() {
     switch (book.type) {
       case LocalBookType.text:
-        return ('ጽሑፍ', Icons.text_snippet);
+        return (AppTexts.bookTypeText, Icons.text_snippet);
       case LocalBookType.image:
-        return ('ምስል', Icons.image);
+        return (AppTexts.bookTypeImage, Icons.image);
     }
   }
 
@@ -222,7 +223,7 @@ class _TypeBadge extends StatelessWidget {
           Icon(Icons.download, size: 14, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 4),
           Text(
-            "መጽሐፉን ለማውረድ ይጫኑት",
+            AppTexts.bookCardDownloadPrompt,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
@@ -258,7 +259,7 @@ class _DownloadIndicator extends StatelessWidget {
           ),
           if (progress > 0)
             Text(
-              '${(progress * 100).round()}%',
+              AppTexts.percentage(progress),
               style: const TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.bold,

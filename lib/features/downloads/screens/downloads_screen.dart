@@ -5,6 +5,7 @@ import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:book_store/features/downloads/controllers/downloads_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 
 class DownloadsScreen extends GetView<DownloadsController> {
   const DownloadsScreen({super.key});
@@ -12,7 +13,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('የወረዱ መጽሐፍት')),
+      appBar: AppBar(title: const Text(AppTexts.downloadsAppBarTitle)),
       body: Column(
         children: [
           _SyncProgressHeader(),
@@ -28,7 +29,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
               }
 
               if (controller.queue.isEmpty && controller.books.isEmpty) {
-                return const EmptyView(message: 'እስካሁን ምንም አልወረደም።');
+                return const EmptyView(message: AppTexts.downloadsEmptyMessage);
               }
 
               return RefreshIndicator(
@@ -58,7 +59,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
       if (index == 0) {
         return const ListTile(
           title: Text(
-            'የማውረድ ተራ',
+            AppTexts.downloadsQueueHeader,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         );
@@ -67,21 +68,15 @@ class DownloadsScreen extends GetView<DownloadsController> {
         final item = queue[index - 1];
         final chapterId = item['chapter_id'] as String? ?? '';
         final bookId = item['book_id'] as String? ?? '';
-        final status = item['status'] as String? ?? 'ያልታወቀ';
+        final status = item['status'] as String? ?? AppTexts.downloadsUnknownStatus;
         final queueProgress = (item['progress'] as num?)?.toDouble() ?? 0.0;
         final retryCount = (item['retry_count'] as num?)?.toInt() ?? 0;
         final canRetry = status == 'FAILED';
         final isDownloading = status == 'DOWNLOADING';
         final chapterTitle = controller.queueChapterTitles[chapterId] ??
-            (chapterId.length > 8
-                ? 'ምዕራፍ ${chapterId.substring(0, 8)}...'
-                : 'ምዕራፍ $chapterId');
+            AppTexts.downloadsChapterTitle(chapterId, chapterId.length > 8);
         final bookTitle = controller.queueBookTitles[bookId] ??
-            (bookId.length > 8
-                ? 'መጽሐፍ ${bookId.substring(0, 8)}...'
-                : 'መጽሐፍ $bookId');
-        final progressText =
-            '${(queueProgress * 100).toStringAsFixed(0)}%';
+            AppTexts.downloadsBookTitle(bookId, bookId.length > 8);
         final statusLabel = controller.queueStatusLabel(status);
         return ListTile(
           leading: isDownloading
@@ -106,11 +101,11 @@ class DownloadsScreen extends GetView<DownloadsController> {
                       .chapterDownloadProgress[chapterId];
                   final progress = live ?? queueProgress;
                   return Text(
-                    '$chapterTitle • $statusLabel • ${(progress * 100).toStringAsFixed(0)}% • ድጋሚ ሙከራዎች: $retryCount',
+                    AppTexts.downloadsQueueItemSubtitle(chapterTitle, statusLabel, progress, retryCount),
                   );
                 })
               : Text(
-                  '$chapterTitle • $statusLabel • $progressText • ድጋሚ ሙከራዎች: $retryCount',
+                  AppTexts.downloadsQueueItemSubtitle(chapterTitle, statusLabel, queueProgress, retryCount),
                 ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -118,12 +113,12 @@ class DownloadsScreen extends GetView<DownloadsController> {
               if (canRetry)
                 IconButton(
                   icon: const Icon(Icons.replay),
-                  tooltip: 'ድጋሜ ይሞክሩ',
+                  tooltip: AppTexts.downloadsRetryTooltip,
                   onPressed: () => controller.retryChapter(chapterId),
                 ),
               IconButton(
                 icon: const Icon(Icons.delete),
-                tooltip: status == 'DOWNLOADING' ? 'አቋርጥ' : 'አስወግድ',
+                tooltip: status == 'DOWNLOADING' ? AppTexts.downloadsCancelTooltip : AppTexts.downloadsRemoveTooltip,
                 onPressed: () => controller.cancelQueueItem(chapterId),
               ),
             ],
@@ -136,7 +131,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
     if (index == bookOffset) {
       return const ListTile(
         title: Text(
-          'የወረዱ መጻሕፍት',
+          AppTexts.downloadsAppBarTitle,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       );
@@ -161,7 +156,7 @@ class DownloadsScreen extends GetView<DownloadsController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${book.type.name} • $downloaded / $total ምዕራፍ ተወርዋል',
+              AppTexts.downloadsBookProgress(book.type.name, downloaded, total),
             ),
             const SizedBox(height: 4),
             LinearProgressIndicator(value: progress),
@@ -209,14 +204,14 @@ class _SyncProgressHeader extends StatelessWidget {
                             child: CircularProgressIndicator(strokeWidth: 3),
                           ),
                           SizedBox(width: 12),
-                          Text('በማውረድ ላይ...'),
+                          Text(AppTexts.downloadsSyncing),
                         ],
                       ),
                     const SizedBox(height: 8),
                     Text(
                       hasProgress
-                          ? '${state.name}... ${(progress * 100).toStringAsFixed(0)}%'
-                          : '${state.name}...',
+                          ? AppTexts.downloadsSyncStateWithProgress(state.name, progress)
+                          : AppTexts.downloadsSyncState(state.name),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     if (syncManager.currentDownload != null)

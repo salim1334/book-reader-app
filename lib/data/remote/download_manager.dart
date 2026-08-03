@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/exceptions/storage_exceptions.dart';
 import 'package:book_store/core/utils/asset_url.dart';
 import 'package:book_store/data/remote/api_client.dart';
@@ -123,7 +124,7 @@ class DownloadManager {
       await _safeDelete(localFile);
       if (_isStorageFullError(e)) {
         throw const StorageFullException(
-          'Not enough storage space. Free up space and try again.',
+          AppTexts.storageFullMessage,
         );
       }
       rethrow;
@@ -176,6 +177,24 @@ class DownloadManager {
     final folder = Directory('${dir.path}/downloads');
     if (folder.existsSync()) {
       await folder.delete(recursive: true);
+    }
+  }
+
+  Future<void> deleteChapterAssets(String chapterId) async {
+    final dir = await getApplicationDocumentsDirectory();
+    for (final type in ['images', 'audio']) {
+      final folder = Directory('${dir.path}/downloads/$type');
+      if (folder.existsSync()) {
+        final subfolders = folder.listSync();
+        for (final subfolder in subfolders) {
+          if (subfolder is Directory) {
+            final chapterFolder = Directory('${subfolder.path}/$chapterId');
+            if (chapterFolder.existsSync()) {
+              await chapterFolder.delete(recursive: true);
+            }
+          }
+        }
+      }
     }
   }
 }

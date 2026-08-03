@@ -10,6 +10,7 @@ import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:book_store/features/book_details/presentation/arguments/book_details_args.dart';
 import 'package:book_store/features/chapter_reader/presentation/arguments/chapter_reader_args.dart';
 import 'package:book_store/routes/app_routes.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -165,11 +166,11 @@ class BookDetailsController extends GetxController {
     try {
       await _syncManager.updateBook(book.value!.id);
       await loadData();
-      SnackbarHelper.show('ማሻሻያው ወርዷል');
+      SnackbarHelper.show(AppTexts.bookDetailsUpdateSuccess);
     } on StorageFullException catch (e) {
       SnackbarHelper.show(e.toString());
     } catch (e) {
-      SnackbarHelper.show('ማሻሻያ ማውረድ አልተቻለም ድጋሜ ይሞክሩ');
+      SnackbarHelper.show(AppTexts.bookDetailsUpdateError);
     } finally {
       isLoading.value = false;
     }
@@ -180,11 +181,11 @@ class BookDetailsController extends GetxController {
     downloadingChapterId.value = chapter.id;
     try {
       await _syncManager.downloadChapter(chapter.id);
-      SnackbarHelper.show('${chapter.title} ወርዷል');
+      SnackbarHelper.show(AppTexts.bookDetailsChapterDownloaded(chapter.title));
     } on StorageFullException catch (e) {
       SnackbarHelper.show(e.toString());
     } catch (e) {
-      SnackbarHelper.show('ማውረድ አልተሳካም ድጋሜ ይሞክሩ');
+      SnackbarHelper.show(AppTexts.bookDetailsDownloadError);
     } finally {
       downloadingChapterId.value = null;
       await loadData();
@@ -193,7 +194,7 @@ class BookDetailsController extends GetxController {
 
   void openChapter(LocalChapter chapter) {
     if (!chapter.isDownloaded) {
-      SnackbarHelper.show('ይህን ምዕራፍ ለማንበብ ያውረዱት');
+      SnackbarHelper.show(AppTexts.bookDetailsChapterNotDownloaded);
       return;
     }
     Get.toNamed(

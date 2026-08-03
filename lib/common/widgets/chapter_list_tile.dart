@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/theme/sacred_theme_extension.dart';
 import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
@@ -33,7 +34,9 @@ class ChapterListTile extends StatelessWidget {
 
     // Amharic subtitle fallbacks
     final subtitleText = chapter.description ??
-        (chapter.isDownloaded ? 'ወርዷል' : 'ለማውረድ ይጫኑት');
+        (chapter.isDownloaded
+            ? AppTexts.chapterListTileDownloaded
+            : AppTexts.chapterListTileDownloadPrompt);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -92,7 +95,7 @@ class ChapterListTile extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${(progress * 100).round()}% ተጠናቋል',
+                          AppTexts.chapterListTileProgress(progress),
                           style: TextStyle(
                             color: theme.colorScheme.primary,
                             fontSize: 11,
@@ -221,7 +224,7 @@ class _DownloadIndicator extends StatelessWidget {
           ),
           if (progress > 0)
             Text(
-              '${(progress * 100).round()}%',
+              AppTexts.percentage(progress),
               style: const TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.bold,

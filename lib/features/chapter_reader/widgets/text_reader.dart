@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/chapter_reader/controllers/text_reader_controller.dart';
@@ -285,7 +286,7 @@ class TextReader extends GetView<TextReaderController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$progress%',
+                AppTexts.textReaderProgressPercent(progress),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: Theme.of(
                     context,
@@ -293,7 +294,7 @@ class TextReader extends GetView<TextReaderController> {
                 ),
               ),
               Text(
-                'Page $displayPage of $totalPages',
+                AppTexts.textReaderPageIndicator(displayPage, totalPages),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: Theme.of(
                     context,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -12,7 +13,7 @@ class AboutScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ስለ አፕሊኬሽኑ'),
+        title: const Text(AppTexts.aboutAppBarTitle),
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: colorScheme.onSurface,
@@ -39,14 +40,14 @@ class AboutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'የሳዳት ከማል መጽሐፍት',
+                  AppTexts.aboutAppName,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'የሳዳት ከማል (አቡ መርየም) ኪታቦች (ደርሶች) የሚለቀቁበት የሞባይል መተግበሪያ',
+                  AppTexts.aboutAppTagline,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -60,33 +61,33 @@ class AboutScreen extends StatelessWidget {
           // ---- About the App ----
           _buildSection(
             context,
-            title: 'ስለ አፕሊኬሽኑ',
+            title: AppTexts.aboutSectionAboutApp,
             children: [
               _buildInfoRow(
                 icon: Icons.description_rounded,
                 text:
-                    'የተለያዩ ኪታቦችን ከድምጽ ጋረ ከኢንተርኔት ውጭ የሚሰራ አፕልኬሽን።',
+                    AppTexts.aboutFeatureOffline,
               ),
               _buildInfoRow(
                 icon: Icons.featured_play_list_rounded,
-                text: 'መጽሐፍትን በቀላሉ ያንብቡ፣ ያዳምጡ እና የደረሱበትን ደረጃ ይከታተሉ',
+                text: AppTexts.aboutFeatureReadListenTrack,
               ),
               _buildInfoRow(
                 icon: Icons.book_rounded,
                 text:
-                    'በኡስታዝ ሳዳት ከማል የተዘጋጁ የኢስላማዊ ጽሑፎች ስብስብ።',
+                    AppTexts.aboutFeatureIslamicCollection,
               ),
               _buildInfoRow(
                 icon: Icons.audio_file_rounded,
-                text: 'ከጽሁፉ ጋር አንድላይ የሚገኝ የድምጽ ቅጂ',
+                text: AppTexts.aboutFeatureAudio,
               ),
               _buildInfoRow(
                 icon: Icons.auto_awesome_rounded,
-                text: 'እጅ ሳይጠቀሙ ለማንበብ የሚረዳ የራስ-ሰር ገጽ የመቀያየር ሁኔታ።',
+                text: AppTexts.aboutFeatureAutoPage,
               ),
               _buildInfoRow(
                 icon: Icons.speed_rounded,
-                text: 'ለድምጽ ምዕራፎች የሚቀያየር የማጫወቻ ፍጥነት።',
+                text: AppTexts.aboutFeatureSpeed,
               ),
             ],
           ),
@@ -95,25 +96,25 @@ class AboutScreen extends StatelessWidget {
           // ---- Credits / Built by ----
           _buildSection(
             context,
-            title: 'ያበለጸገው',
+            title: AppTexts.aboutSectionCredits,
             children: [
               _buildInfoRow(
                 icon: Icons.business_rounded,
-                text: 'በአላርም ቴክኖሎጂ የበለጸገ',
+                text: AppTexts.aboutCreditCompany,
               ),
               _buildInfoRow(
                 icon: Icons.email_rounded,
-                text: 'alarmtechsolution9@gmail.com',
+                text: AppTexts.aboutEmail,
                 onTap: () => _launchEmail('alarmtechsolution9@gmail.com'),
               ),
               _buildInfoRow(
                 icon: Icons.phone_rounded,
-                text: '0933330933',
+                text: AppTexts.aboutPhone1,
                 onTap: () => _launchPhone('0933330933'),
               ),
               _buildInfoRow(
                 icon: Icons.phone_rounded,
-                text: '0933313133',
+                text: AppTexts.aboutPhone2,
                 onTap: () => _launchPhone('0933313133'),
               ),
             ],
@@ -123,7 +124,7 @@ class AboutScreen extends StatelessWidget {
           // ---- Footer ----
           Center(
             child: Text(
-              '© 2026 አላርም ቴክኖሎጂ። መብቱ በህግ የተጠበቀ ነው።',
+              AppTexts.aboutFooter,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant.withOpacity(0.5),
               ),
@@ -179,21 +180,21 @@ class AboutScreen extends StatelessWidget {
   void _launchEmail(String email) async {
     final uri = Uri.parse('mailto:$email');
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
   void _launchPhone(String phone) async {
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
   void _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 }

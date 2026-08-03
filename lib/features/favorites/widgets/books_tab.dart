@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/common/widgets/empty_view.dart';
 import 'package:book_store/features/favorites/controllers/favorites_controller.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,7 @@ class BooksTab extends GetView<FavoritesController> {
     return Obx(() {
       final books = controller.favoriteBooks;
       if (books.isEmpty) {
-        return const EmptyView(message: 'እስካሁን የተመረጡ መጽሐፍት የሉም።');
+        return const EmptyView(message: AppTexts.favoritesEmptyBooks);
       }
       return ListView.builder(
         itemCount: books.length,

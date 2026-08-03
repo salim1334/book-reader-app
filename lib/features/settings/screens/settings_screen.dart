@@ -4,6 +4,7 @@ import 'package:book_store/features/settings/screens/about_screen.dart';
 import 'package:book_store/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
@@ -14,43 +15,48 @@ class SettingsScreen extends GetView<SettingsController> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ቅንብሮች')),
+      appBar: AppBar(title: const Text(AppTexts.settingsAppBarTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           children: [
             // ---- Appearance ----
-            _buildSectionHeader('ገጽታ'),
+            _buildSectionHeader(AppTexts.settingsSectionAppearance),
             _buildThemeSwitch(context, colorScheme),
             const SizedBox(height: 24),
 
             // ---- Reading Preferences ----
-            _buildSectionHeader('የንባብ ምርጫዎች'),
+            _buildSectionHeader(AppTexts.settingsSectionReading),
             _buildReadingSettings(context),
             const SizedBox(height: 24),
 
             // ---- Audio Settings ----
-            _buildSectionHeader('የድምጽ ቅንብሮች'),
+            _buildSectionHeader(AppTexts.settingsSectionAudio),
             _buildAudioSettings(context),
             const SizedBox(height: 24),
 
             // ---- Library Preferences ----
-            _buildSectionHeader('ቤተ-መጻሕፍት'),
+            _buildSectionHeader(AppTexts.settingsSectionLibrary),
             _buildLibrarySettings(context),
             const SizedBox(height: 24),
 
             // ---- Notifications ----
-            _buildSectionHeader('ማሳወቂያዎች'),
+            _buildSectionHeader(AppTexts.settingsSectionNotifications),
             _buildNotificationSettings(context),
             const SizedBox(height: 24),
 
             // ---- Data Management ----
-            _buildSectionHeader('የመረጃ አስተዳደር'),
+            _buildSectionHeader(AppTexts.settingsSectionDataManagement),
             _buildDataManagement(context),
             const SizedBox(height: 24),
 
+            // ---- Feedback ----
+            _buildSectionHeader(AppTexts.feedbackSectionTitle),
+            _buildFeedback(context),
+            const SizedBox(height: 24),
+
             // ---- About ----
-            _buildSectionHeader('ስለ መተግበሪያው'),
+            _buildSectionHeader(AppTexts.settingsSectionAbout),
             _buildAbout(context),
             const SizedBox(height: 40),
           ],
@@ -66,11 +72,11 @@ class SettingsScreen extends GetView<SettingsController> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Obx(() {
         return SwitchListTile(
-          title: const Text('ጨለማ ገጽታ'),
+          title: const Text(AppTexts.settingsDarkThemeTitle),
           subtitle: Text(
             controller.themeMode.value == ThemeMode.dark
-                ? 'ጨለማ ገጽታ በርቷል'
-                : 'ብሩህ ገጽታ በርቷል',
+                ? AppTexts.settingsDarkThemeActive
+                : AppTexts.settingsLightThemeActive,
           ),
           value: controller.themeMode.value == ThemeMode.dark,
           onChanged: (value) {
@@ -101,7 +107,7 @@ class SettingsScreen extends GetView<SettingsController> {
           // a text size for text based books
           ListTile(
             leading: Icon(Icons.text_fields_rounded, color: colors.primary),
-            title: const Text('የፊደል መጠን ለገጾች'),
+            title: const Text(AppTexts.settingsFontSizeForPagesTitle),
             subtitle: Obx(() => Text(controller.fontSize.value)),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showFontSizeDialog(),
@@ -114,8 +120,8 @@ class SettingsScreen extends GetView<SettingsController> {
                 Icons.auto_awesome_rounded,
                 color: colors.primary,
               ),
-              title: const Text('በራሱ ማንሸራተት (Auto-Scroll)'),
-              subtitle: const Text('ገጾችን በራሱ ያንሸራትት'),
+              title: const Text(AppTexts.settingsAutoScrollTitle),
+              subtitle: const Text(AppTexts.settingsAutoScrollSubtitle),
               value: controller.autoScroll.value,
               onChanged: controller.toggleAutoScroll,
             ),
@@ -129,11 +135,11 @@ class SettingsScreen extends GetView<SettingsController> {
                     : Icons.swipe_left_alt_rounded,
                 color: colors.primary,
               ),
-              title: const Text('የገጽ መሸጋገሪያ አቅጣጫ'),
+              title: const Text(AppTexts.settingsPageScrollDirectionTitle),
               subtitle: Text(
                 controller.imagePageVerticalScroll.value
-                    ? 'ወደላይ ማንሸራተት (Vertical)'
-                    : 'አግድም ማንሸራተት (Horizontal)',
+                    ? AppTexts.settingsPageScrollVertical
+                    : AppTexts.settingsPageScrollHorizontal,
               ),
               value: controller.imagePageVerticalScroll.value,
               onChanged: controller.toggleImagePageVerticalScroll,
@@ -154,8 +160,8 @@ class SettingsScreen extends GetView<SettingsController> {
         children: [
           ListTile(
             leading: Icon(Icons.speed_rounded, color: colors.primary),
-            title: const Text('የድምጽ ማጫወቻ ፍጥነት'),
-            subtitle: Obx(() => Text('${controller.defaultSpeed.value}x')),
+            title: const Text(AppTexts.settingsAudioPlayerSpeedTitle),
+            subtitle: Obx(() => Text(AppTexts.playerSpeedValue(controller.defaultSpeed.value))),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showSpeedDialog(),
           ),
@@ -164,8 +170,8 @@ class SettingsScreen extends GetView<SettingsController> {
           Obx(
             () => SwitchListTile(
               secondary: Icon(Icons.skip_next_rounded, color: colors.primary),
-              title: const Text('ቀጣዩን ምዕራፍ በራሱ አጫውት'),
-              subtitle: const Text('ቀጣዩን ምዕራፍ በራሱ ያጫውታል'),
+              title: const Text(AppTexts.settingsAutoPlayNextTitle),
+              subtitle: const Text(AppTexts.settingsAutoPlayNextSubtitle),
               value: controller.autoPlayNext.value,
               onChanged: controller.toggleAutoPlayNext,
             ),
@@ -189,8 +195,8 @@ class SettingsScreen extends GetView<SettingsController> {
                 Icons.offline_bolt_rounded,
                 color: colors.primary,
               ),
-              title: const Text('ከኢንተርኔት ውጭ (Offline)'),
-              subtitle: const Text('የወረዱትን ብቻ አሳይ'),
+              title: const Text(AppTexts.settingsOfflineModeTitle),
+              subtitle: const Text(AppTexts.settingsOfflineModeSubtitle),
               value: controller.offlineMode.value,
               onChanged: controller.toggleOfflineMode,
             ),
@@ -199,8 +205,8 @@ class SettingsScreen extends GetView<SettingsController> {
           Obx(
             () => SwitchListTile(
               secondary: Icon(Icons.download_rounded, color: colors.primary),
-              title: const Text('በራሱ አውርድ'),
-              subtitle: const Text('አዳዲስ ምዕራፎችን በራሱ ያወርዳል'),
+              title: const Text(AppTexts.settingsAutoDownloadTitle),
+              subtitle: const Text(AppTexts.settingsAutoDownloadSubtitle),
               value: controller.autoDownload.value,
               onChanged: controller.toggleAutoDownload,
             ),
@@ -208,8 +214,8 @@ class SettingsScreen extends GetView<SettingsController> {
           const Divider(height: 0, indent: 60),
           ListTile(
             leading: Icon(Icons.storage_rounded, color: colors.primary),
-            title: const Text('ማከማቻ'),
-            subtitle: const Text('የወረዱትን ያስተዳድሩ'),
+            title: const Text(AppTexts.settingsStorageTitle),
+            subtitle: const Text(AppTexts.settingsStorageSubtitle),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Get.toNamed(Routes.downloads),
           ),
@@ -229,8 +235,8 @@ class SettingsScreen extends GetView<SettingsController> {
           Obx(
             () => SwitchListTile(
               secondary: Icon(Icons.book_rounded, color: colors.primary),
-              title: const Text('አዳዲስ መጻሕፍት'),
-              subtitle: const Text('አዳዲስ መጻሕፍት ሲጫኑ አሳውቀኝ'),
+              title: const Text(AppTexts.settingsNotifyNewBooksTitle),
+              subtitle: const Text(AppTexts.settingsNotifyNewBooksSubtitle),
               value: controller.notifyNewBooks.value,
               onChanged: controller.toggleNotifyNewBooks,
             ),
@@ -239,8 +245,8 @@ class SettingsScreen extends GetView<SettingsController> {
           Obx(
             () => SwitchListTile(
               secondary: Icon(Icons.update_rounded, color: colors.primary),
-              title: const Text('ማሻሻያዎች'),
-              subtitle: const Text('ማሻሻያዎች ሲኖሩ አሳውቀኝ'),
+              title: const Text(AppTexts.settingsNotifyUpdatesTitle),
+              subtitle: const Text(AppTexts.settingsNotifyUpdatesSubtitle),
               value: controller.notifyUpdates.value,
               onChanged: controller.toggleNotifyUpdates,
             ),
@@ -260,8 +266,8 @@ class SettingsScreen extends GetView<SettingsController> {
         children: [
           ListTile(
             leading: Icon(Icons.restore_page_rounded, color: colors.error),
-            title: const Text('የንባብ ሂደትን ሰርዝ'),
-            subtitle: const Text('የሁሉንም መጻሕፍት እና ምዕራፎች የንባብ ሂደት ያጠፋል።'),
+            title: const Text(AppTexts.settingsResetReadingProgressTitle),
+            subtitle: const Text(AppTexts.settingsResetReadingProgressSubtitle),
             onTap: controller.resetReadingProgress,
             trailing: const Icon(Icons.chevron_right_rounded),
           ),
@@ -278,10 +284,26 @@ class SettingsScreen extends GetView<SettingsController> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
         leading: Icon(Icons.info_outline_rounded, color: colors.primary),
-        title: const Text('ስለዚህ መተግበሪያ'),
-        subtitle: const Text('Version 1.0.0'),
+        title: const Text(AppTexts.settingsAboutAppTitle),
+        subtitle: const Text(AppTexts.settingsAppVersion),
         trailing: const Icon(Icons.chevron_right_rounded),
         onTap: () => Get.to(() => const AboutScreen()),
+      ),
+    );
+  }
+
+  // -- Feedback --
+  Widget _buildFeedback(BuildContext context) {
+    final colors = context.colorScheme;
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ListTile(
+        leading: Icon(Icons.feedback_outlined, color: colors.primary),
+        title: const Text(AppTexts.feedbackButtonTitle),
+        subtitle: const Text(AppTexts.feedbackButtonSubtitle),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: controller.sendFeedback,
       ),
     );
   }
@@ -307,7 +329,7 @@ class SettingsScreen extends GetView<SettingsController> {
   void _showFontSizeDialog() {
     Get.dialog(
       AlertDialog(
-        title: const Text('የፊደል መጠን'),
+        title: const Text(AppTexts.settingsFontSizeDialogTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -317,13 +339,13 @@ class SettingsScreen extends GetView<SettingsController> {
                 min: 0.8,
                 max: 1.8,
                 divisions: 10,
-                label: '${(controller.fontSizeSlider.value * 100).round()}%',
+                label: AppTexts.settingsFontSizePercent((controller.fontSizeSlider.value * 100).round()),
                 onChanged: controller.updateFontSize,
               ),
             ),
             Obx(
               () => Text(
-                'የናሙና ጽሑፍ መጠን: ${(controller.fontSizeSlider.value * 100).round()}%',
+                AppTexts.settingsFontSizeSample((controller.fontSizeSlider.value * 100).round()),
                 style: TextStyle(
                   fontSize: 14 * controller.fontSizeSlider.value,
                 ),
@@ -332,7 +354,7 @@ class SettingsScreen extends GetView<SettingsController> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('እሺ')),
+          TextButton(onPressed: () => Get.back(), child: const Text(AppTexts.dialogOk)),
         ],
       ),
     );
@@ -342,14 +364,14 @@ class SettingsScreen extends GetView<SettingsController> {
     const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
     Get.dialog(
       AlertDialog(
-        title: const Text('የመጫወቻ ፍጥነት'),
+        title: const Text(AppTexts.settingsPlayerSpeedDialogTitle),
         content: SizedBox(
           width: double.maxFinite,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: speeds.map((speed) {
               return ListTile(
-                title: Text('${speed}x'),
+                title: Text(AppTexts.playerSpeedValue(speed)),
                 trailing: Obx(
                   () => Radio<double>(
                     value: speed,
@@ -372,19 +394,19 @@ class SettingsScreen extends GetView<SettingsController> {
     final colors = Theme.of(Get.context!).colorScheme;
     Get.dialog(
       AlertDialog(
-        title: const Text('ማከማቻ'),
+        title: const Text(AppTexts.settingsStorageTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const ListTile(
               leading: Icon(Icons.sd_storage_rounded),
-              title: Text('ያገለገለ ማከማቻ'),
-              subtitle: Text('245 MB'),
+              title: const Text(AppTexts.settingsUsedStorageTitle),
+              subtitle: const Text(AppTexts.settingsStorageUsed),
             ),
             const Divider(),
             ListTile(
               leading: Icon(Icons.delete_forever_rounded, color: colors.error),
-              title: const Text('የወረዱትን በሙሉ አጥፋ'),
+              title: const Text(AppTexts.settingsClearAllDownloadsTitle),
               onTap: () {
                 Get.back();
                 controller.clearDownloads();
@@ -393,7 +415,7 @@ class SettingsScreen extends GetView<SettingsController> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('ዝጋ')),
+          TextButton(onPressed: () => Get.back(), child: const Text(AppTexts.dialogClose)),
         ],
       ),
     );

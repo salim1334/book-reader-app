@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/common/widgets/loading_indicator.dart';
 import 'package:book_store/features/favorites/controllers/favorites_controller.dart';
 import 'package:book_store/features/favorites/widgets/books_tab.dart';
@@ -15,12 +16,12 @@ class FavoritesScreen extends GetView<FavoritesController> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('የተወደዱ'),
+          title: const Text(AppTexts.favoritesAppBarTitle),
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'መጽሐፍት'),
-              Tab(text: 'ምዕራፎች'),
-              Tab(text: 'ገጾች'),
+              Tab(text: AppTexts.favoritesBooksTab),
+              Tab(text: AppTexts.favoritesChaptersTab),
+              Tab(text: AppTexts.favoritesPagesTab),
             ],
           ),
         ),

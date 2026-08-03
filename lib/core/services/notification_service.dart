@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -91,8 +92,8 @@ class NotificationService extends GetxService {
 
     const androidDetails = AndroidNotificationDetails(
       _NotificationChannels.test,
-      'Test Notifications',
-      channelDescription: 'Used to verify local notifications are working.',
+      AppTexts.notificationChannelTest,
+      channelDescription: AppTexts.notificationChannelTestDesc,
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -104,8 +105,8 @@ class NotificationService extends GetxService {
 
     await _plugin.show(
       0,
-      'Test Notification',
-      'Your notifications are working!',
+      AppTexts.notificationTestTitle,
+      AppTexts.notificationTestBody,
       details,
       payload: 'test',
     );
@@ -117,10 +118,10 @@ class NotificationService extends GetxService {
     await _showNotification(
       id: bookTitle.hashCode,
       channelId: _NotificationChannels.newBooks,
-      channelName: 'New Books',
-      channelDescription: 'Notifications for newly published books.',
-      title: 'New book available',
-      body: '"$bookTitle" has been added to the library.',
+      channelName: AppTexts.notificationChannelNewBooks,
+      channelDescription: AppTexts.notificationChannelNewBooksDesc,
+      title: AppTexts.notificationNewBookTitle,
+      body: AppTexts.notificationNewBookBody(bookTitle),
       payload: 'book:$bookTitle',
     );
   }
@@ -131,10 +132,10 @@ class NotificationService extends GetxService {
     await _showNotification(
       id: ('update_$bookTitle').hashCode,
       channelId: _NotificationChannels.updates,
-      channelName: 'Updates',
-      channelDescription: 'Notifications for book and chapter updates.',
-      title: 'Content updated',
-      body: '"$bookTitle" has been updated.',
+      channelName: AppTexts.notificationChannelUpdates,
+      channelDescription: AppTexts.notificationChannelUpdatesDesc,
+      title: AppTexts.notificationUpdateTitle,
+      body: AppTexts.notificationUpdateBody(bookTitle),
       payload: 'update:$bookTitle',
     );
   }

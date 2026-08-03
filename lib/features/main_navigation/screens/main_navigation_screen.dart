@@ -6,6 +6,8 @@ import 'package:book_store/features/settings/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:book_store/core/constants/app_texts.dart';
+
 import '../models/main_navigation.dart';
 
 class MainNavigationScreen extends GetView<MainNavigationController> {
@@ -16,9 +18,9 @@ class MainNavigationScreen extends GetView<MainNavigationController> {
     const screens = [HomeScreen(), FavoritesScreen(), SettingsScreen()];
 
     final navItems = [
-      NavItem(icon: Icons.home_rounded, label: 'ዋና ገጽ'),
-      NavItem(icon: Icons.bookmark_rounded, label: 'የተወደዱ'),
-      NavItem(icon: Icons.settings_rounded, label: 'ማስተካከያዎች'),
+      NavItem(icon: Icons.home_rounded, label: AppTexts.navHome),
+      NavItem(icon: Icons.bookmark_rounded, label: AppTexts.navFavorites),
+      NavItem(icon: Icons.settings_rounded, label: AppTexts.navSettings),
     ];
 
     return Obx(

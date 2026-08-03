@@ -1,9 +1,11 @@
 import 'package:book_store/common/utils/snackbar_helper.dart';
 import 'package:book_store/core/services/notification_service.dart';
+import 'package:book_store/core/utils/device/device_utils.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 
 class SettingsController extends GetxController {
   final SettingsRepository _settingsRepository = Get.find<SettingsRepository>();
@@ -42,11 +44,11 @@ class SettingsController extends GetxController {
     _settingsRepository.setFontSizeSlider(value);
     // Update the human‑readable label based on slider value
     if (value < 1.0) {
-      setFontSize('Small');
+      setFontSize(AppTexts.settingsFontSizeSmall);
     } else if (value < 1.4) {
-      setFontSize('Medium');
+      setFontSize(AppTexts.settingsFontSizeMedium);
     } else {
-      setFontSize('Large');
+      setFontSize(AppTexts.settingsFontSizeLarge);
     }
   }
 
@@ -73,7 +75,7 @@ class SettingsController extends GetxController {
   Future<void> testNotification() async {
     final notificationService = Get.find<NotificationService>();
     await notificationService.showTestNotification();
-    SnackbarHelper.show('Test notification sent. Check your notification shade.');
+    SnackbarHelper.show(AppTexts.settingsTestNotificationMessage);
   }
 
   // ─── Data Management ─────────────────────────────────────
@@ -81,18 +83,18 @@ class SettingsController extends GetxController {
   Future<void> resetReadingProgress() async {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Reset reading progress?'),
+        title: const Text(AppTexts.settingsResetProgressDialogTitle),
         content: const Text(
-          'This will reset all reading progress and cannot be undone.',
+          AppTexts.settingsResetProgressDialogBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text('Cancel'),
+            child: const Text(AppTexts.dialogCancel),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
-            child: const Text('Reset'),
+            child: const Text(AppTexts.dialogReset),
           ),
         ],
       ),
@@ -100,25 +102,25 @@ class SettingsController extends GetxController {
 
     if (confirm == true) {
       await _bookRepository.clearReadingProgress();
-      SnackbarHelper.show('Reading progress reset.');
+      SnackbarHelper.show(AppTexts.settingsReadingProgressResetMessage);
     }
   }
 
   Future<void> clearDownloads() async {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Clear downloads?'),
+        title: const Text(AppTexts.settingsClearDownloadsDialogTitle),
         content: const Text(
-          'This will delete all downloaded books and media files.',
+          AppTexts.settingsClearDownloadsDialogBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text('Cancel'),
+            child: const Text(AppTexts.dialogCancel),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
-            child: const Text('Clear'),
+            child: const Text(AppTexts.dialogClear),
           ),
         ],
       ),
@@ -126,12 +128,24 @@ class SettingsController extends GetxController {
 
     if (confirm == true) {
       await _bookRepository.clearContent();
-      SnackbarHelper.show('Downloaded content cleared.');
+      SnackbarHelper.show(AppTexts.settingsDownloadsClearedMessage);
     }
   }
 
   Future<void> clearCache() async {
     await _settingsRepository.clearCache();
-    SnackbarHelper.show('Cache cleared.');
+    SnackbarHelper.show(AppTexts.settingsCacheClearedMessage);
+  }
+
+  // ─── Feedback ─────────────────────────────────────────────
+  Future<void> sendFeedback() async {
+    try {
+      final opened = await DeviceUtils.openFeedbackEmail();
+      if (!opened) {
+        SnackbarHelper.show(AppTexts.feedbackNoEmailApp);
+      }
+    } catch (_) {
+      SnackbarHelper.show(AppTexts.feedbackOpenError);
+    }
   }
 }

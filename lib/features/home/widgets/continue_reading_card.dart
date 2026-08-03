@@ -1,4 +1,5 @@
 import 'package:book_store/common/widgets/cover_image.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/features/home/domain/entities/continue_reading.dart';
 import 'package:flutter/material.dart';
 
@@ -153,7 +154,7 @@ class _Content extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              "ማንበብ ይቀጥሉ",
+              AppTexts.homeContinueReadingTitle,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -187,14 +188,14 @@ class _Content extends StatelessWidget {
         Row(
           children: [
             Text(
-              '${(progress * 100).toStringAsFixed(0)}%',
+              AppTexts.percentage(progress),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
               ),
             ),
             const SizedBox(width: 6),
-            const Text("ተጠናቋል"),
+            const Text(AppTexts.homeContinueReadingCompleted),
           ],
         ),
       ],

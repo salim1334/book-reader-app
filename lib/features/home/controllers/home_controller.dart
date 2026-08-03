@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:book_store/common/utils/snackbar_helper.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/exceptions/storage_exceptions.dart';
 import 'package:book_store/core/services/reading_progress_service.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
@@ -230,7 +231,7 @@ class HomeController extends GetxController {
         }
       }
     } catch (e) {
-      SnackbarHelper.show('Could not refresh catalog:  ');
+      SnackbarHelper.show(AppTexts.homeRefreshCatalogError);
     }
   }
 
@@ -239,11 +240,11 @@ class HomeController extends GetxController {
     try {
       await _syncManager.downloadBook(book.id);
       await loadBooks();
-      SnackbarHelper.show('${book.title} downloaded');
+      SnackbarHelper.show(AppTexts.homeBookDownloaded(book.title));
     } on StorageFullException catch (e) {
       SnackbarHelper.show(e.toString());
     } catch (e) {
-      SnackbarHelper.show('Download failed:  ');
+      SnackbarHelper.show(AppTexts.homeDownloadFailed);
     } finally {
       downloadingBookId.value = null;
     }

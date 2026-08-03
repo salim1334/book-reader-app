@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:get/get.dart';
@@ -111,7 +112,8 @@ class AudioPlayerService extends GetxService {
       builder: () => _BookReaderAudioHandler(),
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'com.book_store.channel.audio',
-        androidNotificationChannelName: 'Audio playback',
+        androidNotificationChannelName: AppTexts.audioServiceChannelName,
+        androidNotificationIcon: 'mipmap/launcher_icon',
         androidNotificationOngoing: true,
         androidResumeOnClick: true,
         androidNotificationClickStartsActivity: true,

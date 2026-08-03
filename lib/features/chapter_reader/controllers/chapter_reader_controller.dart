@@ -9,6 +9,7 @@ import 'package:book_store/features/chapter_reader/controllers/text_reader_contr
 import 'package:book_store/features/chapter_reader/presentation/arguments/chapter_reader_args.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:get/get.dart';
 import 'package:photo_view/photo_view.dart';
 
@@ -182,7 +183,7 @@ class ChapterReaderController extends GetxController {
 
     final next = chapters[currentIndex + 1];
     if (!next.isDownloaded) {
-      SnackbarHelper.show('ቀጣዩ ምዕራፍ አልወረደም ያውርዱት።');
+      SnackbarHelper.show(AppTexts.chapterReaderNextNotDownloaded);
       return;
     }
 
@@ -196,7 +197,7 @@ class ChapterReaderController extends GetxController {
 
     final previous = chapters[currentIndex - 1];
     if (!previous.isDownloaded) {
-      SnackbarHelper.show('ቀዳሚው ምዕራፍ አልወረደም ያውርዱት');
+      SnackbarHelper.show(AppTexts.chapterReaderPreviousNotDownloaded);
       return;
     }
 

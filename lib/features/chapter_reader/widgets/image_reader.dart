@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:book_store/core/constants/app_enums.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
 import 'package:book_store/features/chapter_reader/controllers/image_reader_controller.dart';
@@ -24,7 +25,7 @@ class ImageReader extends GetView<ImageReaderController> {
       final media = controller.media.value;
 
       if (media == null || media.images.isEmpty) {
-        return const Center(child: Text('ለዚህ ምዕራፍ ምንም የወረደ ምስል የለም'));
+        return const Center(child: Text(AppTexts.imageReaderNoImages));
       }
 
       final total = media.images.length;
@@ -181,7 +182,7 @@ class ImageReader extends GetView<ImageReaderController> {
                   ),
 
                   child: Text(
-                    '$current / $total',
+                    AppTexts.imageReaderPageIndicator(current, total),
 
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: Theme.of(

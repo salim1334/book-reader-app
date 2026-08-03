@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:flutter/material.dart';
 
 class LoadingIndicator extends StatelessWidget {
@@ -53,7 +54,7 @@ class LoadingIndicator extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${(value * 100).toStringAsFixed(0)}%',
+                        AppTexts.percentage(value),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),

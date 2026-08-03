@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,12 +18,12 @@ class AudioSpeedButton extends StatelessWidget {
     return Obx(() {
       return _ValuePopupButton<double>(
         icon: Icons.speed_rounded,
-        tooltip: 'Playback speed',
+        tooltip: AppTexts.audioPlayerSpeedTooltip,
         value: audio.speed.value,
-        valueLabel: '${audio.speed.value.toStringAsFixed(2)}x',
+        valueLabel: AppTexts.audioPlayerSpeedLabel(audio.speed.value),
         items: speeds,
         onSelected: audio.setSpeed,
-        itemLabel: (speed) => '${speed}x',
+        itemLabel: (speed) => AppTexts.playerSpeedValue(speed),
         compact: compact,
       );
     });
@@ -51,12 +52,12 @@ class AudioVolumeButton extends StatelessWidget {
 
       return _ValuePopupButton<double>(
         icon: icon,
-        tooltip: 'Volume',
+        tooltip: AppTexts.audioPlayerVolumeTooltip,
         value: volume,
-        valueLabel: '${(volume * 100).round()}%',
+        valueLabel: AppTexts.percentage(volume),
         items: volumes,
         onSelected: audio.setVolume,
-        itemLabel: (v) => '${(v * 100).round()}%',
+        itemLabel: (v) => AppTexts.percentage(v),
         compact: compact,
       );
     });

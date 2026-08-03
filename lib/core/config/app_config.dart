@@ -19,7 +19,7 @@ abstract final class AppConfig {
 
   static String get appEnv => _safeGet('APP_ENV', 'Production');
 
-  static bool get isDev => appEnv.toLowerCase() == 'Production';
+  static bool get isDev => appEnv.toLowerCase() == 'development';
 
   static void validate() {
     if (kDebugMode && apiKey.isEmpty) {

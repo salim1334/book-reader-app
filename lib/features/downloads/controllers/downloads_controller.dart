@@ -6,6 +6,7 @@ import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 
 class DownloadsController extends GetxController {
   final BookRepository _repository = Get.find<BookRepository>();
@@ -69,7 +70,7 @@ class DownloadsController extends GetxController {
       isLoading.value = false;
     } catch (e) {
       isLoading.value = false;
-      errorMessage.value = 'ማውረድ አልተቻለም ድጋሜ ይሞክሩ';
+      errorMessage.value = AppTexts.downloadsLoadError;
       debugPrint('DownloadsController.loadData error:  ');
     }
   }
@@ -80,7 +81,7 @@ class DownloadsController extends GetxController {
     } on StorageFullException catch (e) {
       SnackbarHelper.show(e.toString());
     } catch (e) {
-      SnackbarHelper.show('ምዕራፍ ማውረድ አልተቻለም ድጋሜ ይሞክሩ');
+      SnackbarHelper.show(AppTexts.downloadsChapterError);
     } finally {
       await loadData();
     }
@@ -98,16 +99,16 @@ class DownloadsController extends GetxController {
   Future<void> deleteBook(LocalBook book) async {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('የወረደውን መጽሐፍ ይጥፉ?'),
-        content: Text('"${book.title}" እና የሚመለከተው ፋይሎች ይጠፋሉ።'),
+        title: const Text(AppTexts.downloadsDeleteBookDialogTitle),
+        content: Text(AppTexts.downloadsDeleteBookBody(book.title)),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text('ይቅር'),
+            child: const Text(AppTexts.downloadsDeleteBookCancel),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
-            child: const Text('አጥፋ'),
+            child: const Text(AppTexts.downloadsDeleteBookConfirm),
           ),
         ],
       ),
@@ -127,10 +128,10 @@ class DownloadsController extends GetxController {
 
   String queueStatusLabel(String status) {
     return switch (status) {
-      'COMPLETED' => 'አልቋል',
-      'FAILED' => 'አልተሳካም',
-      'DOWNLOADING' => 'በማውረድ ላይ',
-      'PENDING' => 'በተራ ላይ',
+      'COMPLETED' => AppTexts.downloadsStatusCompleted,
+      'FAILED' => AppTexts.downloadsStatusFailed,
+      'DOWNLOADING' => AppTexts.downloadsStatusDownloading,
+      'PENDING' => AppTexts.downloadsStatusPending,
       _ => status,
     };
   }

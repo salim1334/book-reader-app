@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/features/onboarding/controllers/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -22,7 +23,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
               ),
               const SizedBox(height: 32),
               Text(
-                'በዚ አፕሊኬሽን የሳዳት ከማል ኪታቦችን ያገኛሉ',
+                AppTexts.onboardingTitle,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -30,7 +31,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
               ),
               const SizedBox(height: 16),
               Text(
-                'አዳዲስ ኪታቦች ሲጨመሩ የማሳወቂያ መልዕክት እንዲደርሶ የኖትፍኬሽን ፍቃድ ለአፕልኬሽኑ ይስጡ።',
+                AppTexts.onboardingBody,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
@@ -39,7 +40,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: controller.completeOnboarding,
-                  child: const Text('ጀምር'),
+                  child: const Text(AppTexts.onboardingStartButton),
                 ),
               ),
             ],

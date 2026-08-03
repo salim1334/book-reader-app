@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
@@ -115,8 +116,8 @@ void didChangeDependencies() {
                               )
                           : controller.toggleImmersiveMode,
                       tooltip: isImageBook
-                          ? 'የማሸጋገሪያ አቅጣጫ ቀይር'
-                          : 'ሙሉ ገጽ መቀየሪያ',
+                          ? AppTexts.chapterReaderScrollDirectionTooltip
+                          : AppTexts.chapterReaderImmersiveTooltip,
                     ),
                   ],
                 ),

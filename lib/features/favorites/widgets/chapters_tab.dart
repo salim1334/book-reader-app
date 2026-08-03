@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/common/widgets/empty_view.dart';
 import 'package:book_store/features/favorites/controllers/favorites_controller.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,7 @@ class ChaptersTab extends GetView<FavoritesController> {
     return Obx(() {
       final chapters = controller.favoriteChapters;
       if (chapters.isEmpty) {
-        return const EmptyView(message: 'እስካሁን የተመረጡ ምዕራፎች የሉም።');
+        return const EmptyView(message: AppTexts.favoritesEmptyChapters);
       }
       return ListView.builder(
         itemCount: chapters.length,
@@ -23,7 +24,7 @@ class ChaptersTab extends GetView<FavoritesController> {
             ),
             child: ListTile(
               title: Text(chapter.title),
-              subtitle: Text('Book ID: ${chapter.bookId}'),
+              subtitle: Text(AppTexts.favoritesBookIdLabel(chapter.bookId)),
               trailing: IconButton(
                 icon: const Icon(Icons.delete, size: 20),
                 onPressed: () => controller.removeChapterFavorite(chapter),

@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -29,7 +30,7 @@ class AppHelper {
   static void showSnack(String message, {bool isError = false}) {
     final colorScheme = Get.theme.colorScheme;
     Get.snackbar(
-      isError ? 'Error' : 'Notice',
+      isError ? AppTexts.snackErrorTitle : AppTexts.snackNoticeTitle,
       message,
       snackPosition: SnackPosition.BOTTOM,
       backgroundColor: isError ? colorScheme.errorContainer : colorScheme.primaryContainer,

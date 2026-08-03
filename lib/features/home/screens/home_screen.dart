@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/common/widgets/book_card.dart';
 import 'package:book_store/common/widgets/empty_view.dart';
 import 'package:book_store/common/widgets/error_view.dart';
@@ -39,8 +40,8 @@ class HomeScreen extends GetView<HomeController> {
         if (controller.books.isEmpty) {
           return EmptyView(
             message: controller.isOffline.value || controller.offlineMode.value
-                ? "በአሁኑ ጊዜ ከኔትዎርክ ውጭ ነዎት። ሌሎች የሳዳት ከማልን መጻሕፍትን ለማየት እና ለማውረድ እባክዎ ከኢንተርኔት ጋር ይገናኙ።"
-                : 'ምንም መጻሕፍት አልተገኙም።',
+                ? AppTexts.homeEmptyOffline
+                : AppTexts.homeEmptyNoBooks,
           );
         }
 

@@ -1,5 +1,6 @@
 import 'package:book_store/common/widgets/audio_control_buttons.dart';
 import 'package:book_store/common/widgets/audio_progress_bar.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/services/audio_player_service.dart';
 import 'package:book_store/core/utils/asset_url.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
@@ -114,7 +115,10 @@ class AudioPlayerWidget extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
-                                      '$chapterTitle • $remaining ይቀራል',
+                                      AppTexts.audioPlayerMiniSubtitle(
+                                        chapterTitle,
+                                        remaining,
+                                      ),
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             fontSize: 11,
@@ -341,7 +345,7 @@ class _PlaybackControls extends StatelessWidget {
         children: [
           _ControlButton(
             icon: Icons.replay_10_rounded,
-            tooltip: 'Back 10s',
+            tooltip: AppTexts.audioPlayerBack10,
             onPressed: () => audio.seek(
               Duration(
                 seconds: (audio.position.value.inSeconds - 10).clamp(
@@ -355,7 +359,7 @@ class _PlaybackControls extends StatelessWidget {
           SizedBox(width: compact ? 2 : 4),
           _ControlButton(
             icon: Icons.skip_previous_rounded,
-            tooltip: 'ቀዳሚ ምዕራፍ',
+            tooltip: AppTexts.audioPlayerPrevChapter,
             onPressed: audio.hasMedia.value ? audio.skipToPrevious : null,
             compact: compact,
           ),
@@ -364,14 +368,14 @@ class _PlaybackControls extends StatelessWidget {
           SizedBox(width: compact ? 6 : 10),
           _ControlButton(
             icon: Icons.skip_next_rounded,
-            tooltip: 'ቀጣይ ምዕራፍ',
+            tooltip: AppTexts.audioPlayerNextChapter,
             onPressed: audio.hasMedia.value ? audio.skipToNext : null,
             compact: compact,
           ),
           SizedBox(width: compact ? 2 : 4),
           _ControlButton(
             icon: Icons.forward_10_rounded,
-            tooltip: 'Forward 10s',
+            tooltip: AppTexts.audioPlayerForward10,
             onPressed: () => audio.seek(
               Duration(
                 seconds: (audio.position.value.inSeconds + 10).clamp(

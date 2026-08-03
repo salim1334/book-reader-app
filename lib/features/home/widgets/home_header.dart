@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -21,14 +22,14 @@ class HomeHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "ኢስላማዊ መጽሐፍት",
+                  AppTexts.homeTitle,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  "የሳዳት ከማል ኪታቦች",
+                  AppTexts.homeSubtitle,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

@@ -1,4 +1,5 @@
 import 'package:book_store/common/widgets/audio_player_overlay.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/theme/app_theme.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/routes/app_pages.dart';
@@ -15,7 +16,7 @@ class App extends StatelessWidget {
     final settings = Get.find<SettingsRepository>();
     return Obx(() {
       return GetMaterialApp(
-        title: 'Book Reader',
+        title: AppTexts.appWindowTitle,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

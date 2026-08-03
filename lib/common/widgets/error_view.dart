@@ -1,3 +1,4 @@
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:flutter/material.dart';
 
 class ErrorView extends StatelessWidget {
@@ -23,7 +24,7 @@ class ErrorView extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              FilledButton.tonal(onPressed: onRetry, child: const Text('ደግመህ ሞክር')),
+              FilledButton.tonal(onPressed: onRetry, child: const Text(AppTexts.commonErrorViewRetry)),
             ],
           ],
         ),
