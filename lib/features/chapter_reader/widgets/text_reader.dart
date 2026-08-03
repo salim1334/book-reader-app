@@ -1,6 +1,5 @@
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
-import 'package:book_store/features/chapter_reader/controllers/chapter_reader_controller.dart';
 import 'package:book_store/features/chapter_reader/controllers/text_reader_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,7 +12,6 @@ class TextReader extends GetView<TextReaderController> {
     final segments = controller.chapterReader.chapter.contentSegments;
     final contentText = controller.chapterReader.chapter.contentText;
     final settings = Get.find<SettingsRepository>();
-    final chapterController = Get.find<ChapterReaderController>();
 
     return Obx(() {
       final orientation = MediaQuery.of(context).orientation;
@@ -106,7 +104,7 @@ class TextReader extends GetView<TextReaderController> {
             Expanded(child: readerContent),
 
             // Hide only the indicator, not the scrollable
-            _buildPageIndicator(context),
+            _buildPageIndicator(context, items.length),
           ],
         ),
       );
@@ -125,51 +123,85 @@ class TextReader extends GetView<TextReaderController> {
   }) {
     final theme = Theme.of(context);
 
-    // 1) If we have segments, use them (with karaoke if active)
+    // Build a list of page contents. Each audio segment is a page; otherwise
+    // split the full contentText on double newlines to recover pages.
+    final List<String> pages;
     if (segments != null && segments.isNotEmpty) {
-      return segments.asMap().entries.map((entry) {
-        final index = entry.key;
-        final segment = entry.value;
-        return _buildSegmentWidget(
-          content: segment.content,
-          index: index,
-          isCurrent: hasAudio && index == currentIndex,
+      pages = segments.map((s) => s.content).toList();
+    } else {
+      final normalized = (contentText ?? '').replaceAll('\r\n', '\n');
+      final splitPages = normalized
+          .split('\n\n')
+          .where((p) => p.trim().isNotEmpty)
+          .toList();
+      pages = splitPages.isEmpty ? [normalized] : splitPages;
+    }
+
+    final items = <Widget>[];
+    for (var i = 0; i < pages.length; i++) {
+      final isCurrent = hasAudio && i == currentIndex;
+      items.add(
+        _buildPageBlock(
+          content: pages[i],
+          isCurrent: isCurrent,
+          isLast: i == pages.length - 1,
           baseStyle: baseStyle,
           scale: scale,
           theme: theme,
-          key: index < segmentKeys.length ? segmentKeys[index] : null,
-        );
-      }).toList();
-    }
-
-    // 2) Fallback: split contentText into lines
-    final lines = (contentText ?? '').split('\n');
-    return lines.asMap().entries.map((entry) {
-      final index = entry.key;
-      final line = entry.value;
-      // No karaoke for fallback
-      final isCurrent = false;
-      final key = index < segmentKeys.length ? segmentKeys[index] : null;
-      return _buildSegmentWidget(
-        content: line,
-        index: index,
-        isCurrent: isCurrent,
-        baseStyle: baseStyle,
-        scale: scale,
-        theme: theme,
-        key: key,
+          key: i < segmentKeys.length ? segmentKeys[i] : null,
+        ),
       );
-    }).toList();
+    }
+    return items;
   }
 
-  Widget _buildSegmentWidget({
+  Widget _buildPageBlock({
     required String content,
-    required int index,
     required bool isCurrent,
+    required bool isLast,
     required TextStyle? baseStyle,
     required double scale,
     required ThemeData theme,
     GlobalKey? key,
+  }) {
+    final normalized = content.replaceAll('\r\n', '\n');
+    final lines = normalized
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
+
+    final children = lines
+        .map(
+          (line) => _buildLine(
+            content: line,
+            isCurrent: isCurrent,
+            baseStyle: baseStyle,
+            scale: scale,
+            theme: theme,
+          ),
+        )
+        .toList();
+
+    if (!isLast) {
+      children.add(const Divider(height: 24, thickness: 1));
+    }
+
+    return Container(
+      key: key,
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildLine({
+    required String content,
+    required bool isCurrent,
+    required TextStyle? baseStyle,
+    required double scale,
+    required ThemeData theme,
   }) {
     final trimmed = content.trimLeft();
     final isTitle = trimmed.startsWith('# ');
@@ -199,24 +231,27 @@ class TextReader extends GetView<TextReaderController> {
     }
 
     String displayText = content;
-    if (isTitle) displayText = content.substring(2).trim();
-    if (isSubtitle) displayText = content.substring(3).trim();
+    if (isTitle) {
+      displayText = trimmed.substring(2).trim();
+    } else if (isSubtitle) {
+      displayText = trimmed.substring(3).trim();
+    }
 
     double verticalPad = 8.0;
-    if (isTitle)
+    if (isTitle) {
       verticalPad = 16.0;
-    else if (isSubtitle)
+    } else if (isSubtitle) {
       verticalPad = 12.0;
+    }
 
     return Container(
-      key: key,
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: verticalPad),
       child: Text(displayText, style: style),
     );
   }
 
-  Widget _buildPageIndicator(BuildContext context) {
+  Widget _buildPageIndicator(BuildContext context, int pageCount) {
     // Rebuild whenever the ScrollController notifies (scroll position changes).
     return AnimatedBuilder(
       animation: controller.scrollController,
@@ -236,10 +271,9 @@ class TextReader extends GetView<TextReaderController> {
           return const SizedBox.shrink();
         }
 
-        // total content height = maxScroll + viewportHeight (approx)
-        final totalHeight = maxScroll + viewportHeight;
-        final totalPages = (totalHeight / viewportHeight).ceil();
-        final currentPage = (offset / viewportHeight).floor() + 1;
+        final totalPages = pageCount;
+        final raw = (offset / maxScroll) * totalPages;
+        final currentPage = raw.floor() + 1;
         final displayPage = currentPage.clamp(1, totalPages);
         final progress = maxScroll > 0
             ? (offset / maxScroll * 100).clamp(0, 100).toInt()

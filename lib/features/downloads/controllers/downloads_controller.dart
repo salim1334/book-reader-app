@@ -1,4 +1,5 @@
 import 'package:book_store/common/utils/snackbar_helper.dart';
+import 'package:book_store/core/exceptions/storage_exceptions.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/local/services/bundled_content_seeder.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
@@ -76,6 +77,8 @@ class DownloadsController extends GetxController {
   Future<void> retryChapter(String chapterId) async {
     try {
       await _syncManager.downloadChapter(chapterId);
+    } on StorageFullException catch (e) {
+      SnackbarHelper.show(e.toString());
     } catch (e) {
       SnackbarHelper.show('ምዕራፍ ማውረድ አልተቻለም ድጋሜ ይሞክሩ');
     } finally {

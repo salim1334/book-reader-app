@@ -24,6 +24,17 @@ void main() {
       );
     });
 
+    test('resolveAssetUrl returns absolute URLs unchanged', () {
+      expect(
+        resolveAssetUrl('https://cdn.example.com/uploads/book.jpg'),
+        'https://cdn.example.com/uploads/book.jpg',
+      );
+      expect(
+        resolveAssetUrl('http://cdn.example.com/uploads/book.jpg'),
+        'http://cdn.example.com/uploads/book.jpg',
+      );
+    });
+
     test('isRemoteCoverUrl returns true for http paths', () {
       expect(isRemoteCoverUrl('https://example.com/cover.jpg'), true);
     });

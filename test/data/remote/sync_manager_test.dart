@@ -237,6 +237,54 @@ void main() {
       expect(syncManager.bookDownloadProgress['b1'], 1.0);
     });
 
+    test('stores the local cover path, not the remote URL, in the database', () async {
+      bookRemote.addBook(
+        RemoteBook(
+          id: 'b1',
+          title: 'Book',
+          type: 'TEXT',
+          version: 1,
+          author: RemoteAuthor(id: 'a1', name: 'Author'),
+          coverImage: '/uploads/cover.jpg',
+          published: true,
+          chapters: [
+            RemoteChapterSummary(
+              id: 'c1',
+              title: 'Chapter 1',
+              orderIndex: 0,
+              version: 1,
+            ),
+          ],
+        ),
+      );
+
+      chapterRemote.addChapter(
+        RemoteChapter(
+          id: 'c1',
+          bookId: 'b1',
+          title: 'Chapter 1',
+          orderIndex: 0,
+          version: 1,
+          texts: [
+            RemoteTextPage(
+              id: 't1',
+              chapterId: 'c1',
+              content: 'Hello world',
+              orderIndex: 0,
+              version: 1,
+            ),
+          ],
+        ),
+      );
+
+      await syncManager.downloadBook('b1');
+
+      final captured = verify(() => dao.insertBook(captureAny<LocalBook>())).captured;
+      expect(captured, hasLength(1));
+      expect((captured.first as LocalBook).coverUrl, isNull);
+      verify(() => dao.updateBookCover('b1', any())).called(1);
+    });
+
     test('throws if book is not published', () async {
       bookRemote.addBook(
         RemoteBook(
@@ -321,6 +369,31 @@ void main() {
           audioEndTime: any(named: 'audioEndTime'),
         ),
       ).called(1);
+    });
+
+    test('downloads cover when stored cover is still remote', () async {
+      when(() => dao.getBook('b1')).thenAnswer(
+        (_) async => const LocalBook(
+          id: 'b1',
+          title: 'Book',
+          coverUrl: '/uploads/cover.jpg',
+          type: LocalBookType.text,
+          version: 1,
+        ),
+      );
+      chapterRemote.addChapter(
+        const RemoteChapter(
+          id: 'c1',
+          bookId: 'b1',
+          title: 'Chapter 1',
+          orderIndex: 0,
+          version: 1,
+        ),
+      );
+
+      await syncManager.downloadChapter('c1');
+
+      verify(() => dao.updateBookCover('b1', any())).called(1);
     });
 
     test('marks queue FAILED when offline and increments retry count', () async {

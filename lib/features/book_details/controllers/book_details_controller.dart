@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:book_store/common/utils/snackbar_helper.dart';
+import 'package:book_store/core/exceptions/storage_exceptions.dart';
 import 'package:book_store/core/services/reading_progress_service.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/remote/models/remote_book.dart';
@@ -165,6 +166,8 @@ class BookDetailsController extends GetxController {
       await _syncManager.updateBook(book.value!.id);
       await loadData();
       SnackbarHelper.show('ማሻሻያው ወርዷል');
+    } on StorageFullException catch (e) {
+      SnackbarHelper.show(e.toString());
     } catch (e) {
       SnackbarHelper.show('ማሻሻያ ማውረድ አልተቻለም ድጋሜ ይሞክሩ');
     } finally {
@@ -178,6 +181,8 @@ class BookDetailsController extends GetxController {
     try {
       await _syncManager.downloadChapter(chapter.id);
       SnackbarHelper.show('${chapter.title} ወርዷል');
+    } on StorageFullException catch (e) {
+      SnackbarHelper.show(e.toString());
     } catch (e) {
       SnackbarHelper.show('ማውረድ አልተሳካም ድጋሜ ይሞክሩ');
     } finally {

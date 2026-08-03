@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:book_store/common/utils/snackbar_helper.dart';
+import 'package:book_store/core/exceptions/storage_exceptions.dart';
 import 'package:book_store/core/services/reading_progress_service.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
@@ -239,6 +240,8 @@ class HomeController extends GetxController {
       await _syncManager.downloadBook(book.id);
       await loadBooks();
       SnackbarHelper.show('${book.title} downloaded');
+    } on StorageFullException catch (e) {
+      SnackbarHelper.show(e.toString());
     } catch (e) {
       SnackbarHelper.show('Download failed:  ');
     } finally {

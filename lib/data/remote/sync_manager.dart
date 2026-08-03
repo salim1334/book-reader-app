@@ -413,6 +413,15 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         await _dao!.markChapterDownloaded(chapterId, true);
 
         await _dao!.deleteQueueItem(chapterId);
+
+        // Ensure the cover is also saved locally when any chapter is
+        // downloaded, so books that were populated via individual chapter
+        // downloads still have an offline cover image.
+        try {
+          await _ensureBookCoverDownloaded(existing.bookId);
+        } catch (e) {
+          debugPrint('SyncManager._ensureBookCoverDownloaded error: $e');
+        }
       } catch (e) {
         if (e is DioException && e.type == DioExceptionType.cancel) {
           await _dao!.deleteQueueItem(chapterId);
@@ -471,7 +480,10 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         id: book.id,
         title: book.title,
         description: book.description,
-        coverUrl: book.coverImage,
+        // When a caller is going to download the cover (e.g. downloadBook),
+        // do not store the remote URL here; it will be replaced with the
+        // local file path once the download completes.
+        coverUrl: downloadCover ? null : book.coverImage,
         type: LocalBookTypeX.fromDb(book.type),
         swipeDirection: SwipeDirectionX.fromDb(book.swipeDirection),
         version: book.version,
@@ -485,9 +497,13 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       }
     } else {
       // Keep an existing downloaded cover unless we are explicitly downloading it.
+      // When downloading, leave the stored cover_url untouched; the caller will
+      // replace it with a local file path once the download succeeds. This avoids
+      // writing a remote URL back into the database after it has already been
+      // localized, and keeps a previously-downloaded cover if the update fails.
       String? coverUrl;
       if (downloadCover) {
-        coverUrl = book.coverImage;
+        coverUrl = existing.coverUrl;
       } else if (existing.coverUrl != null &&
           !isRemoteCoverUrl(existing.coverUrl)) {
         coverUrl = existing.coverUrl;
@@ -557,6 +573,27 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       chapterId: 'cover',
       remotePath: coverImage,
       cancelToken: cancelToken,
+    );
+    await _dao!.updateBookCover(bookId, localPath);
+  }
+
+  /// Downloads and stores the cover locally when the stored [coverUrl] is still
+  /// a remote path. This is used when a single chapter is downloaded so a book
+  /// that becomes fully downloaded can still show its cover while offline.
+  Future<void> _ensureBookCoverDownloaded(String bookId) async {
+    await _ensureDb();
+    final book = await _dao!.getBook(bookId);
+    if (book == null) return;
+
+    final cover = book.coverUrl;
+    if (cover == null || cover.isEmpty) return;
+    if (!isRemoteCoverUrl(cover)) return;
+
+    final localPath = await _downloadManager.downloadAsset(
+      assetType: 'images',
+      bookId: bookId,
+      chapterId: 'cover',
+      remotePath: cover,
     );
     await _dao!.updateBookCover(bookId, localPath);
   }

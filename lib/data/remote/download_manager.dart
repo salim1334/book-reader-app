@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:book_store/core/exceptions/storage_exceptions.dart';
 import 'package:book_store/core/utils/asset_url.dart';
 import 'package:book_store/data/remote/api_client.dart';
 import 'package:dio/dio.dart';
@@ -120,8 +121,35 @@ class DownloadManager {
       throw Exception('Failed to download $remotePath: ${response.statusCode}');
     } catch (e) {
       await _safeDelete(localFile);
+      if (_isStorageFullError(e)) {
+        throw const StorageFullException(
+          'Not enough storage space. Free up space and try again.',
+        );
+      }
       rethrow;
     }
+  }
+
+  /// Returns true if [error] indicates the write failed because the device is
+  /// out of storage space. This covers common OS error strings and error codes.
+  bool _isStorageFullError(Object error) {
+    final text = error.toString().toLowerCase();
+    const patterns = [
+      'no space left',
+      'not enough space',
+      'storage full',
+      'disk full',
+      'insufficient storage',
+      'enospc',
+      'error 112', // windows error_disk_full
+    ];
+    for (final pattern in patterns) {
+      if (text.contains(pattern)) return true;
+    }
+
+    final underlying = error is DioException ? error.error : null;
+    if (underlying != null) return _isStorageFullError(underlying);
+    return false;
   }
 
   Future<void> deleteAsset(String localPath) async {

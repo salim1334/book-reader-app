@@ -7,7 +7,12 @@ import 'package:flutter/painting.dart';
 /// Converts a relative server asset path (e.g. `/uploads/images/...`) into a
 /// full URL. This is required because static files are served from the host
 /// root, not under the `/api` prefix used by the mobile API endpoints.
+///
+/// If [remotePath] is already an absolute URL, it is returned as-is.
 String resolveAssetUrl(String remotePath) {
+  if (remotePath.startsWith('http://') || remotePath.startsWith('https://')) {
+    return remotePath;
+  }
   final base = Uri.parse(ApiClient.instance.dio.options.baseUrl);
   final path = remotePath.startsWith('/') ? remotePath : '/$remotePath';
   final port = base.hasPort && base.port > 0 ? ':${base.port}' : '';

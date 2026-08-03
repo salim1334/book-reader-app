@@ -56,7 +56,7 @@ class BookCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Cover Image
-                _BookCover(coverUrl: book.coverUrl!),
+                _BookCover(coverUrl: book.coverUrl),
                 const SizedBox(width: 16),
 
                 // Title, type label, and reading progress bar
