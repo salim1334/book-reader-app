@@ -13,7 +13,6 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  flutter_dotenv: ^6.0.1
   sqflite: ^2.4.2+1
   path: ^1.9.1
   path_provider: ^2.1.3
@@ -45,7 +44,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - .env
     - assets/
     - assets/data/
     - assets/data/bundled_books/

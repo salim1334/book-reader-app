@@ -84,8 +84,6 @@ class BookRepository extends GetxService {
   Future<List<Map<String, Object?>>> getDownloadQueue({String? status}) =>
       _dao.getQueue(status: status);
 
-  Future<void> deleteQueueItem(String chapterId) => _dao.deleteQueueItem(chapterId);
-
   Future<void> recordDownloadedAsset({
     required String chapterId,
     required String assetType,
@@ -163,4 +161,9 @@ class BookRepository extends GetxService {
 
   Future<List<Map<String, Object?>>> getFavoritePages({String? bookId}) =>
       _dao.getFavoritePages(bookId: bookId);
+
+  Future<void> deleteQueueItem(String chapterId) async {
+    await _dao.deleteQueueItem(chapterId);
+    await Get.find<DownloadManager>().deleteChapterAssets(chapterId);
+  }
 }

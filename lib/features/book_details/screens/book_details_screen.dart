@@ -1,9 +1,8 @@
-import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/common/widgets/chapter_list_tile.dart';
 import 'package:book_store/common/widgets/cover_image.dart';
 import 'package:book_store/common/widgets/error_view.dart';
 import 'package:book_store/common/widgets/loading_indicator.dart';
-import 'package:book_store/core/theme/sacred_theme_extension.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/utils/extensions/theme_extension.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
@@ -102,7 +101,9 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                 if (chapters.isEmpty) {
                   return const SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(child: Text(AppTexts.bookDetailsEmptyChapters)),
+                    child: Center(
+                      child: Text(AppTexts.bookDetailsEmptyChapters),
+                    ),
                   );
                 }
 
@@ -129,7 +130,7 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                           progress: progress,
                           downloadProgress:
                               syncManager.chapterDownloadProgress[chapter.id] ??
-                                  0.0,
+                              0.0,
                           isOutdated: isOutdated,
                           isDownloading: isDownloading,
                           isFavorite: isFavorite,
