@@ -508,7 +508,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     if (queuedChapterIds.isEmpty) return;
     
     final nextChapterId = queuedChapterIds.first;
-    queuedChapterIds.removeAt(0);
+    queuedChapterIds.remove(nextChapterId);
     
     // Update queue status to pending - it will be picked up automatically
     // since we're no longer in a downloading state
