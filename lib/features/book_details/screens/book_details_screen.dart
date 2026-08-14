@@ -117,8 +117,12 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                             .contains(chapter.id);
                         final progress =
                             controller.chapterProgress[chapter.id] ?? 0.0;
-                        final isDownloading =
-                            controller.downloadingChapterId.value == chapter.id;
+                        // Show downloading state if this chapter is currently being downloaded
+                        // OR if it's in the download queue
+                        final isCurrentlyDownloading =
+                            controller.currentDownloadingChapterId.value == chapter.id;
+                        final isInQueue = controller.queuedChapterIds.contains(chapter.id);
+                        final isDownloading = isCurrentlyDownloading || isInQueue;
                         final isFavorite =
                             controller.chapterFavoriteStates[chapter.id] ??
                             false;

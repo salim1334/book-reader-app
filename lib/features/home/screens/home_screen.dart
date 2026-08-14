@@ -94,8 +94,12 @@ class HomeScreen extends GetView<HomeController> {
 
                 final isFavorite = controller.bookFavorites[book.id] ?? false;
                 final syncManager = Get.find<SyncManager>();
-                final isDownloading =
-                    controller.downloadingBookId.value == book.id;
+                // Show downloading state if this book is currently being downloaded
+                // OR if it has chapters in the download queue
+                final isCurrentlyDownloading =
+                    controller.currentDownloadingBookId.value == book.id;
+                final isInQueue = controller.queuedBookIds.contains(book.id);
+                final isDownloading = isCurrentlyDownloading || isInQueue;
 
                 return BookCard(
                   book: book,

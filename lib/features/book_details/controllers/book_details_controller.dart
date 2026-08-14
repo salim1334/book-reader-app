@@ -35,8 +35,15 @@ class BookDetailsController extends GetxController {
   final chapterProgress = <String, double>{}.obs;
   final isBookFavorite = false.obs;
   final chapterFavoriteStates = <String, bool>{}.obs;
+  
+  /// Set of chapter IDs currently in the download queue.
+  final queuedChapterIds = <String>{}.obs;
+  
+  /// The chapter ID currently being downloaded (for UI display).
+  final currentDownloadingChapterId = Rxn<String>();
 
   Worker? _catalogSyncWorker;
+  Worker? _downloadQueueWorker;
   StreamSubscription<ReadingProgressUpdate>? _progressSubscription;
 
   @override
@@ -52,6 +59,7 @@ class BookDetailsController extends GetxController {
     book.value = args.book;
     await loadData();
     _bindReactiveListeners();
+    _bindDownloadQueueWorker();
   }
 
   Future<void> loadData({bool silent = false}) async {
@@ -218,6 +226,29 @@ class BookDetailsController extends GetxController {
     );
   }
 
+  /// Binds a worker to listen for changes in the SyncManager's download queue
+  /// and updates the UI state accordingly.
+  void _bindDownloadQueueWorker() {
+    _downloadQueueWorker = ever(
+      _syncManager.queuedChapterIds,
+      (_) {
+        // Update queued chapter IDs - only show chapters for this book
+        final bookChapterIds = chapters.map((c) => c.id).toSet();
+        queuedChapterIds.value = _syncManager.queuedChapterIds
+            .where((id) => bookChapterIds.contains(id))
+            .toSet();
+        
+        // Update current downloading chapter ID
+        final currentChapterId = _syncManager.currentDownloadingChapterId.value;
+        if (currentChapterId != null && bookChapterIds.contains(currentChapterId)) {
+          currentDownloadingChapterId.value = currentChapterId;
+        } else {
+          currentDownloadingChapterId.value = null;
+        }
+      },
+    );
+  }
+
   void _onProgressUpdate(ReadingProgressUpdate update) {
     if (update.bookId != initialBook.id) return;
 
@@ -229,6 +260,7 @@ class BookDetailsController extends GetxController {
   @override
   Future<void> onClose() async {
     _catalogSyncWorker?.dispose();
+    _downloadQueueWorker?.dispose();
     await _progressSubscription?.cancel();
     super.onClose();
   }
