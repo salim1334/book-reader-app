@@ -127,7 +127,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       lastCatalogSyncAt.value = DateTime.now();
       await _processDownloadQueue();
     } catch (e) {
-      debugPrint('SyncManager.backgroundCatalogSync error:  ');
+      debugPrint('SyncManager.backgroundCatalogSync error: $e');
     } finally {
       isBackgroundSyncing.value = false;
     }
@@ -212,7 +212,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
             bookToSync = await _bookRemoteSource.fetchBook(remoteBook.id);
           } catch (e) {
             debugPrint(
-              'SyncManager.syncCatalog: could not fetch chapters for ${remoteBook.id}:  ',
+              'SyncManager.syncCatalog: could not fetch chapters for ${remoteBook.id}: $e',
             );
           }
         }

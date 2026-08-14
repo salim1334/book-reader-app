@@ -5,6 +5,7 @@ import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/core/exceptions/storage_exceptions.dart';
 import 'package:book_store/core/services/reading_progress_service.dart';
 import 'package:book_store/data/local/models/book_local_models.dart';
+import 'package:book_store/data/local/services/bundled_content_seeder.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:book_store/data/repositories/book_repository.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
@@ -28,6 +29,11 @@ class HomeController extends GetxController {
   final isLoading = true.obs;
   final errorMessage = Rxn<String>();
   final isOffline = false.obs;
+  final isCheckingForBooks = false.obs;
+
+  /// True when the library only contains bundled offline content, meaning the
+  /// remote catalog has never been synced and more books may exist online.
+  final showMoreBooksHint = false.obs;
   RxBool get offlineMode => _settings.offlineMode;
   final downloadingBookId = Rxn<String>();
   final downloadedBooks = <String, bool>{}.obs;
@@ -59,7 +65,7 @@ class HomeController extends GetxController {
       }
       bookFavorites.assignAll(favorites);
     } catch (e) {
-      debugPrint('HomeController._refreshFavorites error:  ');
+      debugPrint('HomeController._refreshFavorites error: $e');
     }
   }
 
@@ -83,7 +89,7 @@ class HomeController extends GetxController {
     );
     _progressSubscription = _progressService.progressUpdates.listen(
       _onProgressUpdate,
-      onError: (e) => debugPrint('HomeController progress stream error:  '),
+      onError: (e) => debugPrint('HomeController progress stream error: $e'),
     );
   }
 
@@ -146,6 +152,7 @@ class HomeController extends GetxController {
           : loadedBooks;
 
       books.value = booksToShow;
+      _updateMoreBooksHint(loadedBooks);
       continueReading.value = cont;
       downloadedBooks.assignAll(downloaded);
       bookProgress.assignAll(progress);
@@ -154,9 +161,39 @@ class HomeController extends GetxController {
     } catch (e) {
       if (!silent) {
         isLoading.value = false;
-        errorMessage.value = 'Failed to load books:  ';
+        errorMessage.value = 'Failed to load books: $e';
       }
-      debugPrint('HomeController.loadBooks error:  ');
+      debugPrint('HomeController.loadBooks error: $e');
+    }
+  }
+
+  void _updateMoreBooksHint(List<LocalBook> loadedBooks) {
+    final bundledIds = BundledContentSeeder.bundledBookIds;
+    showMoreBooksHint.value = loadedBooks.isNotEmpty &&
+        bundledIds.isNotEmpty &&
+        loadedBooks.every((book) => bundledIds.contains(book.id));
+  }
+
+  /// Manual "Check for Books" action from the empty state. Verifies
+  /// connectivity first and shows a friendly message when offline.
+  Future<void> checkForBooks() async {
+    if (isCheckingForBooks.value) return;
+    isCheckingForBooks.value = true;
+    try {
+      final online = await _syncManager.isOnline();
+      isOffline.value = !online;
+      if (!online) {
+        SnackbarHelper.show(AppTexts.homeNoInternetMessage);
+        return;
+      }
+
+      await _syncManager.syncCatalog();
+      await loadBooks();
+    } catch (e) {
+      SnackbarHelper.show(AppTexts.homeRefreshCatalogError);
+      debugPrint('HomeController.checkForBooks error: $e');
+    } finally {
+      isCheckingForBooks.value = false;
     }
   }
 

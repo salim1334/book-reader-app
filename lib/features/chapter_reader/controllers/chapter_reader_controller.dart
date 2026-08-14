@@ -39,6 +39,11 @@ class ChapterReaderController extends GetxController {
   /// an immersive full-screen experience. A tap on the content toggles it.
   final isImmersiveMode = false.obs;
 
+  /// Whether the next chapter loaded should start playing audio immediately.
+  /// Used to keep auto-play-next/manual skip working while preventing autoplay
+  /// on the very first chapter open.
+  final _shouldAutoPlayOnLoad = false.obs;
+
   @override
   Future<void> onInit() async {
     super.onInit();
@@ -176,10 +181,19 @@ class ChapterReaderController extends GetxController {
     await _skipToNextChapter();
   }
 
+  /// Returns and clears the pending "should autoplay on load" flag.
+  bool consumeShouldAutoPlayOnLoad() {
+    final value = _shouldAutoPlayOnLoad.value;
+    _shouldAutoPlayOnLoad.value = false;
+    return value;
+  }
+
   Future<void> _skipToNextChapter() async {
     final chapters = await _repository.getChapters(book.id);
     final currentIndex = chapters.indexWhere((c) => c.id == chapter.id);
     if (currentIndex < 0 || currentIndex >= chapters.length - 1) return;
+
+    _shouldAutoPlayOnLoad.value = true;
 
     final next = chapters[currentIndex + 1];
     if (!next.isDownloaded) {
@@ -194,6 +208,8 @@ class ChapterReaderController extends GetxController {
     final chapters = await _repository.getChapters(book.id);
     final currentIndex = chapters.indexWhere((c) => c.id == chapter.id);
     if (currentIndex <= 0) return;
+
+    _shouldAutoPlayOnLoad.value = true;
 
     final previous = chapters[currentIndex - 1];
     if (!previous.isDownloaded) {

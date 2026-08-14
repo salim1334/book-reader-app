@@ -101,6 +101,10 @@ abstract final class AppTexts {
   static const String aboutEmail = 'alarmtechsolution9@gmail.com';
   static const String aboutPhone1 = '0933330933';
   static const String aboutPhone2 = '0933313133';
+  static const String aboutNoEmailApp =
+      'በዚህ መሳሪያ ላይ የኢሜይል መተግበሪያ አልተገኘም።';
+  static const String aboutNoPhoneApp =
+      'በዚህ መሳሪያ ላይ የስልክ መተግበሪያ አልተገኘም።';
   static String get aboutFooter =>
       '© ${DateTime.now().year} አላርም ቴክኖሎጂ። መብቱ በህግ የተጠበቀ ነው።';
 
@@ -186,6 +190,16 @@ abstract final class AppTexts {
   static const String homeEmptyOffline =
       'በአሁኑ ጊዜ ከኔትዎርክ ውጭ ነዎት። ሌሎች የሳዳት ከማልን መጻሕፍትን ለማየት እና ለማውረድ እባክዎ ከኢንተርኔት ጋር ይገናኙ።';
   static const String homeEmptyNoBooks = 'ምንም መጻሕፍት አልተገኙም።';
+  static const String homeEmptyTitle = 'መጻሕፍትዎ እዚህ ይታያሉ';
+  static const String homeEmptyBody =
+      'የመጀመሪያው መጽሐፍ በመዘጋጀት ላይ ሊሆን ይችላል። አዳዲስ መጻሕፍትን ከመስመር ላይ ለማግኘት ከታች ያለውን ቁልፍ ይጫኑ።';
+  static const String homeCheckForBooks = 'መጻሕፍትን ፈልግ';
+  static const String homeNoInternetMessage =
+      'ኢንተርኔት የለም። መጻሕፍትን ለማግኘት እና ለማውረድ እባክዎ Wi-Fi ወይም የሞባይል ዳታ ያብሩ።';
+  static const String homeMoreBooksOnline =
+      'ተጨማሪ መጻሕፍት በመስመር ላይ ሊገኙ ይችላሉ። አዳዲስ መጻሕፍትን ለማየት እና ለማውረድ ከኢንተርኔት ጋር ተገናኝተው ያድሱ።';
+  static const String homeAllBooksHere =
+      'የሳዳት ከማልን መጽሐፍት እዚህ ማግኘት ይችላሉ። አዳዲስ መጻሕፍት ሲለቀቁ የማሳወቂያ መልዕክት ይደርሶታል፤ ይከታተሉ።';
   static const String homeContinueReadingTitle = 'ማንበብ ይቀጥሉ';
   static const String homeContinueReadingCompleted = 'ተጠናቋል';
   static const String homeRefreshCatalogError = 'ካታሎጉን ማደስ አልተቻለም፦  ';

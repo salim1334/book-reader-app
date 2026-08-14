@@ -9,12 +9,9 @@ class DatabaseHelper {
   static const int _dbVersion = 10;
   static const String _dbName = 'book_store.db';
 
-  Database? _database;
+  Future<Database>? _dbFuture;
 
-  Future<Database> get database async {
-    _database ??= await _initDatabase();
-    return _database!;
-  }
+  Future<Database> get database => _dbFuture ??= _initDatabase();
 
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();

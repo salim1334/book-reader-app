@@ -109,9 +109,9 @@ class BookDetailsController extends GetxController {
     } catch (e) {
       if (!silent) isLoading.value = false;
       if (book.value == null && !silent) {
-        errorMessage.value = 'Failed to load book details:  ';
+        errorMessage.value = 'Failed to load book details: $e';
       }
-      debugPrint('BookDetailsController.loadData error:  ');
+      debugPrint('BookDetailsController.loadData error: $e');
     }
   }
 
@@ -214,7 +214,7 @@ class BookDetailsController extends GetxController {
     _progressSubscription = _progressService.progressUpdates.listen(
       _onProgressUpdate,
       onError: (e) =>
-          debugPrint('BookDetailsController progress stream error:  '),
+          debugPrint('BookDetailsController progress stream error: $e'),
     );
   }
 

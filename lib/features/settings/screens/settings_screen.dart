@@ -389,35 +389,4 @@ class SettingsScreen extends GetView<SettingsController> {
       ),
     );
   }
-
-  void _showStorageDialog() {
-    final colors = Theme.of(Get.context!).colorScheme;
-    Get.dialog(
-      AlertDialog(
-        title: const Text(AppTexts.settingsStorageTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ListTile(
-              leading: Icon(Icons.sd_storage_rounded),
-              title: const Text(AppTexts.settingsUsedStorageTitle),
-              subtitle: const Text(AppTexts.settingsStorageUsed),
-            ),
-            const Divider(),
-            ListTile(
-              leading: Icon(Icons.delete_forever_rounded, color: colors.error),
-              title: const Text(AppTexts.settingsClearAllDownloadsTitle),
-              onTap: () {
-                Get.back();
-                controller.clearDownloads();
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text(AppTexts.dialogClose)),
-        ],
-      ),
-    );
-  }
 }

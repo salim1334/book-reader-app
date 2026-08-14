@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:book_store/core/constants/app_texts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:book_store/common/utils/snackbar_helper.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -181,6 +182,8 @@ class AboutScreen extends StatelessWidget {
     final uri = Uri.parse('mailto:$email');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      SnackbarHelper.show(AppTexts.aboutNoEmailApp);
     }
   }
 
@@ -188,6 +191,8 @@ class AboutScreen extends StatelessWidget {
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      SnackbarHelper.show(AppTexts.aboutNoPhoneApp);
     }
   }
 

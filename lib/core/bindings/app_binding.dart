@@ -11,30 +11,27 @@ import 'package:book_store/features/favorites/controllers/favorites_controller.d
 import 'package:get/get.dart';
 
 abstract final class AppBinding {
-  static Future<void> init() async {
-    // Core services
+  /// Synchronous registrations the app shell needs before the first frame.
+  /// Put anything accessed by [App], [AudioPlayerOverlay], or the splash here.
+  static void preInit() {
     Get.put(SettingsRepository(), permanent: true);
+    Get.put(AudioPlayerService(), permanent: true);
+    Get.put(BookRemoteSource(), permanent: true);
+    Get.put(ChapterRemoteSource(), permanent: true);
+    Get.put(DownloadManager(), permanent: true);
+    Get.put(NotificationService(), permanent: true);
+  }
 
+  /// Asynchronous initializations that run behind the splash screen.
+  static Future<void> asyncInit() async {
     await Get.putAsync<BookRepository>(
       () async => BookRepository().init(),
       permanent: true,
     );
-    await Get.putAsync<AudioPlayerService>(
-      () async => AudioPlayerService().init(),
-      permanent: true,
-    );
     Get.put(ReadingProgressService(), permanent: true);
     Get.put(FavoritesController(), permanent: true);
-
-    await Get.putAsync<NotificationService>(
-      () async => NotificationService().init(),
-      permanent: true,
-    );
-
-    // Remote services
-    Get.put(BookRemoteSource(), permanent: true);
-    Get.put(ChapterRemoteSource(), permanent: true);
-    Get.put(DownloadManager(), permanent: true);
+    await Get.find<AudioPlayerService>().init();
+    await Get.find<NotificationService>().init();
     await Get.putAsync<SyncManager>(
       () async => SyncManager.init(),
       permanent: true,

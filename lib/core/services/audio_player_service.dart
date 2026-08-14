@@ -156,6 +156,7 @@ class AudioPlayerService extends GetxService {
     String? sourceSubtitle,
     String? sourceArtUri,
     double? initialSpeed,
+    bool autoPlay = true,
   }) async {
     if (!_initialized.value) return;
 
@@ -206,7 +207,9 @@ class AudioPlayerService extends GetxService {
     // play() returns a future that completes when playback completes or is
     // paused/stopped, so we must not await it here. Awaiting it would keep
     // isLoading true for the entire duration of playback.
-    unawaited(_handler.play());
+    if (autoPlay) {
+      unawaited(_handler.play());
+    }
   }
 
   Future<Duration> _estimateDuration(String path) async {

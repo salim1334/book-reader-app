@@ -127,9 +127,16 @@ void didChangeDependencies() {
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onTap: controller.toggleImmersiveMode,
-                  child: immersive && controller.bookType.value == LocalBookType.image 
-                      ? reader
-                      : SafeArea(bottom: false, child: reader),
+                  // Keep SafeArea in the tree at all times and only toggle its
+                  // insets. Swapping the wrapper widget itself would recreate
+                  // the reader subtree and reset the current page/scroll.
+                  child: SafeArea(
+                    bottom: false,
+                    top: !(immersive && isImageBook),
+                    left: !(immersive && isImageBook),
+                    right: !(immersive && isImageBook),
+                    child: reader,
+                  ),
                 ),
               ),
               if (!immersive) const SafeArea(child: ReaderAudioPlayer()),

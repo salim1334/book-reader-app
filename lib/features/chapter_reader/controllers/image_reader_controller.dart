@@ -171,6 +171,7 @@ class ImageReaderController extends GetxController {
           sourceSubtitle: _chapterReader.book.title,
           sourceArtUri: artUri,
           initialSpeed: _settings.defaultSpeed.value,
+          autoPlay: _chapterReader.consumeShouldAutoPlayOnLoad(),
         );
       }
     } else {
