@@ -397,7 +397,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     try {
       syncState.value = SyncState.downloading;
       currentDownload?.value = 'Fetching chapter...';
-      chapterDownloadProgress[chapterId] = 0.0;
+      // Set initial progress to a small value to trigger UI loading indicator
+      chapterDownloadProgress[chapterId] = 0.01;
 
       final queueItem = await _dao!.getQueueItem(chapterId);
       final retryCount = (queueItem?['retry_count'] as num?)?.toInt() ?? 0;
@@ -431,8 +432,11 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
             (chapter.pages?.length ?? 0) + (chapter.audios?.length ?? 0);
         var completedAssets = 0;
         void report() {
-          final progress =
-              totalAssets == 0 ? 1.0 : completedAssets / totalAssets;
+          // For text-only chapters (0 assets), keep progress at a mid-range value
+          // to show indeterminate loading, then complete at 1.0
+          final progress = totalAssets == 0
+              ? (completedAssets == 0 ? 0.5 : 1.0)
+              : completedAssets / totalAssets;
           chapterDownloadProgress[chapterId] = progress;
           onProgress?.call(progress);
         }
