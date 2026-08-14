@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:book_store/common/widgets/empty_view.dart';
 import 'package:book_store/common/widgets/error_view.dart';
 import 'package:book_store/common/widgets/loading_indicator.dart';
@@ -182,12 +184,13 @@ class _SyncProgressHeader extends StatelessWidget {
       final state = syncManager.syncState.value;
       final isActive =
           state == SyncState.syncing || state == SyncState.downloading;
+      final isDownloadingChapter = syncManager.currentDownloadingChapterId.value != null;
       final progress = _activeProgress(syncManager);
       final hasProgress = progress != null && progress > 0;
 
       return AnimatedSize(
         duration: const Duration(milliseconds: 250),
-        child: isActive
+        child: isActive || isDownloadingChapter
             ? Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -214,11 +217,29 @@ class _SyncProgressHeader extends StatelessWidget {
                           : AppTexts.downloadsSyncState(state.name),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    if (syncManager.currentDownload != null)
+                    // Show the currently downloading chapter
+                    if (isDownloadingChapter)
+                      Obx(
+                        () => Text(
+                          'Downloading: ${syncManager.currentDownloadingChapterId.value}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      )
+                    else if (syncManager.currentDownload != null)
                       Obx(
                         () => Text(
                           syncManager.currentDownload!.value,
                           style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    // Show queue status
+                    if (syncManager.queuedChapterIds.isNotEmpty)
+                      Obx(
+                        () => Text(
+                          '${AppTexts.downloadsQueueHeader} (${syncManager.queuedChapterIds.length})',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                   ],

@@ -51,11 +51,27 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   /// Tokens for cancelling in-flight chapter downloads.
   final _cancelTokens = <String, CancelToken>{};
 
+  /// Queue of chapter IDs waiting to be downloaded. Ensures sequential
+  /// downloads to avoid overwhelming weak network connections.
+  final _downloadQueue = <String>[];
+
+  /// Flag indicating if a download is currently in progress.
+  bool _isDownloading = false;
+
   /// Reactive flag showing when the last catalog-only background sync completed.
   final lastCatalogSyncAt = Rxn<DateTime>();
 
   /// Reactive flag indicating a background sync is currently running.
   final isBackgroundSyncing = false.obs;
+
+  /// Reactive set of chapter IDs currently in the download queue.
+  final queuedChapterIds = <String>{}.obs;
+
+  /// The chapter ID currently being downloaded (for UI display).
+  final currentDownloadingChapterId = Rxn<String>();
+
+  /// Completer to signal when a download finishes, for queue processing.
+  Completer<void>? _downloadCompleteCompleter;
 
   static Future<SyncManager> init() async {
     final manager = SyncManager(
@@ -336,6 +352,9 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
 
   /// Downloads the content and media for a single chapter and marks it as
   /// downloaded so it can be read offline.
+  /// 
+  /// If a download is already in progress, the chapter is added to a queue
+  /// and will be downloaded sequentially after the current download completes.
   Future<void> downloadChapter(
     String chapterId, {
     void Function(double progress)? onProgress,
@@ -346,7 +365,36 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       throw Exception('Chapter $chapterId not found locally');
     }
 
-    return _runSingleFlight('chapter:$chapterId', (token) async {
+    // Check if this chapter is already being downloaded or queued
+    if (_activeDownloads.containsKey('chapter:$chapterId')) {
+      return await _activeDownloads['chapter:$chapterId']!;
+    }
+
+    // Add to queue if another download is in progress
+    if (_isDownloading) {
+      if (!queuedChapterIds.contains(chapterId)) {
+        queuedChapterIds.add(chapterId);
+        await _dao!.insertQueueItem(
+          chapterId: chapterId,
+          bookId: existing.bookId,
+          status: 'PENDING',
+          progress: 0.0,
+          retryCount: 0,
+        );
+      }
+      // Wait for the chapter to be processed by the queue processor
+      while (queuedChapterIds.contains(chapterId)) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      return;
+    }
+
+    // Start the download process
+    _isDownloading = true;
+    currentDownloadingChapterId.value = chapterId;
+    _downloadCompleteCompleter = Completer<void>();
+
+    try {
       syncState.value = SyncState.downloading;
       currentDownload?.value = 'Fetching chapter...';
       chapterDownloadProgress[chapterId] = 0.0;
@@ -357,7 +405,7 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       await _dao!.insertQueueItem(
         chapterId: chapterId,
         bookId: existing.bookId,
-        status: 'PENDING',
+        status: 'DOWNLOADING',
         progress: 0.0,
         retryCount: retryCount,
       );
@@ -390,13 +438,15 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         }
 
         report();
+        final cancelToken = CancelToken();
+        _cancelTokens['chapter:$chapterId'] = cancelToken;
         await _downloadMedia(
           chapter,
           onAssetComplete: () {
             completedAssets++;
             report();
           },
-          cancelToken: token,
+          cancelToken: cancelToken,
         );
         chapterDownloadProgress[chapterId] = 1.0;
         onProgress?.call(1.0);
@@ -438,7 +488,43 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         syncState.value = SyncState.idle;
         currentDownload?.value = '';
       }
-    });
+    } finally {
+      _isDownloading = false;
+      currentDownloadingChapterId.value = null;
+      queuedChapterIds.remove(chapterId);
+      _cancelTokens.remove('chapter:$chapterId');
+      
+      // Signal that this download is complete
+      _downloadCompleteCompleter?.complete();
+      _downloadCompleteCompleter = null;
+      
+      // Process next item in queue if available
+      unawaited(_processNextQueuedDownload());
+    }
+  }
+
+  /// Processes the next chapter in the download queue.
+  Future<void> _processNextQueuedDownload() async {
+    if (queuedChapterIds.isEmpty) return;
+    
+    final nextChapterId = queuedChapterIds.first;
+    queuedChapterIds.removeAt(0);
+    
+    // Update queue status to pending - it will be picked up automatically
+    // since we're no longer in a downloading state
+    await _dao!.updateQueueStatus(
+      chapterId: nextChapterId,
+      status: 'PENDING',
+      progress: 0.0,
+    );
+    
+    // Trigger the download by calling downloadChapter again
+    // The _isDownloading flag is now false, so it will proceed
+    try {
+      await downloadChapter(nextChapterId);
+    } catch (e) {
+      debugPrint('SyncManager._processNextQueuedDownload error: $e');
+    }
   }
 
   /// Cancels an in-flight chapter download, if any.
@@ -447,6 +533,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
   }
 
   /// Processes PENDING queue items and retries FAILED items up to _maxRetries.
+  /// With the new sequential download system, this method now only handles
+  /// retrying FAILED items, as PENDING items are processed through the queue.
   Future<void> _processDownloadQueue() async {
     await _ensureDb();
     final queue = await _dao!.getQueue();
@@ -455,10 +543,19 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       final chapterId = item['chapter_id'] as String? ?? '';
       final retryCount = (item['retry_count'] as num?)?.toInt() ?? 0;
 
-      if (status == 'PENDING' ||
-          (status == 'FAILED' && retryCount < _maxRetries)) {
+      // Only retry FAILED items - PENDING items are handled by the sequential queue
+      if (status == 'FAILED' && retryCount < _maxRetries) {
         try {
-          await downloadChapter(chapterId);
+          // Reset status to pending so it can be picked up
+          await _dao!.updateQueueStatus(
+            chapterId: chapterId,
+            status: 'PENDING',
+            progress: 0.0,
+          );
+          // Add to the reactive queue set if not already there
+          if (!queuedChapterIds.contains(chapterId)) {
+            queuedChapterIds.add(chapterId);
+          }
         } catch (e) {
           debugPrint('SyncManager._processDownloadQueue error: $e');
         }
