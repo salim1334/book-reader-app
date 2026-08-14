@@ -260,7 +260,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       await _guardOnlineAndOfflineMode();
 
       syncState.value = SyncState.downloading;
-      bookDownloadProgress[bookId] = 0.0;
+      // Set initial progress to a small value to trigger UI loading indicator
+      bookDownloadProgress[bookId] = 0.01;
       try {
         final remoteBook = await _bookRemoteSource.fetchBook(bookId);
         if (!remoteBook.isPublished) {
@@ -281,12 +282,12 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
         final totalChapters = remoteBook.chapters.length;
         for (var i = 0; i < totalChapters; i++) {
           final summary = remoteBook.chapters[i];
-          bookDownloadProgress[bookId] = i / totalChapters;
+          bookDownloadProgress[bookId] = (i / totalChapters).clamp(0.01, 0.99);
           await downloadChapter(
             summary.id,
             onProgress: (chapterProgress) {
               bookDownloadProgress[bookId] =
-                  (i + chapterProgress) / totalChapters;
+                  ((i + chapterProgress) / totalChapters).clamp(0.01, 0.99);
             },
           );
         }
@@ -306,7 +307,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       await _guardOnlineAndOfflineMode();
 
       syncState.value = SyncState.downloading;
-      bookDownloadProgress[bookId] = 0.0;
+      // Set initial progress to a small value to trigger UI loading indicator
+      bookDownloadProgress[bookId] = 0.01;
       try {
         final remoteBook = await _bookRemoteSource.fetchBook(bookId);
         if (!remoteBook.isPublished) {
@@ -332,12 +334,12 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
               summary.id,
               onProgress: (chapterProgress) {
                 bookDownloadProgress[bookId] =
-                    (processedChapters + chapterProgress) / totalChapters;
+                    ((processedChapters + chapterProgress) / totalChapters).clamp(0.01, 0.99);
               },
             );
           }
           processedChapters++;
-          bookDownloadProgress[bookId] = processedChapters / totalChapters;
+          bookDownloadProgress[bookId] = (processedChapters / totalChapters).clamp(0.01, 0.99);
         }
 
         await _downloadCover(bookId, remoteBook.coverImage);

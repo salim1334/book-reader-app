@@ -51,70 +51,72 @@ class HomeScreen extends GetView<HomeController> {
 
         return RefreshIndicator(
           onRefresh: controller.autoSync,
-          child: ListView.builder(
-            // padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+          child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: controller.books.length + (hasContinue ? 2 : 1) + 1,
-            itemBuilder: (context, index) {
-              // Header
-              if (index == 0) {
-                return const HomeHeader();
-              }
+            slivers: [
+              // Sticky Header
+              SliverToBoxAdapter(
+                child: const HomeHeader(),
+              ),
 
               // "More books online" hint
-              if (index == 1) {
-                return MoreBooksBanner(showMoreBooks: showBanner);
-              }
-
-              const offset = 1;
+              SliverToBoxAdapter(
+                child: MoreBooksBanner(showMoreBooks: showBanner),
+              ),
 
               // Continue Reading
-              if (hasContinue && index == 1 + offset) {
-                return ContinueReadingCard(
-                  reading: controller.continueReading.value!,
-                  onTap: controller.openContinueReading,
-                  progress:
-                      controller.bookProgress[controller
-                          .continueReading
-                          .value!
-                          .book
-                          .id] ??
-                      0.0,
-                );
-              }
+              if (hasContinue)
+                SliverToBoxAdapter(
+                  child: ContinueReadingCard(
+                    reading: controller.continueReading.value!,
+                    onTap: controller.openContinueReading,
+                    progress:
+                        controller.bookProgress[controller
+                            .continueReading
+                            .value!
+                            .book
+                            .id] ??
+                        0.0,
+                  ),
+                ),
 
-              final adjustedIndex =
-                  index - offset - (hasContinue ? 2 : 1);
+              // Books List
+              SliverPadding(
+                padding: const EdgeInsets.only(bottom: 24),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final book = controller.books[index];
 
-              final book = controller.books[adjustedIndex];
+                    return Obx(() {
+                      final isDownloaded =
+                          controller.downloadedBooks[book.id] ?? false;
 
-              return Obx(() {
-                final isDownloaded =
-                    controller.downloadedBooks[book.id] ?? false;
+                      final isFavorite = controller.bookFavorites[book.id] ?? false;
+                      final syncManager = Get.find<SyncManager>();
+                      // Show downloading state if this book is currently being downloaded
+                      // OR if it has chapters in the download queue
+                      final isCurrentlyDownloading =
+                          controller.currentDownloadingBookId.value == book.id;
+                      final isInQueue = controller.queuedBookIds.contains(book.id);
+                      final isDownloading = isCurrentlyDownloading || isInQueue;
 
-                final isFavorite = controller.bookFavorites[book.id] ?? false;
-                final syncManager = Get.find<SyncManager>();
-                // Show downloading state if this book is currently being downloaded
-                // OR if it has chapters in the download queue
-                final isCurrentlyDownloading =
-                    controller.currentDownloadingBookId.value == book.id;
-                final isInQueue = controller.queuedBookIds.contains(book.id);
-                final isDownloading = isCurrentlyDownloading || isInQueue;
-
-                return BookCard(
-                  book: book,
-                  isDownloaded: isDownloaded,
-                  isDownloading: isDownloading,
-                  progressPercent: controller.bookProgress[book.id] ?? 0.0,
-                  downloadProgress:
-                      syncManager.bookDownloadProgress[book.id] ?? 0.0,
-                  isFavorite: isFavorite,
-                  onDownload: () => controller.downloadBook(book),
-                  onTap: () => controller.openBook(book),
-                  onFavorite: () => controller.toggleBookFavorite(book),
-                );
-              });
-            },
+                      return BookCard(
+                        book: book,
+                        isDownloaded: isDownloaded,
+                        isDownloading: isDownloading,
+                        progressPercent: controller.bookProgress[book.id] ?? 0.0,
+                        downloadProgress:
+                            syncManager.bookDownloadProgress[book.id] ?? 0.0,
+                        isFavorite: isFavorite,
+                        onDownload: () => controller.downloadBook(book),
+                        onTap: () => controller.openBook(book),
+                        onFavorite: () => controller.toggleBookFavorite(book),
+                      );
+                    });
+                  }, childCount: controller.books.length),
+                ),
+              ),
+            ],
           ),
         );
       }),
