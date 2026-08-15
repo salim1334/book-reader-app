@@ -376,6 +376,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
     if (_isDownloading) {
       if (!queuedChapterIds.contains(chapterId)) {
         queuedChapterIds.add(chapterId);
+        // Set initial progress to show loading indicator in UI even while queued
+        chapterDownloadProgress[chapterId] = 0.01;
         await _dao!.insertQueueItem(
           chapterId: chapterId,
           bookId: existing.bookId,
@@ -481,6 +483,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       } catch (e) {
         if (e is DioException && e.type == DioExceptionType.cancel) {
           await _dao!.deleteQueueItem(chapterId);
+          // Clean up progress entry on cancel
+          chapterDownloadProgress.remove(chapterId);
           return;
         }
         await _dao!.incrementRetryCount(chapterId);
@@ -489,6 +493,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
           status: 'FAILED',
           progress: 0.0,
         );
+        // Clean up progress entry on failure
+        chapterDownloadProgress.remove(chapterId);
         rethrow;
       } finally {
         syncState.value = SyncState.idle;
