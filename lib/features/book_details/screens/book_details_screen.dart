@@ -122,19 +122,25 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                         final isCurrentlyDownloading =
                             controller.currentDownloadingChapterId.value == chapter.id;
                         final isInQueue = controller.queuedChapterIds.contains(chapter.id);
-                        final isDownloading = isCurrentlyDownloading || isInQueue;
                         final isFavorite =
                             controller.chapterFavoriteStates[chapter.id] ??
                             false;
                         final syncManager = Get.find<SyncManager>();
+                        
+                        // Check if chapter has download progress (for individual chapter downloads)
+                        final hasChapterProgress = syncManager.chapterDownloadProgress.containsKey(chapter.id) && 
+                            syncManager.chapterDownloadProgress[chapter.id]! > 0 &&
+                            syncManager.chapterDownloadProgress[chapter.id]! < 1.0;
+                        
+                        final isDownloading = isCurrentlyDownloading || isInQueue || hasChapterProgress;
 
                         return ChapterListTile(
                           index: index,
                           chapter: chapter,
                           progress: progress,
-                          downloadProgress:
-                              syncManager.chapterDownloadProgress[chapter.id] ??
-                              0.0,
+                          downloadProgress: hasChapterProgress 
+                              ? (syncManager.chapterDownloadProgress[chapter.id] ?? 0.0)
+                              : (isCurrentlyDownloading || isInQueue ? 0.01 : 0.0),
                           isOutdated: isOutdated,
                           isDownloading: isDownloading,
                           isFavorite: isFavorite,

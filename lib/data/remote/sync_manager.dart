@@ -499,8 +499,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       } finally {
         syncState.value = SyncState.idle;
         currentDownload?.value = '';
-        // Clean up progress entry after completion
-        chapterDownloadProgress.remove(chapterId);
+        // Keep progress entry at 1.0 briefly so UI can show completion state
+        // Don't remove immediately - let the UI observe the completed state
       }
     } finally {
       _isDownloading = false;
@@ -511,6 +511,11 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       // Signal that this download is complete
       _downloadCompleteCompleter?.complete();
       _downloadCompleteCompleter = null;
+      
+      // Delay removing the progress entry to allow UI to update
+      Future.delayed(const Duration(milliseconds: 300), () {
+        chapterDownloadProgress.remove(chapterId);
+      });
       
       // Process next item in queue if available
       unawaited(_processNextQueuedDownload());

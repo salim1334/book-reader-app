@@ -45,6 +45,23 @@ class HomeController extends GetxController {
   
   /// The book ID currently being downloaded (for UI display).
   final currentDownloadingBookId = Rxn<String>();
+  
+  /// Calculates which books have chapters currently in the download queue.
+  /// This is used to show loading indicators for partially downloaded books.
+  RxSet<String> get booksWithQueuedChapters {
+    final bookIdSet = <String>{};
+    for (final chapterId in _syncManager.queuedChapterIds) {
+      // We need to get the book ID for each queued chapter
+      unawaited(_getBookIdForChapter(chapterId).then((bookId) {
+        if (bookId != null) {
+          bookIdSet.add(bookId);
+        }
+      }).catchError((e) {
+        debugPrint('HomeController.booksWithQueuedChapters error: $e');
+      }));
+    }
+    return bookIdSet.obs;
+  }
 
   Worker? _offlineModeWorker;
   Worker? _autoDownloadWorker;

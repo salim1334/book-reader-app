@@ -146,20 +146,30 @@ class HomeScreen extends GetView<HomeController> {
 
                       final isFavorite = controller.bookFavorites[book.id] ?? false;
                       final syncManager = Get.find<SyncManager>();
-                      // Show downloading state if this book is currently being downloaded
-                      // OR if it has chapters in the download queue
+                      // Show downloading state if:
+                      // 1. This book is currently being downloaded (full book download)
+                      // 2. This book is in the queue for batch download
+                      // 3. Any chapter of this book has download progress (individual chapter downloads)
                       final isCurrentlyDownloading =
                           controller.currentDownloadingBookId.value == book.id;
                       final isInQueue = controller.queuedBookIds.contains(book.id);
-                      final isDownloading = isCurrentlyDownloading || isInQueue;
+                      
+                      // Check if book has any chapter-level download activity
+                      // by checking if bookDownloadProgress contains this book ID with progress < 1.0
+                      final hasBookProgress = syncManager.bookDownloadProgress.containsKey(book.id) && 
+                          syncManager.bookDownloadProgress[book.id]! > 0 &&
+                          syncManager.bookDownloadProgress[book.id]! < 1.0;
+                      
+                      final isDownloading = isCurrentlyDownloading || isInQueue || hasBookProgress;
 
                       return BookCard(
                         book: book,
                         isDownloaded: isDownloaded,
                         isDownloading: isDownloading,
                         progressPercent: controller.bookProgress[book.id] ?? 0.0,
-                        downloadProgress:
-                            syncManager.bookDownloadProgress[book.id] ?? 0.0,
+                        downloadProgress: hasBookProgress 
+                            ? (syncManager.bookDownloadProgress[book.id] ?? 0.0)
+                            : (isCurrentlyDownloading || isInQueue ? 0.01 : 0.0),
                         isFavorite: isFavorite,
                         onDownload: () => controller.downloadBook(book),
                         onTap: () => controller.openBook(book),
