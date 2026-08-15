@@ -164,6 +164,31 @@ class HomeController extends GetxController {
         } else {
           currentDownloadingBookId.value = null;
         }
+        
+        // Also observe chapterDownloadProgress for individual chapter downloads
+        // This ensures books with partially downloaded chapters show loading indicator
+      },
+    );
+    
+    // Also observe chapterDownloadProgress changes
+    ever(
+      _syncManager.chapterDownloadProgress,
+      (_) {
+        // Update queuedBookIds and currentDownloadingBookId based on chapter progress
+        final bookIdSet = <String>{};
+        for (final entry in _syncManager.chapterDownloadProgress.entries) {
+          if (entry.value > 0 && entry.value < 1.0) {
+            unawaited(_getBookIdForChapter(entry.key).then((bookId) {
+              if (bookId != null) {
+                bookIdSet.add(bookId);
+              }
+            }).catchError((e) {
+              debugPrint('HomeController.chapterDownloadProgress observer error: $e');
+            }));
+          }
+        }
+        // Add these books to queuedBookIds so they show loading indicator
+        queuedBookIds.addAll(bookIdSet);
       },
     );
   }
