@@ -160,7 +160,12 @@ class HomeScreen extends GetView<HomeController> {
                           syncManager.bookDownloadProgress[book.id]! > 0 &&
                           syncManager.bookDownloadProgress[book.id]! < 1.0;
                       
-                      final isDownloading = isCurrentlyDownloading || isInQueue || hasBookProgress;
+                      // Check if any chapter of THIS book has individual download progress
+                      // by checking if this book is in queuedBookIds or is currently downloading
+                      final hasChapterProgress = controller.queuedBookIds.contains(book.id) ||
+                          (controller.currentDownloadingBookId.value == book.id);
+                      
+                      final isDownloading = isCurrentlyDownloading || isInQueue || hasBookProgress || hasChapterProgress;
 
                       return BookCard(
                         book: book,
@@ -169,7 +174,7 @@ class HomeScreen extends GetView<HomeController> {
                         progressPercent: controller.bookProgress[book.id] ?? 0.0,
                         downloadProgress: hasBookProgress 
                             ? (syncManager.bookDownloadProgress[book.id] ?? 0.0)
-                            : (isCurrentlyDownloading || isInQueue ? 0.01 : 0.0),
+                            : (hasChapterProgress ? 0.01 : 0.0),
                         isFavorite: isFavorite,
                         onDownload: () => controller.downloadBook(book),
                         onTap: () => controller.openBook(book),
