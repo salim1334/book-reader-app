@@ -195,19 +195,19 @@ class _HeaderCard extends StatelessWidget {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 8),
-                    Chip(
-                      label: Text(
-                        book.type == LocalBookType.text
-                            ? AppTexts.bookTypeText
-                            : AppTexts.bookTypeImage,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      backgroundColor: theme.colorScheme.primaryContainer
-                          .withOpacity(0.5),
-                      side: BorderSide.none,
-                    ),
+                    // const SizedBox(height: 8),
+                    // Chip(
+                    //   label: Text(
+                    //     book.type == LocalBookType.text
+                    //         ? AppTexts.bookTypeText
+                    //         : AppTexts.bookTypeImage,
+                    //     style: const TextStyle(fontSize: 12),
+                    //   ),
+                    //   visualDensity: VisualDensity.compact,
+                    //   backgroundColor: theme.colorScheme.primaryContainer
+                    //       .withOpacity(0.5),
+                    //   side: BorderSide.none,
+                    // ),
                     if (book.description != null &&
                         book.description!.isNotEmpty) ...[
                       const SizedBox(height: 12),
