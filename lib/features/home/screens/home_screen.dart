@@ -2,13 +2,15 @@ import 'package:book_store/common/widgets/book_card.dart';
 import 'package:book_store/common/widgets/error_view.dart';
 import 'package:book_store/common/widgets/loading_indicator.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/home/controllers/home_controller.dart';
 import 'package:book_store/features/home/widgets/continue_reading_card.dart';
 import 'package:book_store/features/home/widgets/home_empty_state.dart';
-import 'package:book_store/features/home/widgets/home_header.dart';
 import 'package:book_store/features/home/widgets/more_books_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../routes/app_routes.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -51,66 +53,138 @@ class HomeScreen extends GetView<HomeController> {
 
         return RefreshIndicator(
           onRefresh: controller.autoSync,
-          child: ListView.builder(
-            // padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+          child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: controller.books.length + (hasContinue ? 2 : 1) + 1,
-            itemBuilder: (context, index) {
-              // Header
-              if (index == 0) {
-                return const HomeHeader();
-              }
+            slivers: [
+              // Sticky Header that shrinks on scroll
+              SliverAppBar(
+                pinned: true,
+                floating: false,
+                elevation: 0,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                surfaceTintColor: Colors.transparent,
+                expandedHeight: 120,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 50, 24, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          AppTexts.homeTitle,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          AppTexts.homeSubtitle,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () => Get.toNamed(Routes.search),
+                  ),
+                  Obx(() {
+                    final settingsController = Get.find<SettingsRepository>();
+                    return IconButton(
+                      icon: Icon(
+                        settingsController.themeMode.value == ThemeMode.dark
+                            ? Icons.dark_mode_rounded
+                            : Icons.light_mode_rounded,
+                      ),
+                      onPressed: () => settingsController.setThemeMode(
+                        settingsController.themeMode.value == ThemeMode.light
+                            ? ThemeMode.dark
+                            : ThemeMode.light,
+                      ),
+                    );
+                  }),
+                  const SizedBox(width: 8),
+                ],
+              ),
 
               // "More books online" hint
-              if (index == 1) {
-                return MoreBooksBanner(showMoreBooks: showBanner);
-              }
-
-              const offset = 1;
+              SliverToBoxAdapter(
+                child: MoreBooksBanner(showMoreBooks: showBanner),
+              ),
 
               // Continue Reading
-              if (hasContinue && index == 1 + offset) {
-                return ContinueReadingCard(
-                  reading: controller.continueReading.value!,
-                  onTap: controller.openContinueReading,
-                  progress:
-                      controller.bookProgress[controller
-                          .continueReading
-                          .value!
-                          .book
-                          .id] ??
-                      0.0,
-                );
-              }
+              if (hasContinue)
+                SliverToBoxAdapter(
+                  child: ContinueReadingCard(
+                    reading: controller.continueReading.value!,
+                    onTap: controller.openContinueReading,
+                    progress:
+                        controller.bookProgress[controller
+                            .continueReading
+                            .value!
+                            .book
+                            .id] ??
+                        0.0,
+                  ),
+                ),
 
-              final adjustedIndex =
-                  index - offset - (hasContinue ? 2 : 1);
+              // Books List
+              SliverPadding(
+                padding: const EdgeInsets.only(bottom: 24),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final book = controller.books[index];
 
-              final book = controller.books[adjustedIndex];
+                    return Obx(() {
+                      final isDownloaded =
+                          controller.downloadedBooks[book.id] ?? false;
 
-              return Obx(() {
-                final isDownloaded =
-                    controller.downloadedBooks[book.id] ?? false;
+                      final isFavorite = controller.bookFavorites[book.id] ?? false;
+                      final syncManager = Get.find<SyncManager>();
+                      // Show downloading state if:
+                      // 1. This book is currently being downloaded (full book download)
+                      // 2. This book is in the queue for batch download
+                      // 3. Any chapter of this book has download progress (individual chapter downloads)
+                      final isCurrentlyDownloading =
+                          controller.currentDownloadingBookId.value == book.id;
+                      final isInQueue = controller.queuedBookIds.contains(book.id);
+                      
+                      // Check if book has any chapter-level download activity
+                      // by checking if bookDownloadProgress contains this book ID with progress < 1.0
+                      final hasBookProgress = syncManager.bookDownloadProgress.containsKey(book.id) && 
+                          syncManager.bookDownloadProgress[book.id]! > 0 &&
+                          syncManager.bookDownloadProgress[book.id]! < 1.0;
+                      
+                      // Check if any chapter of THIS book has individual download progress
+                      // by checking if this book is in queuedBookIds or is currently downloading
+                      final hasChapterProgress = controller.queuedBookIds.contains(book.id) ||
+                          (controller.currentDownloadingBookId.value == book.id);
+                      
+                      final isDownloading = isCurrentlyDownloading || isInQueue || hasBookProgress || hasChapterProgress;
 
-                final isFavorite = controller.bookFavorites[book.id] ?? false;
-                final syncManager = Get.find<SyncManager>();
-                final isDownloading =
-                    controller.downloadingBookId.value == book.id;
-
-                return BookCard(
-                  book: book,
-                  isDownloaded: isDownloaded,
-                  isDownloading: isDownloading,
-                  progressPercent: controller.bookProgress[book.id] ?? 0.0,
-                  downloadProgress:
-                      syncManager.bookDownloadProgress[book.id] ?? 0.0,
-                  isFavorite: isFavorite,
-                  onDownload: () => controller.downloadBook(book),
-                  onTap: () => controller.openBook(book),
-                  onFavorite: () => controller.toggleBookFavorite(book),
-                );
-              });
-            },
+                      return BookCard(
+                        book: book,
+                        isDownloaded: isDownloaded,
+                        isDownloading: isDownloading,
+                        progressPercent: controller.bookProgress[book.id] ?? 0.0,
+                        downloadProgress: hasBookProgress 
+                            ? (syncManager.bookDownloadProgress[book.id] ?? 0.0)
+                            : (hasChapterProgress ? 0.01 : 0.0),
+                        isFavorite: isFavorite,
+                        onDownload: () => controller.downloadBook(book),
+                        onTap: () => controller.openBook(book),
+                        onFavorite: () => controller.toggleBookFavorite(book),
+                      );
+                    });
+                  }, childCount: controller.books.length),
+                ),
+              ),
+            ],
           ),
         );
       }),

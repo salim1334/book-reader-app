@@ -39,11 +39,35 @@ class HomeController extends GetxController {
   final downloadedBooks = <String, bool>{}.obs;
   final bookProgress = <String, double>{}.obs;
   final bookFavorites = <String, bool>{}.obs;
+  
+  /// Set of book IDs currently in the download queue (for batch downloads).
+  final queuedBookIds = <String>{}.obs;
+  
+  /// The book ID currently being downloaded (for UI display).
+  final currentDownloadingBookId = Rxn<String>();
+  
+  /// Calculates which books have chapters currently in the download queue.
+  /// This is used to show loading indicators for partially downloaded books.
+  RxSet<String> get booksWithQueuedChapters {
+    final bookIdSet = <String>{};
+    for (final chapterId in _syncManager.queuedChapterIds) {
+      // We need to get the book ID for each queued chapter
+      unawaited(_getBookIdForChapter(chapterId).then((bookId) {
+        if (bookId != null) {
+          bookIdSet.add(bookId);
+        }
+      }).catchError((e) {
+        debugPrint('HomeController.booksWithQueuedChapters error: $e');
+      }));
+    }
+    return bookIdSet.obs;
+  }
 
   Worker? _offlineModeWorker;
   Worker? _autoDownloadWorker;
   Worker? _catalogSyncWorker;
   Worker? _selectedIndexWorker;
+  Worker? _downloadQueueWorker;
   StreamSubscription<ReadingProgressUpdate>? _progressSubscription;
   @override
   Future<void> onInit() async {
@@ -52,6 +76,7 @@ class HomeController extends GetxController {
     _bindSettingWorkers();
     _bindReactiveListeners();
     _bindTabWorker();
+    _bindDownloadQueueWorker();
 
     // Instead of calling onInit(), just refresh favorites
     ever(_bookRepository.favoriteVersion, (_) => _refreshFavorites());
@@ -109,12 +134,82 @@ class HomeController extends GetxController {
     }
   }
 
+  /// Binds a worker to listen for changes in the SyncManager's download queue
+  /// and updates the UI state accordingly.
+  void _bindDownloadQueueWorker() {
+    _downloadQueueWorker = ever(
+      _syncManager.queuedChapterIds,
+      (_) {
+        // Update queued book IDs based on which books have chapters in the queue
+        final queuedBookIdSet = <String>{};
+        for (final chapterId in _syncManager.queuedChapterIds) {
+          // We need to get the book ID for each queued chapter
+          // This is a simplified approach - in practice you might want to cache this
+          unawaited(_getBookIdForChapter(chapterId).then((bookId) {
+            if (bookId != null) {
+              queuedBookIds.add(bookId);
+            }
+          }).catchError((e) {
+            debugPrint('HomeController._bindDownloadQueueWorker error: $e');
+          }));
+        }
+        // Update current downloading book ID
+        final currentChapterId = _syncManager.currentDownloadingChapterId.value;
+        if (currentChapterId != null) {
+          unawaited(_getBookIdForChapter(currentChapterId).then((bookId) {
+            currentDownloadingBookId.value = bookId;
+          }).catchError((e) {
+            debugPrint('HomeController._bindDownloadQueueWorker error: $e');
+          }));
+        } else {
+          currentDownloadingBookId.value = null;
+        }
+        
+        // Also observe chapterDownloadProgress for individual chapter downloads
+        // This ensures books with partially downloaded chapters show loading indicator
+      },
+    );
+    
+    // Also observe chapterDownloadProgress changes
+    ever(
+      _syncManager.chapterDownloadProgress,
+      (_) {
+        // Update queuedBookIds and currentDownloadingBookId based on chapter progress
+        final bookIdSet = <String>{};
+        for (final entry in _syncManager.chapterDownloadProgress.entries) {
+          if (entry.value > 0 && entry.value < 1.0) {
+            unawaited(_getBookIdForChapter(entry.key).then((bookId) {
+              if (bookId != null) {
+                bookIdSet.add(bookId);
+              }
+            }).catchError((e) {
+              debugPrint('HomeController.chapterDownloadProgress observer error: $e');
+            }));
+          }
+        }
+        // Add these books to queuedBookIds so they show loading indicator
+        queuedBookIds.addAll(bookIdSet);
+      },
+    );
+  }
+
+  Future<String?> _getBookIdForChapter(String chapterId) async {
+    try {
+      final chapter = await _bookRepository.getChapter(chapterId);
+      return chapter?.bookId;
+    } catch (e) {
+      debugPrint('HomeController._getBookIdForChapter error: $e');
+      return null;
+    }
+  }
+
   @override
   Future<void> onClose() async {
     _offlineModeWorker?.dispose();
     _autoDownloadWorker?.dispose();
     _catalogSyncWorker?.dispose();
     _selectedIndexWorker?.dispose();
+    _downloadQueueWorker?.dispose();
     await _progressSubscription?.cancel();
     super.onClose();
   }
@@ -273,7 +368,17 @@ class HomeController extends GetxController {
   }
 
   Future<void> downloadBook(LocalBook book) async {
-    downloadingBookId.value = book.id;
+    // Add to queue if another book download is in progress
+    if (currentDownloadingBookId.value != null && 
+        currentDownloadingBookId.value != book.id) {
+      if (!queuedBookIds.contains(book.id)) {
+        queuedBookIds.add(book.id);
+      }
+      // The download will be handled by the queue worker
+      return;
+    }
+    
+    currentDownloadingBookId.value = book.id;
     try {
       await _syncManager.downloadBook(book.id);
       await loadBooks();
@@ -283,8 +388,29 @@ class HomeController extends GetxController {
     } catch (e) {
       SnackbarHelper.show(AppTexts.homeDownloadFailed);
     } finally {
-      downloadingBookId.value = null;
+      currentDownloadingBookId.value = null;
+      queuedBookIds.remove(book.id);
+      // Process next queued book download if available
+      _processNextQueuedBookDownload();
     }
+  }
+
+  /// Processes the next book in the download queue.
+  void _processNextQueuedBookDownload() {
+    if (queuedBookIds.isEmpty) return;
+    
+    final nextBookId = queuedBookIds.first;
+    queuedBookIds.removeAt(0);
+    
+    // Find the book and trigger its download
+    final nextBook = books.firstWhere(
+      (b) => b.id == nextBookId,
+      orElse: () => throw Exception('Book $nextBookId not found'),
+    );
+    
+    unawaited(downloadBook(nextBook).catchError((e) {
+      debugPrint('HomeController._processNextQueuedBookDownload error: $e');
+    }));
   }
 
   Future<void> toggleBookFavorite(LocalBook book) async {

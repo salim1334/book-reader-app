@@ -117,20 +117,30 @@ class BookDetailsScreen extends GetView<BookDetailsController> {
                             .contains(chapter.id);
                         final progress =
                             controller.chapterProgress[chapter.id] ?? 0.0;
-                        final isDownloading =
-                            controller.downloadingChapterId.value == chapter.id;
+                        // Show downloading state if this chapter is currently being downloaded
+                        // OR if it's in the download queue
+                        final isCurrentlyDownloading =
+                            controller.currentDownloadingChapterId.value == chapter.id;
+                        final isInQueue = controller.queuedChapterIds.contains(chapter.id);
                         final isFavorite =
                             controller.chapterFavoriteStates[chapter.id] ??
                             false;
                         final syncManager = Get.find<SyncManager>();
+                        
+                        // Check if chapter has download progress (for individual chapter downloads)
+                        final hasChapterProgress = syncManager.chapterDownloadProgress.containsKey(chapter.id) && 
+                            syncManager.chapterDownloadProgress[chapter.id]! > 0 &&
+                            syncManager.chapterDownloadProgress[chapter.id]! < 1.0;
+                        
+                        final isDownloading = isCurrentlyDownloading || isInQueue || hasChapterProgress;
 
                         return ChapterListTile(
                           index: index,
                           chapter: chapter,
                           progress: progress,
-                          downloadProgress:
-                              syncManager.chapterDownloadProgress[chapter.id] ??
-                              0.0,
+                          downloadProgress: hasChapterProgress 
+                              ? (syncManager.chapterDownloadProgress[chapter.id] ?? 0.0)
+                              : (isCurrentlyDownloading || isInQueue ? 0.01 : 0.0),
                           isOutdated: isOutdated,
                           isDownloading: isDownloading,
                           isFavorite: isFavorite,
