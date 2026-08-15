@@ -493,6 +493,8 @@ class SyncManager extends GetxService with WidgetsBindingObserver {
       } finally {
         syncState.value = SyncState.idle;
         currentDownload?.value = '';
+        // Clean up progress entry after completion
+        chapterDownloadProgress.remove(chapterId);
       }
     } finally {
       _isDownloading = false;
