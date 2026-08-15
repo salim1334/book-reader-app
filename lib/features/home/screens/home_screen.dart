@@ -2,13 +2,15 @@ import 'package:book_store/common/widgets/book_card.dart';
 import 'package:book_store/common/widgets/error_view.dart';
 import 'package:book_store/common/widgets/loading_indicator.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
+import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/home/controllers/home_controller.dart';
 import 'package:book_store/features/home/widgets/continue_reading_card.dart';
 import 'package:book_store/features/home/widgets/home_empty_state.dart';
-import 'package:book_store/features/home/widgets/home_header.dart';
 import 'package:book_store/features/home/widgets/more_books_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../routes/app_routes.dart';
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -54,9 +56,60 @@ class HomeScreen extends GetView<HomeController> {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              // Sticky Header
-              SliverToBoxAdapter(
-                child: const HomeHeader(),
+              // Sticky Header that shrinks on scroll
+              SliverAppBar(
+                pinned: true,
+                floating: false,
+                elevation: 0,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                surfaceTintColor: Colors.transparent,
+                expandedHeight: 120,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 50, 24, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          AppTexts.homeTitle,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          AppTexts.homeSubtitle,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () => Get.toNamed(Routes.search),
+                  ),
+                  Obx(() {
+                    final settingsController = Get.find<SettingsRepository>();
+                    return IconButton(
+                      icon: Icon(
+                        settingsController.themeMode.value == ThemeMode.dark
+                            ? Icons.dark_mode_rounded
+                            : Icons.light_mode_rounded,
+                      ),
+                      onPressed: () => settingsController.setThemeMode(
+                        settingsController.themeMode.value == ThemeMode.light
+                            ? ThemeMode.dark
+                            : ThemeMode.light,
+                      ),
+                    );
+                  }),
+                  const SizedBox(width: 8),
+                ],
               ),
 
               // "More books online" hint
