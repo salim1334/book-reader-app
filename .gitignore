@@ -8,6 +8,7 @@
 *.dll
 *.so
 *.a
+/build
 
 # Dependencies
 node_modules/
