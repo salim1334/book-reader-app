@@ -29,7 +29,8 @@ class BookDetailsController extends GetxController {
   final remoteBook = Rxn<RemoteBook>();
   final hasUpdate = false.obs;
   final outdatedChapterIds = <String>[].obs;
-  final downloadingChapterId = Rxn<String>();
+  // was: final downloadingChapterId = Rxn<String>();
+  final downloadingChapterIds = <String>{}.obs;
   final isOffline = false.obs;
   final bookProgressPercent = 0.0.obs;
   final chapterProgress = <String, double>{}.obs;
@@ -43,6 +44,7 @@ class BookDetailsController extends GetxController {
   final currentDownloadingChapterId = Rxn<String>();
 
   Worker? _catalogSyncWorker;
+  Worker? _currentDownloadWorker;
   Worker? _downloadQueueWorker;
   StreamSubscription<ReadingProgressUpdate>? _progressSubscription;
 
@@ -185,8 +187,8 @@ class BookDetailsController extends GetxController {
   }
 
   Future<void> downloadChapter(LocalChapter chapter) async {
-    if (downloadingChapterId.value == chapter.id) return;
-    downloadingChapterId.value = chapter.id;
+    if (downloadingChapterIds.contains(chapter.id)) return;
+    downloadingChapterIds.add(chapter.id);
     try {
       await _syncManager.downloadChapter(chapter.id);
       SnackbarHelper.show(AppTexts.bookDetailsChapterDownloaded(chapter.title));
@@ -195,7 +197,7 @@ class BookDetailsController extends GetxController {
     } catch (e) {
       SnackbarHelper.show(AppTexts.bookDetailsDownloadError);
     } finally {
-      downloadingChapterId.value = null;
+      downloadingChapterIds.remove(chapter.id);
       await loadData();
     }
   }
@@ -231,22 +233,26 @@ class BookDetailsController extends GetxController {
   void _bindDownloadQueueWorker() {
     _downloadQueueWorker = ever(
       _syncManager.queuedChapterIds,
-      (_) {
-        // Update queued chapter IDs - only show chapters for this book
-        final bookChapterIds = chapters.map((c) => c.id).toSet();
-        queuedChapterIds.value = _syncManager.queuedChapterIds
-            .where((id) => bookChapterIds.contains(id))
-            .toSet();
-        
-        // Update current downloading chapter ID
-        final currentChapterId = _syncManager.currentDownloadingChapterId.value;
-        if (currentChapterId != null && bookChapterIds.contains(currentChapterId)) {
-          currentDownloadingChapterId.value = currentChapterId;
-        } else {
-          currentDownloadingChapterId.value = null;
-        }
-      },
+      (_) => _syncDownloadStateFromManager(),
     );
+    _currentDownloadWorker = ever(
+      _syncManager.currentDownloadingChapterId,
+      (_) => _syncDownloadStateFromManager(),
+    );
+  }
+
+  void _syncDownloadStateFromManager() {
+    final bookChapterIds = chapters.map((c) => c.id).toSet();
+
+    queuedChapterIds.value = _syncManager.queuedChapterIds
+        .where((id) => bookChapterIds.contains(id))
+        .toSet();
+
+    final currentChapterId = _syncManager.currentDownloadingChapterId.value;
+    currentDownloadingChapterId.value =
+        (currentChapterId != null && bookChapterIds.contains(currentChapterId))
+        ? currentChapterId
+        : null;
   }
 
   void _onProgressUpdate(ReadingProgressUpdate update) {
@@ -261,6 +267,7 @@ class BookDetailsController extends GetxController {
   Future<void> onClose() async {
     _catalogSyncWorker?.dispose();
     _downloadQueueWorker?.dispose();
+    _currentDownloadWorker?.dispose();
     await _progressSubscription?.cancel();
     super.onClose();
   }

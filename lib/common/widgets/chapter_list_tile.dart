@@ -137,7 +137,7 @@ class ChapterListTile extends StatelessWidget {
                           chapter.isDownloaded
                               ? (isOutdated
                                   ? Icons.update
-                                  : Icons.check_circle_outline)
+                                  : null)
                               : Icons.cloud_download_outlined,
                           color: chapter.isDownloaded
                               ? (isOutdated

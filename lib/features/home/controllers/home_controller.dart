@@ -400,7 +400,7 @@ class HomeController extends GetxController {
     if (queuedBookIds.isEmpty) return;
     
     final nextBookId = queuedBookIds.first;
-    queuedBookIds.removeAt(0);
+    queuedBookIds.remove(nextBookId);
     
     // Find the book and trigger its download
     final nextBook = books.firstWhere(

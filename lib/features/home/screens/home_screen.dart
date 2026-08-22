@@ -1,6 +1,7 @@
 import 'package:book_store/common/widgets/book_card.dart';
 import 'package:book_store/common/widgets/error_view.dart';
 import 'package:book_store/common/widgets/loading_indicator.dart';
+import 'package:book_store/core/constants/app_texts.dart';
 import 'package:book_store/data/remote/sync_manager.dart';
 import 'package:book_store/data/repositories/settings_repository.dart';
 import 'package:book_store/features/home/controllers/home_controller.dart';

@@ -29,19 +29,19 @@ class BookCard extends StatelessWidget {
   });
 
   /// Returns localized label and icon based on book type
-  (String label, IconData icon) _getTypeInfo() {
-    switch (book.type) {
-      case LocalBookType.text:
-        return (AppTexts.bookTypeText, Icons.text_snippet);
-      case LocalBookType.image:
-        return (AppTexts.bookTypeImage, Icons.image);
-    }
-  }
+  // (String label, IconData icon) _getTypeInfo() {
+  //   switch (book.type) {
+  //     case LocalBookType.text:
+  //       return (AppTexts.bookTypeText, Icons.text_snippet);
+  //     case LocalBookType.image:
+  //       return ("", Icons.image);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final (typeLabel, typeIcon) = _getTypeInfo();
+    // final (typeLabel, typeIcon) = _getTypeInfo();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -76,10 +76,10 @@ class BookCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                      // const SizedBox(height: 6),
 
                       // Format type badge
-                      _TypeBadge(label: typeLabel, icon: typeIcon, isDownloaded: isDownloaded),
+                      //  _TypeBadge(label: typeLabel, icon: typeIcon, isDownloaded: isDownloaded),
 
                       // Reading progress bar
                       if (isDownloaded && progressPercent > 0) ...[
@@ -126,12 +126,10 @@ class BookCard extends StatelessWidget {
                     else
                       IconButton(
                         icon: Icon(
-                          isDownloaded
-                              ? Icons.check_circle_outline
-                              : Icons.cloud_download_outlined,
-                          color: isDownloaded
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
+                          !isDownloaded
+                              ? Icons.cloud_download_outlined : null,
+                          color: !isDownloaded
+                              ? theme.colorScheme.onSurfaceVariant : null,
                           size: 26,
                         ),
                         onPressed: onDownload,
