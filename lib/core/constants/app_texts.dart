@@ -46,7 +46,7 @@ abstract final class AppTexts {
   static const String settingsResetReadingProgressTitle = 'የንባብ ሂደትን ሰርዝ';
   static const String settingsResetReadingProgressSubtitle = 'የሁሉንም መጻሕፍት እና ምዕራፎች የንባብ ሂደት ያጠፋል።';
   static const String settingsAboutAppTitle = 'ስለዚህ መተግበሪያ';
-  static const String settingsAppVersion = 'Version 1.0.1';
+  static const String settingsAppVersion = 'Version 1.0.0';
   static const String settingsFontSizeDialogTitle = 'የፊደል መጠን';
   static const String settingsPlayerSpeedDialogTitle = 'የመጫወቻ ፍጥነት';
   static const String settingsUsedStorageTitle = 'ያገለገለ ማከማቻ';
@@ -128,7 +128,7 @@ abstract final class AppTexts {
       'በዚህ መሳሪያ ላይ የኢሜይል መተግበሪያ አልተገኘም።';
   static const String feedbackOpenError =
       'የአስተያየት ኢሜይሉን መክፈት አልተቻለም። እባክዎ በኋላ እንደገና ይሞክሩ።';
-  static const String feedbackVersionFallback = 'Version 1.0.1';
+  static const String feedbackVersionFallback = 'Version 1.0.0';
   static const String feedbackDeviceFallback = 'ያልታወቀ መሳሪያ';
 
   // Downloads

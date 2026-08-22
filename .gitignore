@@ -9,6 +9,7 @@
 *.so
 *.a
 /build
+.env
 
 # Dependencies
 node_modules/
